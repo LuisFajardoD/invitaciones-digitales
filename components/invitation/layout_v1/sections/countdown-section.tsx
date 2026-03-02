@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { InvitationSectionFrame } from "@/components/invitation/layout_v1/sections/section-frame";
 import type { CountdownSectionData } from "@/types/invitations";
 
 type CountdownSectionProps = {
@@ -19,6 +21,7 @@ function getRemaining(targetAt: string) {
 
 export function CountdownSection({ data }: CountdownSectionProps) {
   const [remaining, setRemaining] = useState(() => getRemaining(data.target_at));
+  const reducedMotion = Boolean(useReducedMotion());
   const cells = useMemo(
     () => [
       ["Dias", remaining.days],
@@ -38,17 +41,30 @@ export function CountdownSection({ data }: CountdownSectionProps) {
   }, [data.target_at]);
 
   return (
-    <section className="section-shell">
-      <p className="eyebrow">Countdown</p>
-      <h2>{data.label}</h2>
-      <div className="countdown-grid">
+    <InvitationSectionFrame
+      eyebrow="Cuenta regresiva"
+      title={data.label}
+      subtitle="Cada segundo nos acerca al despegue."
+      tone="default"
+    >
+      <div className="countdown-grid countdown-grid--mission">
         {cells.map(([label, value]) => (
-          <div key={label} className="countdown-cell">
+          <motion.div
+            key={label}
+            className="countdown-cell countdown-cell--mission"
+            animate={reducedMotion ? undefined : { y: [0, -3, 0] }}
+            transition={{
+              duration: 2.8,
+              repeat: Number.POSITIVE_INFINITY,
+              repeatDelay: 0.4,
+              delay: Number(value) * 0.02,
+            }}
+          >
             <strong>{value}</strong>
-            <span className="muted">{label}</span>
-          </div>
+            <span className="mission-caption">{label}</span>
+          </motion.div>
         ))}
       </div>
-    </section>
+    </InvitationSectionFrame>
   );
 }

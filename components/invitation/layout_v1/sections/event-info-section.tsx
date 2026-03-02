@@ -1,5 +1,6 @@
 "use client";
 
+import { InvitationSectionFrame } from "@/components/invitation/layout_v1/sections/section-frame";
 import { formatDateLabel, formatTimeLabel } from "@/lib/utils";
 import type { EventInfoSectionData, InvitationRecord } from "@/types/invitations";
 
@@ -10,23 +11,26 @@ type EventInfoSectionProps = {
 
 export function EventInfoSection({ data, invitation }: EventInfoSectionProps) {
   return (
-    <section className="section-shell">
-      <p className="eyebrow">Datos del evento</p>
-      <h2>{data.venue_name}</h2>
-      <div className="event-grid">
-        <div className="event-chip">
+    <InvitationSectionFrame
+      eyebrow="Bitacora"
+      title={data.venue_name}
+      subtitle="Todo listo para el punto de encuentro."
+      tone="aurora"
+    >
+      <div className="event-grid event-grid--mission">
+        <div className="event-chip event-chip--organic">
           <strong>{data.weekday_text || formatDateLabel(invitation.event_start_at, invitation.timezone)}</strong>
-          <p className="muted">{data.date_text}</p>
+          <p className="mission-caption">{data.date_text}</p>
         </div>
-        <div className="event-chip">
+        <div className="event-chip event-chip--organic">
           <strong>{data.time_text || formatTimeLabel(invitation.event_start_at, invitation.timezone)}</strong>
-          <p className="muted">Hora de llegada</p>
+          <p className="mission-caption">Hora de llegada</p>
         </div>
-        <div className="event-chip">
+        <div className="event-chip event-chip--organic">
           <strong>{data.venue_name}</strong>
-          <p className="muted">{data.address_text}</p>
+          <p className="mission-caption">{data.address_text}</p>
         </div>
       </div>
-    </section>
+    </InvitationSectionFrame>
   );
 }

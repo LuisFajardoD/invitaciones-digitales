@@ -1,6 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { InvitationSectionFrame } from "@/components/invitation/layout_v1/sections/section-frame";
+import {
+  getButtonHoverMotion,
+  getButtonTapMotion,
+} from "@/components/invitation/layout_v1/motion";
 import { buildCalendarDataUri } from "@/lib/utils";
 import type { InvitationRecord, QuickActionsSectionData } from "@/types/invitations";
 
@@ -11,14 +17,17 @@ type QuickActionsSectionProps = {
 
 export function QuickActionsSection({ data, invitation }: QuickActionsSectionProps) {
   const [message, setMessage] = useState("");
+  const reducedMotion = Boolean(useReducedMotion());
   const items = data.items.filter((item) => {
-    if (item.type === "confirm") {
+    const actionType = String(item.type);
+
+    if (actionType === "confirm" || actionType === "rsvp") {
       return invitation.sections.rsvp.enabled;
     }
-    if (item.type === "location") {
+    if (actionType === "location" || actionType === "map") {
       return invitation.sections.map.enabled;
     }
-    if (item.type === "calendar") {
+    if (actionType === "calendar") {
       return Boolean(invitation.event_start_at && invitation.sections.hero.title);
     }
     return true;
@@ -41,11 +50,11 @@ export function QuickActionsSection({ data, invitation }: QuickActionsSectionPro
   }
 
   function handleAction(type: string) {
-    if (type === "confirm") {
+    if (type === "confirm" || type === "rsvp") {
       document.getElementById("rsvp-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    if (type === "location") {
+    if (type === "location" || type === "map") {
       document.getElementById("map-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
@@ -59,21 +68,27 @@ export function QuickActionsSection({ data, invitation }: QuickActionsSectionPro
   }
 
   return (
-    <section className="section-shell">
-      <p className="eyebrow">Acciones rapidas</p>
-      <div className="quick-grid">
+    <InvitationSectionFrame
+      eyebrow="Control de misión"
+      title="Acciones rápidas"
+      subtitle="Toca un comando y continúa el recorrido."
+      tone="gold"
+    >
+      <div className="quick-grid quick-grid--mission">
         {items.map((item) => (
-          <button
+          <motion.button
             type="button"
-            key={item.type}
-            className="button-secondary quick-button"
-            onClick={() => handleAction(item.type)}
+            key={`${item.type}-${item.label}`}
+            className="mission-button mission-button--ghost quick-button"
+            onClick={() => handleAction(String(item.type))}
+            whileHover={getButtonHoverMotion(reducedMotion, true)}
+            whileTap={getButtonTapMotion(reducedMotion)}
           >
             {item.label}
-          </button>
+          </motion.button>
         ))}
       </div>
-      {message ? <p className="helper-text">{message}</p> : null}
-    </section>
+      {message ? <p className="mission-caption">{message}</p> : null}
+    </InvitationSectionFrame>
   );
 }

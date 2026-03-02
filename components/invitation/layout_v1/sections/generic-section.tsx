@@ -1,5 +1,11 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  getButtonHoverMotion,
+  getButtonTapMotion,
+} from "@/components/invitation/layout_v1/motion";
+import { InvitationSectionFrame } from "@/components/invitation/layout_v1/sections/section-frame";
 import type { GenericTextSectionData } from "@/types/invitations";
 
 type GenericSectionProps = {
@@ -8,25 +14,35 @@ type GenericSectionProps = {
 };
 
 export function GenericSection({ title, data }: GenericSectionProps) {
+  const reducedMotion = Boolean(useReducedMotion());
+
   return (
-    <section className="section-shell">
-      <p className="eyebrow">Extra</p>
-      <h2>{data.title || title}</h2>
-      {data.text ? <p className="muted">{data.text}</p> : null}
+    <InvitationSectionFrame
+      eyebrow="Modulo extra"
+      title={data.title || title}
+      subtitle={data.text || "Informacion adicional para la mision."}
+      tone="default"
+    >
       {data.items?.length ? (
-        <div className="notes-list">
-          {data.items.map((item) => (
-            <div key={item} className="note-card">
-              {item}
+        <div className="notes-list notes-list--mission">
+          {data.items.map((item, index) => (
+            <div key={`${item}-${index}`} className="note-card note-card--mission">
+              <span className="note-card__index">{String(index + 1).padStart(2, "0")}</span>
+              <span>{item}</span>
             </div>
           ))}
         </div>
       ) : null}
       {data.url ? (
-        <a href={data.url} className="button-secondary">
+        <motion.a
+          href={data.url}
+          className="mission-button mission-button--ghost"
+          whileHover={getButtonHoverMotion(reducedMotion, true)}
+          whileTap={getButtonTapMotion(reducedMotion)}
+        >
           Abrir enlace
-        </a>
+        </motion.a>
       ) : null}
-    </section>
+    </InvitationSectionFrame>
   );
 }
