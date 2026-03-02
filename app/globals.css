@@ -774,23 +774,41 @@ img {
   pointer-events: none;
 }
 
+.hero-cinematic__astronaut-art {
+  position: absolute;
+  z-index: 1;
+  right: clamp(10px, 6vw, 96px);
+  bottom: clamp(34px, 8vh, 88px);
+  width: clamp(148px, 23vw, 264px);
+  pointer-events: none;
+  opacity: 0.92;
+  filter: drop-shadow(0 18px 34px rgba(3, 11, 28, 0.24));
+  user-select: none;
+}
+
+.hero-cinematic__astronaut-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .hero-cinematic__planet {
   border-radius: 50%;
 }
 
 .hero-cinematic__planet--main {
-  width: clamp(228px, 34vw, 460px);
-  height: clamp(228px, 34vw, 460px);
-  right: clamp(-84px, -8vw, -42px);
-  top: clamp(52px, 10vh, 112px);
+  width: clamp(204px, 30vw, 408px);
+  height: clamp(204px, 30vw, 408px);
+  right: clamp(-72px, -7vw, -36px);
+  top: clamp(56px, 10vh, 120px);
   overflow: hidden;
   background:
-    radial-gradient(circle at 34% 30%, rgba(255, 245, 205, 0.82), transparent 18%),
-    radial-gradient(circle at 46% 44%, rgba(196, 127, 22, 0.18), transparent 54%),
-    radial-gradient(circle at 42% 38%, #f9df9a, #f0ad46 56%, #b56417 82%, #6f350a 100%);
+    radial-gradient(circle at 34% 30%, rgba(223, 229, 241, 0.52), transparent 18%),
+    radial-gradient(circle at 46% 44%, rgba(72, 82, 104, 0.18), transparent 54%),
+    radial-gradient(circle at 42% 38%, #c7cfde, #919caf 56%, #5e677d 82%, #31384b 100%);
   box-shadow:
-    inset -28px -38px 64px rgba(95, 48, 8, 0.42),
-    0 0 140px rgba(248, 201, 75, 0.22);
+    inset -30px -40px 70px rgba(30, 36, 52, 0.42),
+    0 0 96px rgba(150, 163, 194, 0.1);
 }
 
 .hero-cinematic__planet--small {
@@ -818,18 +836,18 @@ img {
 .hero-cinematic__moon-sheen {
   inset: 0;
   background:
-    radial-gradient(circle at 28% 24%, rgba(255, 248, 230, 0.28), transparent 16%),
-    radial-gradient(circle at 62% 70%, rgba(109, 56, 10, 0.12), transparent 22%);
+    radial-gradient(circle at 28% 24%, rgba(245, 248, 255, 0.16), transparent 16%),
+    radial-gradient(circle at 62% 70%, rgba(52, 60, 82, 0.16), transparent 22%);
 }
 
 .hero-cinematic__moon-crater {
   border-radius: 50%;
-  border: 1px solid rgba(142, 86, 18, 0.22);
+  border: 1px solid rgba(86, 98, 126, 0.24);
   background:
-    radial-gradient(circle at 35% 35%, rgba(255, 225, 163, 0.26), rgba(176, 101, 22, 0.1) 68%, rgba(115, 58, 11, 0.18));
+    radial-gradient(circle at 35% 35%, rgba(229, 234, 244, 0.12), rgba(126, 137, 162, 0.08) 68%, rgba(58, 66, 84, 0.2));
   box-shadow:
-    inset -5px -7px 8px rgba(118, 62, 12, 0.12),
-    inset 3px 3px 6px rgba(255, 240, 198, 0.08);
+    inset -6px -8px 10px rgba(48, 56, 72, 0.16),
+    inset 3px 3px 5px rgba(228, 234, 244, 0.05);
 }
 
 .hero-cinematic__moon-crater--one {
@@ -928,20 +946,24 @@ img {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 16px;
   min-height: inherit;
   width: min(900px, calc(100% - 28px));
   margin: 0 auto;
-  padding: clamp(92px, 12vh, 148px) clamp(8px, 2vw, 16px) clamp(84px, 12vh, 128px);
+  padding: clamp(96px, 11vh, 132px) clamp(8px, 2vw, 16px) clamp(96px, 11vh, 132px);
 }
 
 .hero-cinematic__hud {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
   width: fit-content;
   max-width: min(100%, 640px);
+  margin-top: 18px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .hero-cinematic__hud span,
@@ -977,6 +999,9 @@ img {
 
 .mission-eyebrow--hero {
   opacity: 0.92;
+  align-self: center;
+  margin-top: 28px;
+  text-align: center;
 }
 
 .hero-cinematic__title,
@@ -1416,8 +1441,9 @@ img {
 
   .hero-cinematic__content {
     width: min(100%, calc(100% - 18px));
+    justify-content: center;
     padding-top: 92px;
-    padding-bottom: 112px;
+    padding-bottom: 92px;
   }
 
   .hero-cinematic__hud {
@@ -1425,10 +1451,10 @@ img {
   }
 
   .hero-cinematic__planet--main {
-    width: 300px;
-    height: 300px;
-    right: -104px;
-    top: 60px;
+    width: 268px;
+    height: 268px;
+    right: -92px;
+    top: 72px;
   }
 
   .hero-cinematic__planet--small {
@@ -1436,6 +1462,12 @@ img {
     height: 104px;
     left: 18px;
     top: 21%;
+  }
+
+  .hero-cinematic__astronaut-art {
+    right: 2px;
+    bottom: 34px;
+    width: 172px;
   }
 
   .hero-cinematic__comet--one {

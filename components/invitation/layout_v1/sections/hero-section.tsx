@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { formatTimeLabel } from "@/lib/utils";
 import type { HeroSectionData, InvitationRecord } from "@/types/invitations";
@@ -19,9 +20,7 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
   const cometOneX = useTransform(scrollYProgress, [0, 0.4], [0, prefersReducedMotion ? 0 : 64]);
   const cometTwoX = useTransform(scrollYProgress, [0, 0.4], [0, prefersReducedMotion ? 0 : -42]);
   const hasArt = Boolean(data.background_image_url);
-  const eventInfo = invitation.sections.event_info;
   const scheduleLabel = buildScheduleLabel(invitation);
-  const venueLabel = eventInfo.venue_name?.trim();
 
   return (
     <motion.section
@@ -86,33 +85,46 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
         transition={{ duration: 8.8, repeat: Number.POSITIVE_INFINITY, repeatDelay: 0.8, ease: "easeInOut" }}
       />
 
+      <motion.div
+        className="hero-cinematic__astronaut-art"
+        initial={{ opacity: 0 }}
+        animate={
+          prefersReducedMotion
+            ? { opacity: 0.9 }
+            : {
+                opacity: [0.8, 0.94, 0.8],
+                x: [-20, 20, -20],
+                y: [-12, 12, -12],
+                rotate: [-2, 2, -2],
+              }
+        }
+        transition={
+          prefersReducedMotion
+            ? { duration: 0.4, ease: "easeOut" }
+            : {
+                duration: 22,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+              }
+        }
+        aria-hidden="true"
+      >
+        <Image
+          src="/assets/astronaut-luis-arturo.webp"
+          alt=""
+          aria-hidden="true"
+          width={640}
+          height={820}
+          priority
+        />
+      </motion.div>
+
       <div className="hero-cinematic__content">
-        {(scheduleLabel || venueLabel) ? (
-          <motion.div
-            className="hero-cinematic__hud"
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 14 }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-            transition={{ delay: 0.04, duration: prefersReducedMotion ? 0.2 : 0.28 }}
-          >
-            {scheduleLabel ? <span>{scheduleLabel}</span> : null}
-            {venueLabel ? <span>{venueLabel}</span> : null}
-          </motion.div>
-        ) : null}
-
-        <motion.p
-          className="mission-eyebrow mission-eyebrow--hero"
-          initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
-          animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-          transition={{ delay: 0.08, duration: prefersReducedMotion ? 0.2 : 0.28 }}
-        >
-          Protocolo de despegue
-        </motion.p>
-
         <motion.h1
           className="hero-cinematic__title"
           initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 28 }}
           animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-          transition={{ delay: 0.14, duration: prefersReducedMotion ? 0.24 : 0.4 }}
+          transition={{ delay: 0.06, duration: prefersReducedMotion ? 0.24 : 0.4 }}
         >
           {data.title}
         </motion.h1>
@@ -121,10 +133,30 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
           className="hero-cinematic__subtitle"
           initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
           animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: prefersReducedMotion ? 0.22 : 0.34 }}
+          transition={{ delay: 0.12, duration: prefersReducedMotion ? 0.22 : 0.34 }}
         >
           {data.subtitle}
         </motion.p>
+
+        <motion.p
+          className="mission-eyebrow mission-eyebrow--hero"
+          initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
+          animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          transition={{ delay: 0.18, duration: prefersReducedMotion ? 0.2 : 0.28 }}
+        >
+          Protocolo de despegue
+        </motion.p>
+
+        {scheduleLabel ? (
+          <motion.div
+            className="hero-cinematic__hud"
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 14 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            transition={{ delay: 0.22, duration: prefersReducedMotion ? 0.2 : 0.28 }}
+          >
+            <span>{scheduleLabel}</span>
+          </motion.div>
+        ) : null}
       </div>
 
       <div className="hero-cinematic__wave" />
@@ -134,7 +166,14 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
 
 function buildScheduleLabel(invitation: InvitationRecord) {
   const eventInfo = invitation.sections.event_info;
-  const dateChunk = [eventInfo.weekday_text, eventInfo.date_text].filter(Boolean).join(" ").trim();
+  const eventDate = new Date(invitation.event_start_at);
+  const baseDateText = (eventInfo.date_text || "").trim();
+  const hasExplicitYear = /\b\d{4}\b/.test(baseDateText);
+  const year = Number.isNaN(eventDate.getTime()) || hasExplicitYear ? "" : ` de ${eventDate.getFullYear()}`;
+  const dateChunk = [eventInfo.weekday_text, `${baseDateText}${year}`.trim()]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
   const timeChunk = eventInfo.time_text || formatTimeLabel(invitation.event_start_at, invitation.timezone);
-  return [dateChunk, timeChunk].filter(Boolean).join(" | ");
+  return [dateChunk, timeChunk].filter(Boolean).join(" ");
 }
