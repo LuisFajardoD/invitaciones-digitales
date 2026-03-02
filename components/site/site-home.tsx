@@ -1,0 +1,205 @@
+"use client";
+
+import Link from "next/link";
+import { createWhatsAppUrl, isWithinRange } from "@/lib/utils";
+import type { SiteSettingsData, SiteBlockKey } from "@/types/invitations";
+
+type SiteHomeProps = {
+  settings: SiteSettingsData;
+};
+
+export function SiteHome({ settings }: SiteHomeProps) {
+  const now = new Date();
+
+  return (
+    <main className="site-shell">
+      <header className="site-topbar">
+        <span>Invitaciones Digitales</span>
+        <Link href="/admin" className="ghost-link">
+          Admin
+        </Link>
+      </header>
+      {settings.blocks_order.map((key) => renderBlock(key, settings, now))}
+    </main>
+  );
+}
+
+function renderBlock(key: SiteBlockKey, settings: SiteSettingsData, now: Date) {
+  switch (key) {
+    case "hero": {
+      const block = settings.blocks.hero;
+      if (!block.enabled) {
+        return null;
+      }
+      return (
+        <section key={key} className="site-hero">
+          <p className="eyebrow">{block.badge}</p>
+          <h1>{block.title}</h1>
+          <p className="lede">{block.subtitle}</p>
+          <div className="action-row">
+            <a href={block.primary_cta_href} className="button-primary">
+              {block.primary_cta_text}
+            </a>
+            <a href={block.secondary_cta_href} className="button-secondary">
+              {block.secondary_cta_text}
+            </a>
+          </div>
+        </section>
+      );
+    }
+    case "examples": {
+      const block = settings.blocks.examples;
+      if (!block.enabled) {
+        return null;
+      }
+      return (
+        <section key={key} id="examples" className="content-panel">
+          <div className="section-head">
+            <p className="eyebrow">Demos</p>
+            <h2>{block.title}</h2>
+          </div>
+          <div className="card-grid">
+            {block.items.map((item) => (
+              <Link key={item.slug} href={`/i/${item.slug}`} className="preview-card">
+                <div
+                  className="preview-media"
+                  style={{ backgroundImage: `linear-gradient(180deg, transparent, rgba(3, 17, 42, 0.8)), url(${item.cover_url})` }}
+                />
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      );
+    }
+    case "promo": {
+      const block = settings.blocks.promo;
+      if (!block.enabled || !isWithinRange(now, block.valid_from, block.valid_to)) {
+        return null;
+      }
+      return (
+        <section key={key} className="promo-strip">
+          <p className="eyebrow">Promo</p>
+          <strong>{block.title}</strong>
+          <span>{block.text}</span>
+        </section>
+      );
+    }
+    case "packages": {
+      const block = settings.blocks.packages;
+      if (!block.enabled) {
+        return null;
+      }
+      return (
+        <section key={key} className="content-panel">
+          <div className="section-head">
+            <p className="eyebrow">Paquetes</p>
+            <h2>{block.title}</h2>
+          </div>
+          <div className="card-grid">
+            {block.items.map((item) => (
+              <article key={item.name} className="package-card">
+                <p className="package-price">{item.price}</p>
+                <h3>{item.name}</h3>
+                <p>{item.description}</p>
+                <ul>
+                  {item.features.map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    }
+    case "extras": {
+      const block = settings.blocks.extras;
+      if (!block.enabled) {
+        return null;
+      }
+      return (
+        <section key={key} className="content-panel">
+          <div className="section-head">
+            <p className="eyebrow">Extras</p>
+            <h2>{block.title}</h2>
+          </div>
+          <div className="stack-list">
+            {block.items.map((item) => (
+              <div key={item} className="list-row">
+                {item}
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+    case "how_it_works": {
+      const block = settings.blocks.how_it_works;
+      if (!block.enabled) {
+        return null;
+      }
+      return (
+        <section key={key} className="content-panel">
+          <div className="section-head">
+            <p className="eyebrow">Proceso</p>
+            <h2>{block.title}</h2>
+          </div>
+          <div className="stack-list">
+            {block.items.map((item) => (
+              <div key={item} className="list-row">
+                {item}
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+    case "faq": {
+      const block = settings.blocks.faq;
+      if (!block.enabled) {
+        return null;
+      }
+      return (
+        <section key={key} className="content-panel">
+          <div className="section-head">
+            <p className="eyebrow">FAQ</p>
+            <h2>{block.title}</h2>
+          </div>
+          <div className="faq-grid">
+            {block.items.map((item) => (
+              <article key={item.question} className="faq-card">
+                <h3>{item.question}</h3>
+                <p>{item.answer}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    }
+    case "contact": {
+      const block = settings.blocks.contact;
+      if (!block.enabled) {
+        return null;
+      }
+      return (
+        <section key={key} className="contact-panel">
+          <div>
+            <p className="eyebrow">Contacto</p>
+            <h2>{block.title}</h2>
+            <p>{block.text}</p>
+          </div>
+          <a
+            href={createWhatsAppUrl(block.whatsapp_number, block.whatsapp_prefill_text)}
+            className="button-primary"
+          >
+            Cotizar por WhatsApp
+          </a>
+        </section>
+      );
+    }
+    default:
+      return null;
+  }
+}
