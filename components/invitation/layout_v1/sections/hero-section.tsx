@@ -113,7 +113,7 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
           src="/assets/astronaut-luis-arturo.webp"
           alt=""
           aria-hidden="true"
-          width={640}
+          width={630}
           height={820}
           priority
         />
