@@ -11,6 +11,18 @@ type QuickActionsSectionProps = {
 
 export function QuickActionsSection({ data, invitation }: QuickActionsSectionProps) {
   const [message, setMessage] = useState("");
+  const items = data.items.filter((item) => {
+    if (item.type === "confirm") {
+      return invitation.sections.rsvp.enabled;
+    }
+    if (item.type === "location") {
+      return invitation.sections.map.enabled;
+    }
+    if (item.type === "calendar") {
+      return Boolean(invitation.event_start_at && invitation.sections.hero.title);
+    }
+    return true;
+  });
 
   async function handleShare() {
     const url = window.location.href;
@@ -50,7 +62,7 @@ export function QuickActionsSection({ data, invitation }: QuickActionsSectionPro
     <section className="section-shell">
       <p className="eyebrow">Acciones rapidas</p>
       <div className="quick-grid">
-        {data.items.map((item) => (
+        {items.map((item) => (
           <button
             type="button"
             key={item.type}

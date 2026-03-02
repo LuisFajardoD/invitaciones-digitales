@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { InvitationRenderer } from "@/components/invitation/layout_v1/invitation-renderer";
-import { getInvitationBySlug, getPublicInvitationBySlug } from "@/lib/repository";
+import { getPublicInvitationBySlug } from "@/lib/repository";
+
+export const dynamic = "force-dynamic";
 
 type InvitationPageProps = {
   params: Promise<{ slug: string }>;
@@ -9,7 +11,7 @@ type InvitationPageProps = {
 
 export async function generateMetadata({ params }: InvitationPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const invitation = await getInvitationBySlug(slug);
+  const invitation = await getPublicInvitationBySlug(slug);
 
   if (!invitation) {
     return {

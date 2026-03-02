@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getClientRsvpView } from "@/lib/repository";
 import { formatDateTimeLabel } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 type ClientRsvpPageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ token?: string }>;
