@@ -777,13 +777,24 @@ img {
 .hero-cinematic__astronaut-art {
   position: absolute;
   z-index: 1;
-  right: clamp(8px, 5vw, 84px);
-  bottom: clamp(48px, 10vh, 108px);
-  width: clamp(168px, 24vw, 286px);
+  right: clamp(24px, 7vw, 116px);
+  bottom: clamp(56px, 11vh, 126px);
+  width: clamp(188px, 27vw, 322px);
   pointer-events: none;
   opacity: 0.24;
-  filter: drop-shadow(0 18px 34px rgba(3, 11, 28, 0.24));
+  filter: drop-shadow(0 22px 38px rgba(3, 11, 28, 0.22));
   user-select: none;
+  isolation: isolate;
+}
+
+.hero-cinematic__astronaut-art::before {
+  content: "";
+  position: absolute;
+  inset: 20% 12% 10%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(118, 247, 255, 0.1), rgba(118, 247, 255, 0.03) 42%, transparent 70%);
+  filter: blur(18px);
 }
 
 .hero-cinematic__astronaut-art img {
@@ -802,13 +813,27 @@ img {
   right: clamp(-72px, -7vw, -36px);
   top: clamp(56px, 10vh, 120px);
   overflow: hidden;
+  opacity: 0.28;
   background:
     radial-gradient(circle at 34% 30%, rgba(223, 229, 241, 0.52), transparent 18%),
-    radial-gradient(circle at 46% 44%, rgba(72, 82, 104, 0.18), transparent 54%),
+    radial-gradient(circle at 46% 44%, rgba(72, 82, 104, 0.22), transparent 54%),
     radial-gradient(circle at 42% 38%, #c7cfde, #919caf 56%, #5e677d 82%, #31384b 100%);
   box-shadow:
-    inset -30px -40px 70px rgba(30, 36, 52, 0.42),
-    0 0 96px rgba(150, 163, 194, 0.1);
+    inset -30px -40px 72px rgba(24, 30, 44, 0.46),
+    0 0 88px rgba(150, 163, 194, 0.08);
+}
+
+.hero-cinematic__planet--main::after {
+  content: "";
+  position: absolute;
+  inset: 3% 4% 3% 3%;
+  border-radius: 50%;
+  border-top: 1px solid rgba(244, 248, 255, 0.24);
+  border-left: 1px solid rgba(238, 244, 255, 0.16);
+  box-shadow:
+    inset 24px 14px 30px rgba(250, 252, 255, 0.05),
+    inset -18px -18px 24px rgba(43, 50, 66, 0.16);
+  pointer-events: none;
 }
 
 .hero-cinematic__planet--small {
@@ -817,6 +842,7 @@ img {
   left: clamp(18px, 5vw, 72px);
   top: 24%;
   overflow: hidden;
+  opacity: 0.26;
   background:
     radial-gradient(circle at 30% 30%, rgba(209, 250, 255, 0.9), transparent 20%),
     radial-gradient(circle at 38% 34%, #93eaff, #2b98d4 56%, #0b4f8a 82%);
@@ -836,18 +862,19 @@ img {
 .hero-cinematic__moon-sheen {
   inset: 0;
   background:
-    radial-gradient(circle at 28% 24%, rgba(245, 248, 255, 0.16), transparent 16%),
+    radial-gradient(circle at 26% 24%, rgba(248, 251, 255, 0.18), transparent 14%),
+    radial-gradient(circle at 18% 34%, rgba(235, 242, 255, 0.08), transparent 20%),
     radial-gradient(circle at 62% 70%, rgba(52, 60, 82, 0.16), transparent 22%);
 }
 
 .hero-cinematic__moon-crater {
   border-radius: 50%;
-  border: 1px solid rgba(86, 98, 126, 0.24);
+  border: 1px solid rgba(86, 98, 126, 0.3);
   background:
-    radial-gradient(circle at 35% 35%, rgba(229, 234, 244, 0.12), rgba(126, 137, 162, 0.08) 68%, rgba(58, 66, 84, 0.2));
+    radial-gradient(circle at 35% 35%, rgba(236, 241, 248, 0.16), rgba(126, 137, 162, 0.12) 62%, rgba(46, 54, 72, 0.26));
   box-shadow:
-    inset -6px -8px 10px rgba(48, 56, 72, 0.16),
-    inset 3px 3px 5px rgba(228, 234, 244, 0.05);
+    inset -7px -10px 12px rgba(40, 48, 64, 0.2),
+    inset 4px 4px 6px rgba(236, 242, 250, 0.08);
 }
 
 .hero-cinematic__moon-crater--one {
@@ -955,6 +982,11 @@ img {
   padding: clamp(96px, 11vh, 132px) clamp(8px, 2vw, 16px) clamp(96px, 11vh, 132px);
 }
 
+.hero-cinematic__telemetry-wrap {
+  display: grid;
+  gap: 6px;
+}
+
 .hero-cinematic__telemetry {
   margin: 0;
   color: #8ff7ff;
@@ -963,6 +995,26 @@ img {
   letter-spacing: 0.26em;
   text-transform: uppercase;
   text-shadow: 0 0 12px rgba(118, 247, 255, 0.14);
+}
+
+.hero-cinematic__telemetry-detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(198, 245, 255, 0.72);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero-cinematic__telemetry-line {
+  width: clamp(86px, 22vw, 150px);
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(143, 247, 255, 0.92), rgba(143, 247, 255, 0.18));
+  transform-origin: left center;
+  box-shadow: 0 0 10px rgba(118, 247, 255, 0.14);
 }
 
 .hero-cinematic__hud {
@@ -987,16 +1039,18 @@ img {
 .hero-cinematic__hud span {
   padding: 7px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(118, 247, 255, 0.18);
+  border: 1px solid rgba(118, 247, 255, 0.14);
   background:
-    linear-gradient(180deg, rgba(8, 28, 54, 0.56), rgba(5, 18, 34, 0.42));
+    linear-gradient(180deg, rgba(8, 28, 54, 0.62), rgba(5, 18, 34, 0.46));
   color: #c8f8ff;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: clamp(0.62rem, 1.8vw, 0.78rem);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: nowrap;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 8px 18px rgba(2, 10, 20, 0.16);
+    0 0 14px rgba(118, 247, 255, 0.08),
+    0 8px 18px rgba(2, 10, 20, 0.14);
 }
 
 .mission-eyebrow {
@@ -1050,6 +1104,7 @@ img {
   font-weight: 800;
   line-height: 0.92;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-shadow:
     0 10px 24px rgba(0, 0, 0, 0.34),
     0 0 16px rgba(118, 247, 255, 0.08);
@@ -1072,6 +1127,12 @@ img {
   color: #d3e4ff;
   font-size: clamp(1rem, 3vw, 1.24rem);
   line-height: 1.52;
+}
+
+.hero-cinematic__subtitle {
+  margin-top: 20px;
+  color: #ebf3ff;
+  font-size: clamp(1.08rem, 3.4vw, 1.34rem);
 }
 
 .hero-cinematic__wave {
@@ -1510,9 +1571,9 @@ img {
   }
 
   .hero-cinematic__astronaut-art {
-    right: -6px;
-    bottom: 54px;
-    width: 186px;
+    right: 10px;
+    bottom: 72px;
+    width: 206px;
   }
 
   .hero-cinematic__comet--one {

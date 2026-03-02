@@ -24,8 +24,8 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
   const { scrollYProgress } = useScroll();
   const [typewriterDone, setTypewriterDone] = useState(false);
   const shellY = useTransform(scrollYProgress, [0, 0.35], [0, prefersReducedMotion ? 0 : 72]);
-  const moonY = useTransform(scrollYProgress, [0, 0.32], [0, prefersReducedMotion ? 0 : 34]);
-  const planetY = useTransform(scrollYProgress, [0, 0.32], [0, prefersReducedMotion ? 0 : -22]);
+  const moonY = useTransform(scrollYProgress, [0, 0.32], [0, prefersReducedMotion ? 0 : 52]);
+  const planetY = useTransform(scrollYProgress, [0, 0.32], [0, prefersReducedMotion ? 0 : -34]);
   const cometOneX = useTransform(scrollYProgress, [0, 0.4], [0, prefersReducedMotion ? 0 : 64]);
   const cometTwoX = useTransform(scrollYProgress, [0, 0.4], [0, prefersReducedMotion ? 0 : -42]);
   const hasArt = Boolean(data.background_image_url);
@@ -56,7 +56,7 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
       <motion.div
         className="hero-cinematic__planet hero-cinematic__planet--main"
         style={{ y: moonY }}
-        animate={prefersReducedMotion ? undefined : { rotate: [0, 4, 0], scale: [1, 1.045, 1] }}
+        animate={prefersReducedMotion ? undefined : { y: [0, 12, 0], rotate: [0, 6, 0], scale: [1, 1.06, 1] }}
         transition={{ duration: 10.5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
       >
         <span className="hero-cinematic__moon-sheen" />
@@ -69,7 +69,7 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
       <motion.div
         className="hero-cinematic__planet hero-cinematic__planet--small"
         style={{ y: planetY }}
-        animate={prefersReducedMotion ? undefined : { y: [0, -12, 0], x: [0, 8, 0] }}
+        animate={prefersReducedMotion ? undefined : { y: [0, -18, 0], x: [0, 12, 0], rotate: [0, -4, 0] }}
         transition={{ duration: 7.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
       >
         <span className="hero-cinematic__planet-atmosphere" />
@@ -130,14 +130,25 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
       </motion.div>
 
       <div className="hero-cinematic__content">
-        <motion.p
-          className={`${orbitron.className} hero-cinematic__telemetry`}
-          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-          animate={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-          transition={{ duration: prefersReducedMotion ? 0.1 : 0.28, delay: prefersReducedMotion ? 0 : 0.08 }}
-        >
-          PROTOCOLO DE DESPEGUE
-        </motion.p>
+        <div className="hero-cinematic__telemetry-wrap">
+          <motion.p
+            className={`${orbitron.className} hero-cinematic__telemetry`}
+            initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+            animate={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0.1 : 0.28, delay: prefersReducedMotion ? 0 : 0.08 }}
+          >
+            PROTOCOLO DE DESPEGUE
+          </motion.p>
+          <div className={`${orbitron.className} hero-cinematic__telemetry-detail`}>
+            <span>ID: LA-07</span>
+          </div>
+          <motion.div
+            className="hero-cinematic__telemetry-line"
+            initial={prefersReducedMotion ? { scaleX: 1, opacity: 0.8 } : { scaleX: 0, opacity: 0.6 }}
+            animate={prefersReducedMotion ? { scaleX: 1, opacity: 0.8 } : { scaleX: 1, opacity: 1 }}
+            transition={{ duration: prefersReducedMotion ? 0.1 : 0.56, delay: prefersReducedMotion ? 0 : 0.14, ease: [0.22, 1, 0.36, 1] }}
+          />
+        </div>
 
         <TypewriterTitle
           lines={titleLines}
@@ -195,11 +206,28 @@ function buildScheduleLabel(invitation: InvitationRecord) {
   const eventDate = new Date(invitation.event_start_at);
   const baseDateText = (eventInfo.date_text || "").trim();
   const hasExplicitYear = /\b\d{4}\b/.test(baseDateText);
-  const year = Number.isNaN(eventDate.getTime()) || hasExplicitYear ? "" : ` de ${eventDate.getFullYear()}`;
+  const year = Number.isNaN(eventDate.getTime()) || hasExplicitYear ? "" : ` ${eventDate.getFullYear()}`;
   const dateChunk = [eventInfo.weekday_text, `${baseDateText}${year}`.trim()]
     .filter(Boolean)
     .join(" ")
     .trim();
-  const timeChunk = eventInfo.time_text || formatTimeLabel(invitation.event_start_at, invitation.timezone);
-  return [dateChunk, timeChunk].filter(Boolean).join(" ");
+  const timeChunk = formatHeroTime(invitation);
+  return [dateChunk, timeChunk].filter(Boolean).join(" • ");
+}
+
+function formatHeroTime(invitation: InvitationRecord) {
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: invitation.timezone || "America/Mexico_City",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).format(new Date(invitation.event_start_at));
+  } catch {
+    return formatTimeLabel(invitation.event_start_at, invitation.timezone)
+      .replace("a. m.", "AM")
+      .replace("p. m.", "PM")
+      .replace("a. m", "AM")
+      .replace("p. m", "PM");
+  }
 }
