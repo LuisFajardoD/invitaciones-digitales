@@ -20,6 +20,8 @@ type InvitationRendererProps = {
 export function InvitationRenderer({ invitation, previewMode = false }: InvitationRendererProps) {
   return (
     <div className="invitation-shell">
+      <div className="invitation-shell__nebula invitation-shell__nebula--one" />
+      <div className="invitation-shell__nebula invitation-shell__nebula--two" />
       {invitation.sections_order.map((key) => {
         const section = invitation.sections[key];
         if (!section || !section.enabled) {
@@ -35,7 +37,14 @@ export function InvitationRenderer({ invitation, previewMode = false }: Invitati
 function renderSection(key: SectionKey, invitation: InvitationRecord, previewMode: boolean) {
   switch (key) {
     case "hero":
-      return <HeroSection key={key} data={invitation.sections.hero} />;
+      return (
+        <HeroSection
+          key={key}
+          data={invitation.sections.hero}
+          invitation={invitation}
+          previewMode={previewMode}
+        />
+      );
     case "event_info":
       return <EventInfoSection key={key} data={invitation.sections.event_info} invitation={invitation} />;
     case "quick_actions":
