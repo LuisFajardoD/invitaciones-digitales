@@ -95,7 +95,11 @@ export function TypewriterTitle({
 
         return (
           <div key={`${line}-${index}`} className="hero-typewriter__row">
-            <span className="hero-typewriter__line">
+            <span
+              className={`hero-typewriter__line ${
+                index === 0 ? "hero-typewriter__line--lead" : "hero-typewriter__line--main"
+              }`}
+            >
               {shown}
               {showCursor ? (
                 <motion.span

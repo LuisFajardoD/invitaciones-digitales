@@ -5,7 +5,6 @@ import Image from "next/image";
 import { Orbitron } from "next/font/google";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { TypewriterTitle } from "@/components/invitation/layout_v1/typewriter";
-import { formatTimeLabel } from "@/lib/utils";
 import type { HeroSectionData, InvitationRecord } from "@/types/invitations";
 
 const orbitron = Orbitron({
@@ -19,7 +18,7 @@ type HeroSectionProps = {
   previewMode?: boolean;
 };
 
-export function HeroSection({ data, invitation, previewMode = false }: HeroSectionProps) {
+export function HeroSection({ data, previewMode = false }: HeroSectionProps) {
   const prefersReducedMotion = Boolean(useReducedMotion());
   const { scrollYProgress } = useScroll();
   const [typewriterDone, setTypewriterDone] = useState(false);
@@ -29,7 +28,6 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
   const cometOneX = useTransform(scrollYProgress, [0, 0.4], [0, prefersReducedMotion ? 0 : 64]);
   const cometTwoX = useTransform(scrollYProgress, [0, 0.4], [0, prefersReducedMotion ? 0 : -42]);
   const hasArt = Boolean(data.background_image_url);
-  const scheduleLabel = buildScheduleLabel(invitation);
   const titleLines = useMemo(() => buildTitleLines(data.title), [data.title]);
 
   return (
@@ -47,11 +45,10 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
       transition={{ duration: prefersReducedMotion ? 0.24 : 0.42, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="hero-cinematic__sky" />
-      <motion.div
-        className="hero-cinematic__starfield"
-        animate={prefersReducedMotion ? undefined : { opacity: [0.46, 0.82, 0.46] }}
-        transition={{ duration: 6.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-      />
+      <div className="hero-cinematic__starfield" />
+      <div className="hero-cinematic__stars stars" aria-hidden="true" />
+      <div className="hero-cinematic__stars stars2" aria-hidden="true" />
+      <div className="hero-cinematic__stars stars3" aria-hidden="true" />
 
       <motion.div
         className="hero-cinematic__planet hero-cinematic__planet--main"
@@ -134,7 +131,7 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
           <motion.p
             className={`${orbitron.className} hero-cinematic__telemetry`}
             initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-            animate={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: prefersReducedMotion ? 0.1 : 0.28, delay: prefersReducedMotion ? 0 : 0.08 }}
           >
             PROTOCOLO DE DESPEGUE
@@ -146,7 +143,11 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
             className="hero-cinematic__telemetry-line"
             initial={prefersReducedMotion ? { scaleX: 1, opacity: 0.8 } : { scaleX: 0, opacity: 0.6 }}
             animate={prefersReducedMotion ? { scaleX: 1, opacity: 0.8 } : { scaleX: 1, opacity: 1 }}
-            transition={{ duration: prefersReducedMotion ? 0.1 : 0.56, delay: prefersReducedMotion ? 0 : 0.14, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              duration: prefersReducedMotion ? 0.1 : 0.56,
+              delay: prefersReducedMotion ? 0 : 0.14,
+              ease: [0.22, 1, 0.36, 1],
+            }}
           />
         </div>
 
@@ -161,30 +162,11 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
         <motion.p
           className="hero-cinematic__subtitle"
           initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-          animate={
-            prefersReducedMotion || typewriterDone
-              ? { opacity: 1, y: 0 }
-              : { opacity: 0, y: 18 }
-          }
+          animate={prefersReducedMotion || typewriterDone ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
           transition={{ duration: prefersReducedMotion ? 0.12 : 0.3, delay: prefersReducedMotion ? 0 : 0.12 }}
         >
           {data.subtitle}
         </motion.p>
-
-        {scheduleLabel ? (
-          <motion.div
-            className="hero-cinematic__hud"
-            initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-            animate={
-              prefersReducedMotion || typewriterDone
-                ? { opacity: 1, y: 0 }
-                : { opacity: 0, y: 14 }
-            }
-            transition={{ duration: prefersReducedMotion ? 0.12 : 0.28, delay: prefersReducedMotion ? 0 : 0.18 }}
-          >
-            <span>{scheduleLabel}</span>
-          </motion.div>
-        ) : null}
       </div>
 
       <div className="hero-cinematic__wave" />
@@ -199,35 +181,4 @@ function buildTitleLines(title: string) {
   }
 
   return [words.slice(0, 2).join(" "), words.slice(2).join(" ")];
-}
-
-function buildScheduleLabel(invitation: InvitationRecord) {
-  const eventInfo = invitation.sections.event_info;
-  const eventDate = new Date(invitation.event_start_at);
-  const baseDateText = (eventInfo.date_text || "").trim();
-  const hasExplicitYear = /\b\d{4}\b/.test(baseDateText);
-  const year = Number.isNaN(eventDate.getTime()) || hasExplicitYear ? "" : ` ${eventDate.getFullYear()}`;
-  const dateChunk = [eventInfo.weekday_text, `${baseDateText}${year}`.trim()]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-  const timeChunk = formatHeroTime(invitation);
-  return [dateChunk, timeChunk].filter(Boolean).join(" • ");
-}
-
-function formatHeroTime(invitation: InvitationRecord) {
-  try {
-    return new Intl.DateTimeFormat("en-US", {
-      timeZone: invitation.timezone || "America/Mexico_City",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    }).format(new Date(invitation.event_start_at));
-  } catch {
-    return formatTimeLabel(invitation.event_start_at, invitation.timezone)
-      .replace("a. m.", "AM")
-      .replace("p. m.", "PM")
-      .replace("a. m", "AM")
-      .replace("p. m", "PM");
-  }
 }
