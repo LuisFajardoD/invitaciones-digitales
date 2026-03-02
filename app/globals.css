@@ -777,11 +777,11 @@ img {
 .hero-cinematic__astronaut-art {
   position: absolute;
   z-index: 1;
-  right: clamp(10px, 6vw, 96px);
-  bottom: clamp(34px, 8vh, 88px);
-  width: clamp(148px, 23vw, 264px);
+  right: clamp(8px, 5vw, 84px);
+  bottom: clamp(48px, 10vh, 108px);
+  width: clamp(168px, 24vw, 286px);
   pointer-events: none;
-  opacity: 0.92;
+  opacity: 0.24;
   filter: drop-shadow(0 18px 34px rgba(3, 11, 28, 0.24));
   user-select: none;
 }
@@ -947,23 +947,34 @@ img {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 14px;
   min-height: inherit;
   width: min(900px, calc(100% - 28px));
   margin: 0 auto;
   padding: clamp(96px, 11vh, 132px) clamp(8px, 2vw, 16px) clamp(96px, 11vh, 132px);
 }
 
+.hero-cinematic__telemetry {
+  margin: 0;
+  color: #8ff7ff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(118, 247, 255, 0.14);
+}
+
 .hero-cinematic__hud {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
-  width: fit-content;
-  max-width: min(100%, 640px);
-  margin-top: 18px;
-  margin-left: auto;
-  margin-right: auto;
+  width: auto;
+  max-width: min(100%, 520px);
+  margin-top: 8px;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .hero-cinematic__hud span,
@@ -974,18 +985,18 @@ img {
 }
 
 .hero-cinematic__hud span {
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(118, 247, 255, 0.22);
+  padding: 7px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(118, 247, 255, 0.18);
   background:
-    linear-gradient(180deg, rgba(8, 28, 54, 0.78), rgba(5, 18, 34, 0.66));
+    linear-gradient(180deg, rgba(8, 28, 54, 0.56), rgba(5, 18, 34, 0.42));
   color: #c8f8ff;
-  font-size: 0.76rem;
-  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 10px 26px rgba(2, 10, 20, 0.22);
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 18px rgba(2, 10, 20, 0.16);
 }
 
 .mission-eyebrow {
@@ -1021,13 +1032,46 @@ img {
     0 0 22px rgba(118, 247, 255, 0.08);
 }
 
+.hero-typewriter {
+  display: grid;
+  gap: 2px;
+}
+
+.hero-typewriter__row {
+  display: block;
+}
+
+.hero-typewriter__line {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.06em;
+  color: #f5f8ff;
+  font-size: clamp(3.5rem, 12vw, 6.8rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.34),
+    0 0 16px rgba(118, 247, 255, 0.08);
+}
+
+.hero-typewriter__cursor {
+  display: inline-block;
+  width: 0.11em;
+  height: 0.94em;
+  margin-left: 0.08em;
+  border-radius: 2px;
+  background: rgba(143, 247, 255, 0.85);
+  box-shadow: 0 0 10px rgba(118, 247, 255, 0.16);
+}
+
 .hero-cinematic__subtitle,
 .mission-subtitle {
   margin: 0;
-  max-width: min(90%, 38ch);
+  max-width: min(88%, 34ch);
   color: #d3e4ff;
-  font-size: clamp(1.04rem, 3.2vw, 1.3rem);
-  line-height: 1.55;
+  font-size: clamp(1rem, 3vw, 1.24rem);
+  line-height: 1.52;
 }
 
 .hero-cinematic__wave {
@@ -1442,6 +1486,7 @@ img {
   .hero-cinematic__content {
     width: min(100%, calc(100% - 18px));
     justify-content: center;
+    align-items: flex-start;
     padding-top: 92px;
     padding-bottom: 92px;
   }
@@ -1465,9 +1510,9 @@ img {
   }
 
   .hero-cinematic__astronaut-art {
-    right: 2px;
-    bottom: 34px;
-    width: 172px;
+    right: -6px;
+    bottom: 54px;
+    width: 186px;
   }
 
   .hero-cinematic__comet--one {

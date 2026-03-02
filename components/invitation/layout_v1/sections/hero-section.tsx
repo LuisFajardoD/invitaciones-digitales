@@ -1,9 +1,17 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Image from "next/image";
+import { Orbitron } from "next/font/google";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { TypewriterTitle } from "@/components/invitation/layout_v1/typewriter";
 import { formatTimeLabel } from "@/lib/utils";
 import type { HeroSectionData, InvitationRecord } from "@/types/invitations";
+
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+});
 
 type HeroSectionProps = {
   data: HeroSectionData;
@@ -14,6 +22,7 @@ type HeroSectionProps = {
 export function HeroSection({ data, invitation, previewMode = false }: HeroSectionProps) {
   const prefersReducedMotion = Boolean(useReducedMotion());
   const { scrollYProgress } = useScroll();
+  const [typewriterDone, setTypewriterDone] = useState(false);
   const shellY = useTransform(scrollYProgress, [0, 0.35], [0, prefersReducedMotion ? 0 : 72]);
   const moonY = useTransform(scrollYProgress, [0, 0.32], [0, prefersReducedMotion ? 0 : 34]);
   const planetY = useTransform(scrollYProgress, [0, 0.32], [0, prefersReducedMotion ? 0 : -22]);
@@ -21,6 +30,7 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
   const cometTwoX = useTransform(scrollYProgress, [0, 0.4], [0, prefersReducedMotion ? 0 : -42]);
   const hasArt = Boolean(data.background_image_url);
   const scheduleLabel = buildScheduleLabel(invitation);
+  const titleLines = useMemo(() => buildTitleLines(data.title), [data.title]);
 
   return (
     <motion.section
@@ -28,7 +38,7 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
       style={{
         y: shellY,
         backgroundImage: hasArt
-          ? `linear-gradient(180deg, rgba(2, 9, 20, 0.12), rgba(2, 9, 20, 0.82)), url(${data.background_image_url})`
+          ? `linear-gradient(180deg, rgba(2, 9, 20, 0.14), rgba(2, 9, 20, 0.84)), url(${data.background_image_url})`
           : undefined,
       }}
       data-preview={previewMode ? "true" : "false"}
@@ -90,11 +100,11 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
         initial={{ opacity: 0 }}
         animate={
           prefersReducedMotion
-            ? { opacity: 0.9 }
+            ? { opacity: 0.24 }
             : {
-                opacity: [0.8, 0.94, 0.8],
-                x: [-20, 20, -20],
-                y: [-12, 12, -12],
+                opacity: [0.18, 0.28, 0.18],
+                x: [-22, 22, -22],
+                y: [-14, 14, -14],
                 rotate: [-2, 2, -2],
               }
         }
@@ -120,39 +130,46 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
       </motion.div>
 
       <div className="hero-cinematic__content">
-        <motion.h1
-          className="hero-cinematic__title"
-          initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 28 }}
-          animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-          transition={{ delay: 0.06, duration: prefersReducedMotion ? 0.24 : 0.4 }}
+        <motion.p
+          className={`${orbitron.className} hero-cinematic__telemetry`}
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+          animate={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0.1 : 0.28, delay: prefersReducedMotion ? 0 : 0.08 }}
         >
-          {data.title}
-        </motion.h1>
+          PROTOCOLO DE DESPEGUE
+        </motion.p>
+
+        <TypewriterTitle
+          lines={titleLines}
+          reducedMotion={prefersReducedMotion}
+          delayMs={280}
+          onComplete={() => setTypewriterDone(true)}
+          className={`${orbitron.className} hero-typewriter`}
+        />
 
         <motion.p
           className="hero-cinematic__subtitle"
-          initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
-          animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-          transition={{ delay: 0.12, duration: prefersReducedMotion ? 0.22 : 0.34 }}
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+          animate={
+            prefersReducedMotion || typewriterDone
+              ? { opacity: 1, y: 0 }
+              : { opacity: 0, y: 18 }
+          }
+          transition={{ duration: prefersReducedMotion ? 0.12 : 0.3, delay: prefersReducedMotion ? 0 : 0.12 }}
         >
           {data.subtitle}
-        </motion.p>
-
-        <motion.p
-          className="mission-eyebrow mission-eyebrow--hero"
-          initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
-          animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-          transition={{ delay: 0.18, duration: prefersReducedMotion ? 0.2 : 0.28 }}
-        >
-          Protocolo de despegue
         </motion.p>
 
         {scheduleLabel ? (
           <motion.div
             className="hero-cinematic__hud"
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 14 }}
-            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-            transition={{ delay: 0.22, duration: prefersReducedMotion ? 0.2 : 0.28 }}
+            initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+            animate={
+              prefersReducedMotion || typewriterDone
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: 14 }
+            }
+            transition={{ duration: prefersReducedMotion ? 0.12 : 0.28, delay: prefersReducedMotion ? 0 : 0.18 }}
           >
             <span>{scheduleLabel}</span>
           </motion.div>
@@ -162,6 +179,15 @@ export function HeroSection({ data, invitation, previewMode = false }: HeroSecti
       <div className="hero-cinematic__wave" />
     </motion.section>
   );
+}
+
+function buildTitleLines(title: string) {
+  const words = title.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= 2) {
+    return [title.trim()];
+  }
+
+  return [words.slice(0, 2).join(" "), words.slice(2).join(" ")];
 }
 
 function buildScheduleLabel(invitation: InvitationRecord) {
