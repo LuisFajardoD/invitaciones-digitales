@@ -1,0 +1,107 @@
+{
+  "id": "main",
+  "data": {
+    "site": {
+      "brand_name": "Invitaciones Digitales",
+      "timezone": "America/Mexico_City"
+    },
+    "blocks_order": ["hero", "examples", "packages", "contact"],
+    "blocks": {
+      "hero": {
+        "enabled": true,
+        "title": "Invitaciones digitales animadas",
+        "subtitle": "Diseños infantiles premium, listos para compartir por WhatsApp",
+        "cta_primary": { "text": "Cotizar por WhatsApp", "action": "whatsapp" },
+        "cta_secondary": { "text": "Ver ejemplos", "action": "scroll", "target": "examples" },
+        "badge": "Nueva colección infantil 🚀"
+      },
+      "examples": {
+        "enabled": true,
+        "title": "Ejemplos (demos)",
+        "subtitle": "Toca cualquiera para ver cómo se siente en celular",
+        "items": [
+          {
+            "title": "Astronautas (Premium)",
+            "cover_url": "",
+            "demo_url": "/i/cumple-7-luis-arturo-astronautas"
+          }
+        ]
+      },
+      "packages": {
+        "enabled": true,
+        "title": "Paquetes",
+        "subtitle": "Tú me mandas la info y yo te entrego el link listo para enviar",
+        "currency": "MXN",
+        "items": [
+          {
+            "key": "basic",
+            "name": "Básica",
+            "badge": "",
+            "price_text": "$___",
+            "delivery_text": "Entrega: __",
+            "revisions_text": "1 ronda de cambios",
+            "includes": [
+              "Invitación animada (1 evento)",
+              "Tema infantil a elegir",
+              "Mapa embebido + dirección",
+              "Cuenta regresiva (opcional)",
+              "Galería (hasta 6 fotos)",
+              "Notas/Avisos y contacto",
+              "Link listo para compartir",
+              "Vigencia hasta 1 día después del evento"
+            ],
+            "rsvp_level": "simple"
+          },
+          {
+            "key": "pro",
+            "name": "Pro",
+            "badge": "Más vendido",
+            "price_text": "$___",
+            "delivery_text": "Entrega: __",
+            "revisions_text": "2 rondas de cambios",
+            "includes": [
+              "Todo lo de Básica",
+              "Animaciones más avanzadas",
+              "RSVP completo (sí/no + # asistentes + mensaje)",
+              "Panel de confirmaciones (para ti)",
+              "Vista de resultados para el cliente (link privado)",
+              "QR para imprimir",
+              "Galería (hasta 12 fotos)"
+            ],
+            "rsvp_level": "full"
+          },
+          {
+            "key": "premium",
+            "name": "Premium",
+            "badge": "Más espectacular",
+            "price_text": "$___",
+            "delivery_text": "Entrega: __",
+            "revisions_text": "3 rondas de cambios",
+            "includes": [
+              "Todo lo de Pro",
+              "Personalización visual avanzada (más único)",
+              "Portada tipo escena (wow) + efectos premium",
+              "Secciones avanzadas (itinerario/FAQ/regalos si aplica)",
+              "Galería (hasta 20 fotos)",
+              "Extensión de vigencia incluida (+30 días después del evento)"
+            ],
+            "rsvp_level": "full_plus"
+          }
+        ],
+        "note": "Los precios pueden variar según complejidad del tema y urgencia."
+      },
+      "contact": {
+        "enabled": true,
+        "title": "Cotiza aquí",
+        "subtitle": "Respondo por WhatsApp",
+        "whatsapp_number": "52XXXXXXXXXX",
+        "whatsapp_prefill_text": "Hola, quiero una invitación digital infantil. Fecha del evento: __. Tema: __. ¿Me pasas paquetes y disponibilidad?",
+        "social": {
+          "instagram_url": "",
+          "tiktok_url": "",
+          "facebook_url": ""
+        }
+      }
+    }
+  }
+}

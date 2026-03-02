@@ -1,121 +1,250 @@
-insert into public.site_settings (id, data)
-values (
-  'main',
-  $json$
-  {
-    "blocks_order": ["hero", "examples", "promo", "packages", "extras", "how_it_works", "faq", "contact"],
+with site_seed as (
+  select
+    $json$
+{
+  "id": "main",
+  "data": {
+    "site": {
+      "brand_name": "Invitaciones Digitales",
+      "timezone": "America/Mexico_City"
+    },
+    "blocks_order": ["hero", "examples", "packages", "contact"],
     "blocks": {
       "hero": {
         "enabled": true,
-        "badge": "Invitaciones premium v1",
-        "title": "Invitaciones digitales que se sienten como una app.",
-        "subtitle": "Landing editable, CRM con RSVP y experiencias premium listas para compartir por WhatsApp.",
-        "primary_cta_text": "Cotizar por WhatsApp",
-        "primary_cta_href": "https://wa.me/5527225459?text=Hola%2C%20quiero%20cotizar%20una%20invitacion%20digital%20premium.",
-        "secondary_cta_text": "Ver ejemplos",
-        "secondary_cta_href": "#examples"
+        "title": "Invitaciones digitales animadas",
+        "subtitle": "Diseños infantiles premium, listos para compartir por WhatsApp",
+        "cta_primary": { "text": "Cotizar por WhatsApp", "action": "whatsapp" },
+        "cta_secondary": { "text": "Ver ejemplos", "action": "scroll", "target": "examples" },
+        "badge": "Nueva colección infantil 🚀"
       },
       "examples": {
         "enabled": true,
-        "title": "Ejemplos destacados",
+        "title": "Ejemplos (demos)",
+        "subtitle": "Toca cualquiera para ver cómo se siente en celular",
         "items": [
           {
-            "title": "Cumple 7 de Luis Arturo",
-            "description": "Tema astronautas con animacion premium, mapa y RSVP.",
-            "slug": "cumple-7-luis-arturo-astronautas",
-            "cover_url": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80"
+            "title": "Astronautas (Premium)",
+            "cover_url": "",
+            "demo_url": "/i/cumple-7-luis-arturo-astronautas"
           }
         ]
-      },
-      "promo": {
-        "enabled": true,
-        "title": "Promo de lanzamiento",
-        "text": "Incluye configuracion inicial del CRM y landing editable en cada paquete premium.",
-        "valid_from": "2026-02-01T00:00:00.000Z",
-        "valid_to": "2026-12-31T23:59:59.000Z"
       },
       "packages": {
         "enabled": true,
         "title": "Paquetes",
+        "subtitle": "Tú me mandas la info y yo te entrego el link listo para enviar",
+        "currency": "MXN",
         "items": [
           {
-            "name": "Essential",
-            "price": "$1,490 MXN",
-            "description": "Invitacion mobile-first con RSVP y secciones clave.",
-            "features": ["1 tema", "Mapa embebido", "RSVP basico"]
+            "key": "basic",
+            "name": "Básica",
+            "badge": "",
+            "price_text": "$___",
+            "delivery_text": "Entrega: __",
+            "revisions_text": "1 ronda de cambios",
+            "includes": [
+              "Invitación animada (1 evento)",
+              "Tema infantil a elegir",
+              "Mapa embebido + dirección",
+              "Cuenta regresiva (opcional)",
+              "Galería (hasta 6 fotos)",
+              "Notas/Avisos y contacto",
+              "Link listo para compartir",
+              "Vigencia hasta 1 día después del evento"
+            ],
+            "rsvp_level": "simple"
           },
           {
-            "name": "Premium Astronautas",
-            "price": "$2,990 MXN",
-            "description": "Experiencia premium con animaciones wow y panel admin.",
-            "features": ["Layout v1 premium", "Open Graph listo para WhatsApp", "Export CSV"]
-          }
-        ]
-      },
-      "extras": {
-        "enabled": true,
-        "title": "Extras",
-        "items": ["Personalizacion de copy y colores", "Carga inicial de galeria", "Ajuste de assets para OG"]
-      },
-      "how_it_works": {
-        "enabled": true,
-        "title": "Como funciona",
-        "items": ["Definimos tema, fecha y lugar.", "Configuramos secciones activas en el CRM.", "Publicas y compartes un link listo para WhatsApp."]
-      },
-      "faq": {
-        "enabled": true,
-        "title": "Preguntas frecuentes",
-        "items": [
-          {
-            "question": "Puedo editar la landing sin redeploy?",
-            "answer": "Si. Todo se guarda en site_settings y se refleja en /."
+            "key": "pro",
+            "name": "Pro",
+            "badge": "Más vendido",
+            "price_text": "$___",
+            "delivery_text": "Entrega: __",
+            "revisions_text": "2 rondas de cambios",
+            "includes": [
+              "Todo lo de Básica",
+              "Animaciones más avanzadas",
+              "RSVP completo (sí/no + # asistentes + mensaje)",
+              "Panel de confirmaciones (para ti)",
+              "Vista de resultados para el cliente (link privado)",
+              "QR para imprimir",
+              "Galería (hasta 12 fotos)"
+            ],
+            "rsvp_level": "full"
           },
           {
-            "question": "La vista cliente requiere cuenta?",
-            "answer": "No. Se comparte un link privado con token de solo lectura."
+            "key": "premium",
+            "name": "Premium",
+            "badge": "Más espectacular",
+            "price_text": "$___",
+            "delivery_text": "Entrega: __",
+            "revisions_text": "3 rondas de cambios",
+            "includes": [
+              "Todo lo de Pro",
+              "Personalización visual avanzada (más único)",
+              "Portada tipo escena (wow) + efectos premium",
+              "Secciones avanzadas (itinerario/FAQ/regalos si aplica)",
+              "Galería (hasta 20 fotos)",
+              "Extensión de vigencia incluida (+30 días después del evento)"
+            ],
+            "rsvp_level": "full_plus"
           }
-        ]
+        ],
+        "note": "Los precios pueden variar según complejidad del tema y urgencia."
       },
       "contact": {
         "enabled": true,
-        "title": "Cotiza tu invitacion",
-        "text": "Cuentanos fecha, tema y tipo de evento para preparar una propuesta.",
-        "whatsapp_number": "5527225459",
-        "whatsapp_prefill_text": "Hola, quiero cotizar una invitacion digital premium."
+        "title": "Cotiza aquí",
+        "subtitle": "Respondo por WhatsApp",
+        "whatsapp_number": "52XXXXXXXXXX",
+        "whatsapp_prefill_text": "Hola, quiero una invitación digital infantil. Fecha del evento: __. Tema: __. ¿Me pasas paquetes y disponibilidad?",
+        "social": {
+          "instagram_url": "",
+          "tiktok_url": "",
+          "facebook_url": ""
+        }
       }
     }
   }
-  $json$::jsonb
+}
+    $json$::jsonb as doc
 )
+insert into public.site_settings (id, data)
+select
+  doc->>'id',
+  doc->'data'
+from site_seed
 on conflict (id) do update
 set data = excluded.data,
     updated_at = now();
 
-insert into public.themes (id, name, preview_url, defaults)
-values (
-  'astronautas',
-  'Astronautas',
-  'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?auto=format&fit=crop&w=1200&q=80',
-  $json$
-  {
-    "palette": {
-      "bg": "#03112a",
-      "accent": "#f7c844",
-      "secondary": "#5ef2ff",
-      "card": "#0d1f43"
+with invitation_seed as (
+  select
+    $json$
+{
+  "slug": "cumple-7-luis-arturo-astronautas",
+  "status": "published",
+  "theme_id": "astronautas",
+  "layout_id": "layout_v1_unico",
+  "animation_profile": "max",
+  "timezone": "America/Mexico_City",
+  "event_start_at": "2026-04-18T11:00:00-06:00",
+  "rsvp_until": "2026-04-18T23:59:00-06:00",
+  "active_until": "2026-04-19T23:59:00-06:00",
+  "share": {
+    "og_title": "Cumple 7 de Luis Arturo",
+    "og_description": "Sábado 18 de abril • 11:00 am • Toca para ver la invitación",
+    "og_image_url": "",
+    "og_type": "website"
+  },
+  "expired_page": {
+    "title": "Este evento ya pasó",
+    "message": "Gracias por tu interés",
+    "primary_cta": { "text": "Ver invitaciones y precios", "href": "/" },
+    "secondary_cta": {
+      "text": "Cotizar por WhatsApp",
+      "href": "https://wa.me/525527225459"
+    }
+  },
+  "client_view_token": "rsvp_3p8hQ7vN2kL9xA1dM6sT",
+  "sections_order": [
+    "hero",
+    "event_info",
+    "quick_actions",
+    "countdown",
+    "map",
+    "gallery",
+    "notes",
+    "rsvp",
+    "contact"
+  ],
+  "sections": {
+    "hero": {
+      "enabled": true,
+      "title": "Cumple 7 de Luis Arturo",
+      "subtitle": "¡La misión es que nos acompañes a celebrar!",
+      "hero_asset_id": null,
+      "theme_variant": "astronautas",
+      "effects": {
+        "stars_background": true,
+        "floating_astronaut": true,
+        "soft_parallax": true
+      }
     },
-    "fontDisplay": "'Trebuchet MS', 'Segoe UI', sans-serif"
+    "event_info": {
+      "enabled": true,
+      "weekday_text": "Sábado",
+      "date_text": "18 de abril",
+      "time_text": "A partir de las 11:00 am",
+      "venue_name": "Jardín del Valle",
+      "address_text": "Cda. Tlalimaya 25, San Andrés Ahuayucan, Xochimilco, 16880, CDMX"
+    },
+    "quick_actions": {
+      "enabled": true,
+      "items": [
+        { "type": "rsvp", "label": "Confirmar" },
+        { "type": "map", "label": "Ubicación" },
+        { "type": "calendar", "label": "Agregar al calendario" },
+        { "type": "share", "label": "Compartir" }
+      ]
+    },
+    "countdown": {
+      "enabled": true,
+      "label": "Despegamos en…",
+      "target_at": "2026-04-18T11:00:00-06:00"
+    },
+    "map": {
+      "enabled": true,
+      "embed": {
+        "lat": 19.220703435663584,
+        "lng": -99.10241678480557,
+        "zoom": 16
+      },
+      "address_text": "Cda. Tlalimaya 25, San Andrés Ahuayucan, Xochimilco, 16880, CDMX",
+      "maps_url": "https://www.google.com/maps?q=19.220703435663584,-99.10241678480557"
+    },
+    "gallery": {
+      "enabled": true,
+      "max_images": 9,
+      "asset_ids": []
+    },
+    "notes": {
+      "enabled": true,
+      "items": [
+        "Trae mucha energía para jugar 🪐",
+        "Si gustas, ven con outfit espacial (opcional)"
+      ]
+    },
+    "rsvp": {
+      "enabled": true,
+      "fields": {
+        "name_required": true,
+        "attending_required": true,
+        "allow_guests_count": true,
+        "allow_message": true
+      },
+      "closed_message": "RSVP cerrado"
+    },
+    "contact": {
+      "enabled": true,
+      "name": "Adry Rodriguez",
+      "whatsapp_number": "5527225459",
+      "whatsapp_url": "https://wa.me/525527225459",
+      "label": "Para dudas"
+    },
+    "itinerary": { "enabled": false, "items": [] },
+    "dress_code": { "enabled": false, "text": "" },
+    "gifts": { "enabled": false, "text": "", "links": [] },
+    "faq": { "enabled": false, "items": [] },
+    "livestream": { "enabled": false, "url": "" },
+    "transport": { "enabled": false, "text": "" },
+    "lodging": { "enabled": false, "text": "" }
   }
-  $json$::jsonb
+}
+    $json$::jsonb as doc
 )
-on conflict (id) do update
-set name = excluded.name,
-    preview_url = excluded.preview_url,
-    defaults = excluded.defaults,
-    updated_at = now();
-
 insert into public.invitations (
-  id,
   slug,
   status,
   theme_id,
@@ -131,156 +260,22 @@ insert into public.invitations (
   expired_page,
   client_view_token
 )
-values (
-  '11111111-1111-4111-8111-111111111111',
-  'cumple-7-luis-arturo-astronautas',
-  'published',
-  'astronautas',
-  'layout_v1_unico',
-  'max',
-  'America/Mexico_City',
-  '2026-04-18T17:00:00.000Z',
-  '2026-04-19T04:59:59.000Z',
-  '2026-04-20T05:59:59.000Z',
-  $json$
-  ["hero", "event_info", "quick_actions", "countdown", "map", "gallery", "notes", "rsvp", "contact"]
-  $json$::jsonb,
-  $json$
-  {
-    "hero": {
-      "enabled": true,
-      "title": "Cumple 7 de Luis Arturo",
-      "subtitle": "La mision es que nos acompanes a celebrar.",
-      "badge": "Mision espacial premium",
-      "accent": "Despegue 11:00 am",
-      "background_image_url": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1400&q=80"
-    },
-    "event_info": {
-      "enabled": true,
-      "weekday_text": "Sabado",
-      "date_text": "18 de abril de 2026",
-      "time_text": "A partir de las 11:00 am",
-      "venue_name": "Jardin del Valle",
-      "address_text": "Cda. Tlalimaya 25, San Andres Ahuayucan, Xochimilco, 16880, CDMX"
-    },
-    "quick_actions": {
-      "enabled": true,
-      "items": [
-        { "type": "confirm", "label": "Confirmar" },
-        { "type": "location", "label": "Ubicacion" },
-        { "type": "calendar", "label": "Agregar al calendario" },
-        { "type": "share", "label": "Compartir" }
-      ]
-    },
-    "countdown": {
-      "enabled": true,
-      "label": "Faltan para el despegue",
-      "target_at": "2026-04-18T17:00:00.000Z"
-    },
-    "map": {
-      "enabled": true,
-      "embed": {
-        "lat": 19.220703435663584,
-        "lng": -99.10241678480557,
-        "zoom": 16
-      },
-      "address_text": "Cda. Tlalimaya 25, San Andres Ahuayucan, Xochimilco, 16880, CDMX",
-      "maps_url": "https://www.google.com/maps/search/?api=1&query=19.220703435663584,-99.10241678480557"
-    },
-    "gallery": {
-      "enabled": true,
-      "max_images": 6,
-      "image_urls": [
-        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1447433819943-74a20887a5b8?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1454789548928-9efd52dc4031?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&w=800&q=80"
-      ]
-    },
-    "notes": {
-      "enabled": true,
-      "items": ["Trae mucha energia para jugar.", "Si gustas, ven con outfit espacial (opcional)."]
-    },
-    "rsvp": {
-      "enabled": true,
-      "fields": {
-        "guests_count": true,
-        "message": true
-      },
-      "closed_message": "RSVP cerrado. Gracias por tu interes."
-    },
-    "contact": {
-      "enabled": true,
-      "name": "Adry Rodriguez",
-      "whatsapp_number": "5527225459",
-      "whatsapp_url": "https://wa.me/5527225459?text=Hola%2C%20quiero%20detalles%20del%20cumple%20de%20Luis%20Arturo.",
-      "label": "Contacto por WhatsApp"
-    },
-    "itinerary": {
-      "enabled": false,
-      "title": "Itinerario",
-      "items": [],
-      "text": ""
-    },
-    "dress_code": {
-      "enabled": true,
-      "title": "Dress code",
-      "text": "Outfit espacial opcional."
-    },
-    "gifts": {
-      "enabled": false,
-      "title": "Regalos",
-      "text": ""
-    },
-    "faq": {
-      "enabled": false,
-      "title": "FAQ",
-      "items": [],
-      "text": ""
-    },
-    "livestream": {
-      "enabled": false,
-      "title": "Livestream",
-      "url": ""
-    },
-    "transport": {
-      "enabled": false,
-      "title": "Transporte",
-      "text": ""
-    },
-    "lodging": {
-      "enabled": false,
-      "title": "Hospedaje",
-      "text": ""
-    }
-  }
-  $json$::jsonb,
-  $json$
-  {
-    "og_title": "Cumple 7 de Luis Arturo | Invitacion Premium Astronautas",
-    "og_description": "La mision es que nos acompanes a celebrar en Jardin del Valle.",
-    "og_image_url": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1200&q=80",
-    "og_type": "website"
-  }
-  $json$::jsonb,
-  $json$
-  {
-    "title": "Este evento ya paso",
-    "message": "Gracias por tu interes. Descubre nuevas invitaciones premium.",
-    "primary_cta": {
-      "text": "Ver invitaciones y precios",
-      "href": "/"
-    },
-    "secondary_cta": {
-      "text": "Cotizar por WhatsApp",
-      "href": "https://wa.me/5527225459?text=Hola%2C%20quiero%20cotizar%20una%20invitacion%20como%20la%20de%20astronautas."
-    }
-  }
-  $json$::jsonb,
-  'astronautas-token-demo'
-)
+select
+  doc->>'slug',
+  doc->>'status',
+  doc->>'theme_id',
+  doc->>'layout_id',
+  doc->>'animation_profile',
+  doc->>'timezone',
+  (doc->>'event_start_at')::timestamptz,
+  (doc->>'rsvp_until')::timestamptz,
+  (doc->>'active_until')::timestamptz,
+  doc->'sections_order',
+  doc->'sections',
+  doc->'share',
+  doc->'expired_page',
+  doc->>'client_view_token'
+from invitation_seed
 on conflict (slug) do update
 set status = excluded.status,
     theme_id = excluded.theme_id,

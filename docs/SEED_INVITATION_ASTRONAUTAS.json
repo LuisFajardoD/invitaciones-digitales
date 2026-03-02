@@ -1,0 +1,120 @@
+{
+  "slug": "cumple-7-luis-arturo-astronautas",
+  "status": "published",
+  "theme_id": "astronautas",
+  "layout_id": "layout_v1_unico",
+  "animation_profile": "max",
+  "timezone": "America/Mexico_City",
+  "event_start_at": "2026-04-18T11:00:00-06:00",
+  "rsvp_until": "2026-04-18T23:59:00-06:00",
+  "active_until": "2026-04-19T23:59:00-06:00",
+  "share": {
+    "og_title": "Cumple 7 de Luis Arturo",
+    "og_description": "Sábado 18 de abril • 11:00 am • Toca para ver la invitación",
+    "og_image_url": "",
+    "og_type": "website"
+  },
+  "expired_page": {
+    "title": "Este evento ya pasó",
+    "message": "Gracias por tu interés",
+    "primary_cta": { "text": "Ver invitaciones y precios", "href": "/" },
+    "secondary_cta": {
+      "text": "Cotizar por WhatsApp",
+      "href": "https://wa.me/525527225459"
+    }
+  },
+  "client_view_token": "rsvp_3p8hQ7vN2kL9xA1dM6sT",
+  "sections_order": [
+    "hero",
+    "event_info",
+    "quick_actions",
+    "countdown",
+    "map",
+    "gallery",
+    "notes",
+    "rsvp",
+    "contact"
+  ],
+  "sections": {
+    "hero": {
+      "enabled": true,
+      "title": "Cumple 7 de Luis Arturo",
+      "subtitle": "¡La misión es que nos acompañes a celebrar!",
+      "hero_asset_id": null,
+      "theme_variant": "astronautas",
+      "effects": {
+        "stars_background": true,
+        "floating_astronaut": true,
+        "soft_parallax": true
+      }
+    },
+    "event_info": {
+      "enabled": true,
+      "weekday_text": "Sábado",
+      "date_text": "18 de abril",
+      "time_text": "A partir de las 11:00 am",
+      "venue_name": "Jardín del Valle",
+      "address_text": "Cda. Tlalimaya 25, San Andrés Ahuayucan, Xochimilco, 16880, CDMX"
+    },
+    "quick_actions": {
+      "enabled": true,
+      "items": [
+        { "type": "rsvp", "label": "Confirmar" },
+        { "type": "map", "label": "Ubicación" },
+        { "type": "calendar", "label": "Agregar al calendario" },
+        { "type": "share", "label": "Compartir" }
+      ]
+    },
+    "countdown": {
+      "enabled": true,
+      "label": "Despegamos en…",
+      "target_at": "2026-04-18T11:00:00-06:00"
+    },
+    "map": {
+      "enabled": true,
+      "embed": {
+        "lat": 19.220703435663584,
+        "lng": -99.10241678480557,
+        "zoom": 16
+      },
+      "address_text": "Cda. Tlalimaya 25, San Andrés Ahuayucan, Xochimilco, 16880, CDMX",
+      "maps_url": "https://www.google.com/maps?q=19.220703435663584,-99.10241678480557"
+    },
+    "gallery": {
+      "enabled": true,
+      "max_images": 9,
+      "asset_ids": []
+    },
+    "notes": {
+      "enabled": true,
+      "items": [
+        "Trae mucha energía para jugar 🪐",
+        "Si gustas, ven con outfit espacial (opcional)"
+      ]
+    },
+    "rsvp": {
+      "enabled": true,
+      "fields": {
+        "name_required": true,
+        "attending_required": true,
+        "allow_guests_count": true,
+        "allow_message": true
+      },
+      "closed_message": "RSVP cerrado"
+    },
+    "contact": {
+      "enabled": true,
+      "name": "Adry Rodriguez",
+      "whatsapp_number": "5527225459",
+      "whatsapp_url": "https://wa.me/525527225459",
+      "label": "Para dudas"
+    },
+    "itinerary": { "enabled": false, "items": [] },
+    "dress_code": { "enabled": false, "text": "" },
+    "gifts": { "enabled": false, "text": "", "links": [] },
+    "faq": { "enabled": false, "items": [] },
+    "livestream": { "enabled": false, "url": "" },
+    "transport": { "enabled": false, "text": "" },
+    "lodging": { "enabled": false, "text": "" }
+  }
+}
