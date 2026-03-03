@@ -3,17 +3,31 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/predev.mjs",
+    "prebuild": "node scripts/prebuild.mjs",
     "dev": "next dev",
+    "dev:all": "node scripts/dev-stack.mjs",
+    "dev:clean": "node scripts/dev-clean.mjs",
     "build": "next build",
-    "start": "next start -p $PORT"
+    "start": "next start -p $PORT",
+    "serve": "next start -p 3000",
+    "preview": "next build && next start -p 3000",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:preview": "npm --prefix frontend run preview",
+    "test:smoke": "node scripts/smoke-e2e.mjs"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@supabase/supabase-js": "^2.49.8",
     "framer-motion": "^12.5.0",
     "next": "^15.2.0",
+    "playwright": "^1.58.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

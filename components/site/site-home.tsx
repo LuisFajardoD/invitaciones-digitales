@@ -12,11 +12,11 @@ export function SiteHome({ settings }: SiteHomeProps) {
   const now = new Date();
 
   return (
-    <main className="site-shell">
+    <main className="app-admin site-shell">
       <header className="site-topbar">
         <span>Invitaciones Digitales</span>
         <Link href="/admin" className="ghost-link">
-          Admin
+          Acceso CRM
         </Link>
       </header>
       {settings.blocks_order.map((key) => renderBlock(key, settings, now))}
@@ -164,7 +164,7 @@ function renderBlock(key: SiteBlockKey, settings: SiteSettingsData, now: Date) {
       return (
         <section key={key} className="content-panel">
           <div className="section-head">
-            <p className="eyebrow">FAQ</p>
+            <p className="eyebrow">Preguntas</p>
             <h2>{block.title}</h2>
           </div>
           <div className="faq-grid">

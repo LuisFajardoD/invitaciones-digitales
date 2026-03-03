@@ -33,7 +33,14 @@
     "gallery",
     "notes",
     "rsvp",
-    "contact"
+    "contact",
+    "itinerary",
+    "dress_code",
+    "gifts",
+    "faq",
+    "livestream",
+    "transport",
+    "lodging"
   ],
   "sections": {
     "hero": {
@@ -109,12 +116,53 @@
       "whatsapp_url": "https://wa.me/525527225459",
       "label": "Para dudas"
     },
-    "itinerary": { "enabled": false, "items": [] },
-    "dress_code": { "enabled": false, "text": "" },
-    "gifts": { "enabled": false, "text": "", "links": [] },
-    "faq": { "enabled": false, "items": [] },
-    "livestream": { "enabled": false, "url": "" },
-    "transport": { "enabled": false, "text": "" },
-    "lodging": { "enabled": false, "text": "" }
+    "itinerary": {
+      "enabled": true,
+      "title": "Itinerario de vuelo",
+      "text": "Asi se vivira la celebracion de principio a fin.",
+      "items": [
+        "11:00 am | Bienvenida y fotos de aterrizaje",
+        "11:30 am | Juegos y misiones espaciales",
+        "1:00 pm | Pastel y cancion para Luis Arturo",
+        "2:00 pm | Pinata, regalos y despedida"
+      ]
+    },
+    "dress_code": {
+      "enabled": true,
+      "title": "Codigo de vestimenta",
+      "text": "Look comodo en tonos azul, plata o blanco. Si quieres, suma un detalle espacial."
+    },
+    "gifts": {
+      "enabled": true,
+      "title": "Mesa de regalos",
+      "text": "Tu presencia es lo mas importante. Si quieres llevar un detalle, puede ser un libro, un juego creativo o una sorpresa espacial.",
+      "url": "https://wa.me/525527225459?text=Hola%2C%20quiero%20preguntar%20sobre%20la%20mesa%20de%20regalos%20de%20Luis%20Arturo."
+    },
+    "faq": {
+      "enabled": true,
+      "title": "Preguntas frecuentes",
+      "text": "Lo mas importante antes del despegue.",
+      "items": [
+        "Hay estacionamiento limitado dentro del salon.",
+        "Si confirmas con acompanantes, incluye el total en tu RSVP.",
+        "Puedes llegar desde las 10:45 am para entrar con calma."
+      ]
+    },
+    "livestream": {
+      "enabled": true,
+      "title": "Transmision en vivo",
+      "text": "Si no puedes venir, tendremos una senal privada para ver el festejo.",
+      "url": "https://www.youtube.com/watch?v=21X5lGlDOfg"
+    },
+    "transport": {
+      "enabled": true,
+      "title": "Transporte",
+      "text": "Si vienes en auto, usa la entrada principal. Si vienes en taxi o app, comparte la ubicacion del mapa para llegar directo."
+    },
+    "lodging": {
+      "enabled": true,
+      "title": "Hospedaje",
+      "text": "Si vienes de fuera de CDMX, te recomendamos hospedarte cerca de Xochimilco o Coapa para llegar mas rapido el dia del evento."
+    }
   }
 }

@@ -15,17 +15,22 @@ type GenericSectionProps = {
 
 export function GenericSection({ title, data }: GenericSectionProps) {
   const reducedMotion = Boolean(useReducedMotion());
+  const safeTitle = (data.title || "").trim() || title;
+  const safeText =
+    (data.text || "").trim() || "Informacion adicional para la mision.";
+  const items = (data.items || []).map((item) => item.trim()).filter(Boolean);
+  const link = (data.url || "").trim();
 
   return (
     <InvitationSectionFrame
       eyebrow="Modulo extra"
-      title={data.title || title}
-      subtitle={data.text || "Informacion adicional para la mision."}
+      title={safeTitle}
+      subtitle={safeText}
       tone="default"
     >
-      {data.items?.length ? (
+      {items.length ? (
         <div className="notes-list notes-list--mission">
-          {data.items.map((item, index) => (
+          {items.map((item, index) => (
             <div key={`${item}-${index}`} className="note-card note-card--mission">
               <span className="note-card__index">{String(index + 1).padStart(2, "0")}</span>
               <span>{item}</span>
@@ -33,9 +38,9 @@ export function GenericSection({ title, data }: GenericSectionProps) {
           ))}
         </div>
       ) : null}
-      {data.url ? (
+      {link ? (
         <motion.a
-          href={data.url}
+          href={link}
           className="mission-button mission-button--ghost"
           whileHover={getButtonHoverMotion(reducedMotion, true)}
           whileTap={getButtonTapMotion(reducedMotion)}

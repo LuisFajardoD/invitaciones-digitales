@@ -19,7 +19,7 @@ export function AdminShell({ title, description, children }: AdminShellProps) {
   }
 
   return (
-    <main className="page-shell" style={{ paddingBottom: 56 }}>
+    <main className="app-admin page-shell" style={{ paddingBottom: 56 }}>
       <header className="admin-topbar">
         <div>
           <strong>Invitaciones Digitales CRM</strong>
@@ -29,7 +29,7 @@ export function AdminShell({ title, description, children }: AdminShellProps) {
             Invitaciones
           </Link>
           <Link href="/admin/site" className="ghost-link">
-            Landing
+            Portada
           </Link>
           <button type="button" className="button-ghost" onClick={handleLogout}>
             Salir

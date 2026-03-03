@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { InvitationRenderer } from "@/components/invitation/layout_v1/invitation-renderer";
+import { ReactViewerBridge } from "@/components/invitation/react-viewer-bridge";
 import { getPublicInvitationBySlug } from "@/lib/repository";
 
 export const dynamic = "force-dynamic";
@@ -39,35 +40,57 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
 
   if (!invitation) {
     return (
-      <section className="empty-state">
-        <p className="eyebrow">Estado</p>
-        <h1>Invitacion no disponible</h1>
-        <p className="muted">Este enlace no esta activo.</p>
-        <Link href="/" className="button-primary">
-          Ver invitaciones
-        </Link>
-      </section>
+      <div className="app-viewer public-viewer">
+        <div className="theme-viewer">
+          <div className="public-viewer__frame">
+            <section className="empty-state">
+              <p className="eyebrow">Estado</p>
+              <h1>Invitacion no disponible</h1>
+              <p className="muted">Este enlace no esta activo.</p>
+              <Link href="/" className="button-primary">
+                Ver invitaciones
+              </Link>
+            </section>
+          </div>
+        </div>
+      </div>
     );
   }
 
   const isExpired = new Date().getTime() > new Date(invitation.active_until).getTime();
   if (isExpired) {
     return (
-      <section className="status-card">
-        <p className="eyebrow">Evento finalizado</p>
-        <h1>{invitation.expired_page.title}</h1>
-        <p className="muted">{invitation.expired_page.message}</p>
-        <div className="action-row" style={{ justifyContent: "center" }}>
-          <Link href={invitation.expired_page.primary_cta.href} className="button-primary">
-            {invitation.expired_page.primary_cta.text}
-          </Link>
-          <a href={invitation.expired_page.secondary_cta.href} className="button-secondary">
-            {invitation.expired_page.secondary_cta.text}
-          </a>
+      <div className="app-viewer public-viewer">
+        <div className="theme-viewer">
+          <div className="public-viewer__frame">
+            <section className="status-card">
+              <p className="eyebrow">Evento finalizado</p>
+              <h1>{invitation.expired_page.title}</h1>
+              <p className="muted">{invitation.expired_page.message}</p>
+              <div className="action-row" style={{ justifyContent: "center" }}>
+                <Link href={invitation.expired_page.primary_cta.href} className="button-primary">
+                  {invitation.expired_page.primary_cta.text}
+                </Link>
+                <a href={invitation.expired_page.secondary_cta.href} className="button-secondary">
+                  {invitation.expired_page.secondary_cta.text}
+                </a>
+              </div>
+            </section>
+          </div>
         </div>
-      </section>
+      </div>
     );
   }
 
-  return <InvitationRenderer invitation={invitation} />;
+  return (
+    <div className="app-viewer public-viewer">
+      <div className="theme-viewer">
+        <div className="public-viewer__frame">
+          <ReactViewerBridge path={`/i/${encodeURIComponent(invitation.slug)}`} title="Viewer React de invitacion publica">
+            <InvitationRenderer invitation={invitation} />
+          </ReactViewerBridge>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -1,0 +1,77 @@
+.app-admin .viewer-admin-shell,
+.app-admin.editor-page.viewer-admin-shell {
+  width: 100%;
+  margin: 0;
+  padding: 28px clamp(20px, 2vw, 24px) 52px;
+}
+
+.app-admin.editor-page .editor-grid {
+  display: grid;
+  grid-template-columns: minmax(520px, 1fr) 520px;
+  gap: 24px;
+  align-items: start;
+}
+
+.app-admin.editor-page .editor-form {
+  min-width: 0;
+}
+
+.app-admin.editor-page .editor-preview {
+  position: sticky;
+  top: 24px;
+  height: auto;
+  overflow: visible;
+  display: grid;
+  grid-template-rows: none;
+  align-content: start;
+}
+
+.app-admin.editor-page .editor-preview .viewer-phone-shell {
+  min-height: 0;
+  height: auto;
+  align-items: start;
+}
+
+.app-admin.editor-page .editor-preview .viewer-phone-shell__scaler {
+  max-height: none;
+}
+
+.app-admin.editor-page .editor-preview .viewer-phone-device {
+  max-height: none;
+}
+
+.app-admin.editor-page .editor-preview .viewer-phone-device__viewport {
+  height: 100%;
+  max-height: calc(100% - 36px);
+  overflow: auto;
+}
+
+.app-admin.editor-page .editor-preview .viewer-admin-actions--sticky {
+  position: static;
+  margin-top: 12px;
+}
+
+.app-admin.editor-page .editor-preview .viewer-preview-meta {
+  margin-top: 10px;
+}
+
+@media (max-width: 1220px) {
+  .app-admin.editor-page .editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-admin.editor-page .editor-preview {
+    position: static;
+    height: auto;
+    overflow: visible;
+    grid-template-rows: none;
+  }
+
+  .app-admin.editor-page .editor-preview .viewer-phone-shell,
+  .app-admin.editor-page .editor-preview .viewer-phone-shell__scaler,
+  .app-admin.editor-page .editor-preview .viewer-phone-device,
+  .app-admin.editor-page .editor-preview .viewer-phone-device__viewport {
+    height: auto;
+    max-height: none;
+  }
+}

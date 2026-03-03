@@ -2,7 +2,14 @@
 node_modules
 .env.local
 .env
+.mock-data
+public/generated-previews
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-lock.yaml
+frontend/dist
+*.tsbuildinfo
+*.out.log
+*.err.log
+artifacts/

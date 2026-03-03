@@ -1,114 +1,60 @@
-# Invitaciones Digitales — CRM + Invitación Pública + Landing Editable
+# Docs - indice y handoff
 
-Plataforma web para crear y administrar invitaciones digitales animadas (primero infantiles), donde:
-- El **admin** crea/edita invitaciones desde un **CRM interno**.
-- Los invitados ven la invitación pública en `/i/[slug]` (mobile-first).
-- La landing `/` es **editable** (paquetes, precios, ejemplos, contacto).
-- Incluye **RSVP**, control de **vigencia** y pantalla de **evento finalizado**.
+Esta carpeta ya no solo guarda documentos funcionales. Tambien sirve para handoff tecnico rapido cuando se reinicia el contexto del chat.
 
-## Funcionalidades (v1)
-- Landing editable `/` desde el CRM (sin tocar código).
-- Invitación pública con **1 layout único** premium y secciones con switch (`enabled/disabled`).
-- **Mapa embebido** cuando la sección `map` está activa.
-- RSVP guardando respuestas y dashboard para admin.
-- Vista de resultados para el cliente por **link con token** (sin cuentas).
-- Expiración: después de `active_until` el mismo link muestra “evento finalizado” + CTA a `/`.
-- Open Graph para vista previa al compartir (WhatsApp): `og:title`, `og:description`, `og:image`.
+## Leer primero
 
-## Rutas principales
+- [README raiz](../README.md)
+- [ESTADO_ACTUAL.md](ESTADO_ACTUAL.md)
+- [CAMBIOS_RECIENTES.md](CAMBIOS_RECIENTES.md)
+- [PENDIENTES.md](PENDIENTES.md)
+- [COMANDOS.md](COMANDOS.md)
 
-### Público
-- `/` — Landing (editable)
-- `/i/[slug]` — Invitación pública
-- `/i/[slug]/rsvp?token=...` — Resultados RSVP para cliente (solo lectura)
+## Que contiene cada documento
 
-### Admin (CRM)
-- `/admin` — Login / redirect
-- `/admin/invitations` — Lista de invitaciones
-- `/admin/invitations/new` — Crear invitación (draft)
-- `/admin/invitations/[id]` — Editor de invitación
-- `/admin/rsvp/[id]` — Dashboard RSVP
-- `/admin/site` — Editor landing (site_settings)
+- `ESTADO_ACTUAL.md`
+  - Estado real del proyecto hoy
+  - Migracion Next -> React
+  - Preview con Playwright
+  - Rutas y flujo local recomendado
+  - Problemas conocidos y siguientes pasos
 
-## Stack recomendado
-- Next.js (App Router) + TypeScript
-- Supabase (Postgres + Storage + Auth)
-- Animaciones: Framer Motion + Lottie
-- Deploy: Vercel
+- `CAMBIOS_RECIENTES.md`
+  - Changelog corto de cambios recientes
+  - Ideal para que un chat nuevo vea rapidamente lo ultimo que se movio
 
-## Documentación del proyecto
-- `SRS.md` — Requisitos del sistema
-- `DATA_MODEL.md` — Modelo de datos (tablas y JSON)
-- `UI_FLOWS.md` — Rutas y flujos
-- `NOTIFICATIONS.md` — Reglas de tiempos/estados y mensajes
-- `TRACEABILITY.md` — Checklist de validación
-- `GUIA_RAPIDA_v1.md` — Guía rápida de ejecución
+- `PENDIENTES.md`
+  - Lista separada de trabajo pendiente
+  - Ideal para retomar sin mezclar "lo hecho" con "lo que falta"
 
-## Setup rápido (local)
+- `COMANDOS.md`
+  - Comandos de uso diario
+  - Flujo rapido de arranque, login y rutas clave
 
-### 1) Instalar dependencias
-    npm install
+- `SRS.md`
+  - Requisitos del sistema
 
-### 2) Variables de entorno
-Crear `.env.local` en la raíz con:
+- `DATA_MODEL.md`
+  - Modelo de datos y estructura base
 
-    NEXT_PUBLIC_SUPABASE_URL=...
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-    SUPABASE_SERVICE_ROLE_KEY=...
+- `UI_FLOWS.md`
+  - Flujos principales de UI y navegacion
 
-Importante: `SUPABASE_SERVICE_ROLE_KEY` solo se usa del lado servidor (nunca en el cliente).
+- `NOTIFICATIONS.md`
+  - Reglas de tiempos, vigencia y notificaciones
 
-### 3) Ejecutar en desarrollo
-    npm run dev
+- `TRACEABILITY.md`
+  - Checklist de validacion
 
-Abrir:
-- http://localhost:3000
+- `GUIA_RAPIDA_v1.md`
+  - Guia operativa historica
 
-## Base de datos (tablas mínimas)
-Tablas:
-- `invitations`
-- `rsvp_responses`
-- `assets`
-- `site_settings`
-- `themes`
+- `SEED_INVITATION_ASTRONAUTAS.json`
+  - Seed de ejemplo de invitacion
 
-Recomendado:
-- `invitations.slug` UNIQUE
-- índice en `rsvp_responses.invitation_id`
+- `SEED_SITE_SETTINGS.json`
+  - Seed de configuracion del sitio
 
-## Storage (imágenes)
-Usar un bucket (ej. `public`) para:
-- Portada (hero)
-- Galería
-- Imagen OG (para compartir)
-- Covers de ejemplos/demos
+## Nota importante
 
-Guardar URLs en `assets.url` y referenciar:
-- `sections.hero.hero_asset_id`
-- `sections.gallery.asset_ids`
-- `share.og_image_url`
-
-## Seeds recomendados (para no iniciar vacío)
-1) `site_settings`
-- Insertar fila única con `id="main"` y `data` (hero, packages, examples, contact, etc.)
-
-2) `themes`
-- Insertar tema `"astronautas"` con `defaults` y `preview_url`
-
-3) `invitations`
-- Insertar invitación demo o la real “Cumple 7 Astronautas” con:
-  - `slug`
-  - `sections_order`
-  - `sections`
-  - `share` (Open Graph)
-  - `expired_page`
-  - `client_view_token`
-
-## Reglas clave (resumen)
-- Vigencia:
-  - Si `now > active_until` → mostrar pantalla “evento finalizado” (no la invitación).
-- RSVP:
-  - Si `now > rsvp_until` → RSVP cerrado (aunque la invitación siga vigente).
-  - Si `rsvp.enabled=false` → no mostrar RSVP.
-- Compartir:
-  - Para vista previa bonita en WhatsApp, usar `share.og_image_url` (recomendado 1200×630).
+La referencia mas util para retomar trabajo hoy es `ESTADO_ACTUAL.md`. Ese archivo resume cambios recientes que no necesariamente estaban documentados en los docs mas viejos.

@@ -70,7 +70,7 @@ export function RsvpSection({ invitation, data, previewMode = false }: RsvpSecti
 
       const payload = (await response.json()) as { error?: string };
       if (!response.ok) {
-        throw new Error(payload.error || "No se pudo enviar tu confirmacion.");
+        throw new Error(payload.error || "No se pudo enviar tu confirmación.");
       }
 
       setSaved(true);
@@ -80,7 +80,7 @@ export function RsvpSection({ invitation, data, previewMode = false }: RsvpSecti
       setMessage("");
       window.setTimeout(() => setSaved(false), 2200);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo enviar tu confirmacion.");
+      setError(submitError instanceof Error ? submitError.message : "No se pudo enviar tu confirmación.");
     } finally {
       setSubmitting(false);
     }
@@ -89,13 +89,13 @@ export function RsvpSection({ invitation, data, previewMode = false }: RsvpSecti
   return (
     <InvitationSectionFrame
       id="rsvp-section"
-      eyebrow="Confirmacion"
+      eyebrow="Confirmación"
       title="Confirma tu asistencia"
-      subtitle="Envianos tu respuesta para cerrar la bitacora."
+      subtitle="Envíanos tu respuesta para cerrar la bitácora."
       tone="aurora"
     >
       {previewMode ? (
-        <p className="mission-caption">Preview de RSVP en admin. El envio real se hace desde /i/[slug].</p>
+        <p className="mission-caption">Vista previa de RSVP en admin. El envío real se hace desde /i/[slug].</p>
       ) : isClosed ? (
         <div className="mission-closed-state">
           <strong>{data.closed_message || "RSVP cerrado"}</strong>
@@ -107,20 +107,20 @@ export function RsvpSection({ invitation, data, previewMode = false }: RsvpSecti
             <input className="mission-input" value={name} onChange={(event) => setName(event.target.value)} />
           </label>
           <label className="field">
-            <span className="mission-label">Asistes? *</span>
+            <span className="mission-label">¿Asistes? *</span>
             <select
               className="mission-input"
               value={attending}
               onChange={(event) => setAttending(event.target.value)}
             >
               <option value="">Selecciona</option>
-              <option value="yes">Si</option>
+              <option value="yes">Sí</option>
               <option value="no">No</option>
             </select>
           </label>
           {allowGuestsCount ? (
             <label className="field">
-              <span className="mission-label">Acompanantes</span>
+              <span className="mission-label">Acompañantes</span>
               <input
                 className="mission-input"
                 type="number"
@@ -182,8 +182,8 @@ export function RsvpSection({ invitation, data, previewMode = false }: RsvpSecti
                 <MissionRocket />
               </motion.div>
             </motion.div>
-            <strong>Mision completada</strong>
-            <p className="mission-caption">Tu RSVP fue enviado y ya quedo registrado.</p>
+            <strong>Misión completada</strong>
+            <p className="mission-caption">Tu RSVP fue enviado y ya quedó registrado.</p>
           </motion.div>
         ) : null}
       </AnimatePresence>

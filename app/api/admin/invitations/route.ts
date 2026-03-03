@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
-import { createInvitation } from "@/lib/repository";
+import { createInvitation, listInvitations } from "@/lib/repository";
+
+export async function GET() {
+  const session = await getAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+
+  const invitations = await listInvitations();
+  return NextResponse.json({ invitations });
+}
 
 export async function POST(request: Request) {
   const session = await getAdminSession();

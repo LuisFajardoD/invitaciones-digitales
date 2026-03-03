@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 2200" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="720" y1="0" x2="720" y2="2200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#03111f"/>
+      <stop offset="0.34" stop-color="#04172d"/>
+      <stop offset="0.7" stop-color="#061a31"/>
+      <stop offset="1" stop-color="#071427"/>
+    </linearGradient>
+    <radialGradient id="nebulaA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(310 560) rotate(28) scale(520 340)">
+      <stop stop-color="#2F90D8" stop-opacity=".34"/>
+      <stop offset=".45" stop-color="#1777B8" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#1777B8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebulaB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1080 420) rotate(-12) scale(420 260)">
+      <stop stop-color="#6CD7FF" stop-opacity=".16"/>
+      <stop offset=".46" stop-color="#2A84C6" stop-opacity=".09"/>
+      <stop offset="1" stop-color="#2A84C6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebulaC" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(780 1240) rotate(16) scale(620 420)">
+      <stop stop-color="#0D5E9C" stop-opacity=".22"/>
+      <stop offset=".5" stop-color="#094B80" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#094B80" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="goldGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1180 860) rotate(-20) scale(280 180)">
+      <stop stop-color="#F2BE65" stop-opacity=".12"/>
+      <stop offset=".54" stop-color="#D59A47" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#D59A47" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1440" height="2200" fill="url(#bg)"/>
+  <rect width="1440" height="2200" fill="url(#nebulaA)"/>
+  <rect width="1440" height="2200" fill="url(#nebulaB)"/>
+  <rect width="1440" height="2200" fill="url(#nebulaC)"/>
+  <rect width="1440" height="2200" fill="url(#goldGlow)"/>
+
+  <g opacity=".55">
+    <circle cx="146" cy="132" r="2.4" fill="#F5FCFF"/>
+    <circle cx="278" cy="268" r="1.8" fill="#C7F5FF"/>
+    <circle cx="412" cy="198" r="1.6" fill="#F5FCFF"/>
+    <circle cx="593" cy="320" r="2.1" fill="#C7F5FF"/>
+    <circle cx="702" cy="180" r="1.8" fill="#F5FCFF"/>
+    <circle cx="844" cy="246" r="1.7" fill="#EAF8FF"/>
+    <circle cx="998" cy="150" r="2" fill="#C7F5FF"/>
+    <circle cx="1114" cy="284" r="1.8" fill="#F5FCFF"/>
+    <circle cx="1280" cy="224" r="2.2" fill="#EAF8FF"/>
+    <circle cx="186" cy="488" r="1.8" fill="#C7F5FF"/>
+    <circle cx="366" cy="604" r="2" fill="#F5FCFF"/>
+    <circle cx="498" cy="522" r="1.6" fill="#EAF8FF"/>
+    <circle cx="648" cy="694" r="2.2" fill="#C7F5FF"/>
+    <circle cx="788" cy="548" r="1.7" fill="#F5FCFF"/>
+    <circle cx="918" cy="648" r="1.8" fill="#EAF8FF"/>
+    <circle cx="1070" cy="572" r="1.9" fill="#C7F5FF"/>
+    <circle cx="1212" cy="688" r="1.7" fill="#F5FCFF"/>
+    <circle cx="1324" cy="522" r="2.2" fill="#EAF8FF"/>
+    <circle cx="126" cy="904" r="1.8" fill="#F5FCFF"/>
+    <circle cx="286" cy="1048" r="2.2" fill="#C7F5FF"/>
+    <circle cx="468" cy="948" r="1.7" fill="#EAF8FF"/>
+    <circle cx="616" cy="1112" r="2.1" fill="#F5FCFF"/>
+    <circle cx="760" cy="980" r="1.8" fill="#C7F5FF"/>
+    <circle cx="912" cy="1108" r="1.9" fill="#F5FCFF"/>
+    <circle cx="1086" cy="1016" r="1.7" fill="#EAF8FF"/>
+    <circle cx="1228" cy="1168" r="2.1" fill="#C7F5FF"/>
+    <circle cx="1310" cy="972" r="1.8" fill="#F5FCFF"/>
+    <circle cx="176" cy="1380" r="2" fill="#EAF8FF"/>
+    <circle cx="336" cy="1498" r="1.8" fill="#C7F5FF"/>
+    <circle cx="510" cy="1408" r="1.6" fill="#F5FCFF"/>
+    <circle cx="664" cy="1564" r="2.2" fill="#C7F5FF"/>
+    <circle cx="806" cy="1446" r="1.7" fill="#EAF8FF"/>
+    <circle cx="962" cy="1602" r="1.9" fill="#F5FCFF"/>
+    <circle cx="1108" cy="1480" r="1.8" fill="#C7F5FF"/>
+    <circle cx="1266" cy="1638" r="2.2" fill="#F5FCFF"/>
+    <circle cx="1342" cy="1428" r="1.7" fill="#EAF8FF"/>
+    <circle cx="144" cy="1780" r="1.8" fill="#F5FCFF"/>
+    <circle cx="306" cy="1926" r="2.1" fill="#C7F5FF"/>
+    <circle cx="486" cy="1812" r="1.7" fill="#EAF8FF"/>
+    <circle cx="622" cy="1980" r="2" fill="#F5FCFF"/>
+    <circle cx="786" cy="1862" r="1.8" fill="#C7F5FF"/>
+    <circle cx="930" cy="2018" r="1.9" fill="#F5FCFF"/>
+    <circle cx="1088" cy="1888" r="1.7" fill="#EAF8FF"/>
+    <circle cx="1220" cy="2046" r="2.2" fill="#C7F5FF"/>
+    <circle cx="1338" cy="1898" r="1.9" fill="#F5FCFF"/>
+  </g>
+</svg>

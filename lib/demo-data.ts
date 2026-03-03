@@ -38,23 +38,45 @@ export const demoInvitation: InvitationRecord = {
   event_start_at: "2026-04-18T17:00:00.000Z",
   rsvp_until: "2026-04-19T04:59:59.000Z",
   active_until: "2026-04-20T05:59:59.000Z",
+  background: {
+    mode: "inherit_hero",
+    custom: {
+      type: "image",
+      image_url: "",
+      video_url: "",
+      poster_url: "",
+    },
+  },
   sections_order: DEFAULT_SECTION_ORDER,
   sections: {
     hero: {
       enabled: true,
       title: "Cumple 7 de Luis Arturo",
-      subtitle: "La mision es que nos acompanes a celebrar.",
-      badge: "Mision espacial premium",
+      subtitle: "La misión es que nos acompañes a celebrar.",
+      badge: "Misión espacial premium",
       accent: "Despegue 11:00 am",
       background_image_url:
         "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1400&q=80",
+      background: {
+        type: "image",
+        image_url:
+          "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1400&q=80",
+        video_url: "",
+        poster_url: "",
+      },
+      astronaut: {
+        enabled: true,
+        image_url: "",
+        position: "bottom-right",
+        opacity: 0.24,
+      },
     },
     event_info: {
       enabled: true,
-      weekday_text: "Sabado",
+      weekday_text: "Sábado",
       date_text: "18 de abril de 2026",
       time_text: "A partir de las 11:00 am",
-      venue_name: "Jardin del Valle",
+      venue_name: "Jardín del Valle",
       address_text:
         "Cda. Tlalimaya 25, San Andres Ahuayucan, Xochimilco, 16880, CDMX",
     },
@@ -62,7 +84,7 @@ export const demoInvitation: InvitationRecord = {
       enabled: true,
       items: [
         { type: "confirm", label: "Confirmar" },
-        { type: "location", label: "Ubicacion" },
+        { type: "location", label: "Ubicación" },
         { type: "calendar", label: "Agregar al calendario" },
         { type: "share", label: "Compartir" },
       ],
@@ -83,6 +105,7 @@ export const demoInvitation: InvitationRecord = {
         "Cda. Tlalimaya 25, San Andres Ahuayucan, Xochimilco, 16880, CDMX",
       maps_url:
         "https://www.google.com/maps/search/?api=1&query=19.220703435663584,-99.10241678480557",
+      dark: true,
     },
     gallery: {
       enabled: true,
@@ -99,7 +122,7 @@ export const demoInvitation: InvitationRecord = {
     notes: {
       enabled: true,
       items: [
-        "Trae mucha energia para jugar.",
+        "Trae mucha energía para jugar.",
         "Si gustas, ven con outfit espacial (opcional).",
       ],
     },
@@ -109,70 +132,84 @@ export const demoInvitation: InvitationRecord = {
         guests_count: true,
         message: true,
       },
-      closed_message: "RSVP cerrado. Gracias por tu interes.",
+      closed_message: "RSVP cerrado. Gracias por tu interés.",
     },
     contact: {
       enabled: true,
-      name: "Adry Rodriguez",
+      name: "Adry Rodríguez",
       whatsapp_number: "5527225459",
       whatsapp_url: createWhatsAppUrl("5527225459", "Hola, quiero detalles del cumple de Luis Arturo."),
       label: "Contacto por WhatsApp",
     },
     itinerary: {
-      enabled: false,
-      title: "Itinerario",
-      items: [],
-      text: "",
+      enabled: true,
+      title: "Itinerario de vuelo",
+      items: [
+        "11:00 am | Bienvenida y fotos de aterrizaje",
+        "11:30 am | Juegos y misiones espaciales",
+        "1:00 pm | Pastel y cancion para Luis Arturo",
+        "2:00 pm | Pinata, regalos y despedida",
+      ],
+      text: "Asi se vivira la celebracion de principio a fin.",
     },
     dress_code: {
       enabled: true,
-      title: "Dress code",
-      text: "Outfit espacial opcional.",
+      title: "Codigo de vestimenta",
+      text: "Look comodo en tonos azul, plata o blanco. Si quieres, suma un detalle espacial.",
     },
     gifts: {
-      enabled: false,
-      title: "Regalos",
-      text: "",
+      enabled: true,
+      title: "Mesa de regalos",
+      text: "Tu presencia es lo mas importante. Si quieres llevar un detalle, puede ser un libro, un juego creativo o una sorpresa espacial.",
+      url: createWhatsAppUrl(
+        "5527225459",
+        "Hola, quiero preguntar sobre la mesa de regalos de Luis Arturo.",
+      ),
     },
     faq: {
-      enabled: false,
-      title: "FAQ",
-      items: [],
-      text: "",
+      enabled: true,
+      title: "Preguntas frecuentes",
+      items: [
+        "Hay estacionamiento limitado dentro del salon.",
+        "Si confirmas con acompanantes, incluye el total en tu RSVP.",
+        "Puedes llegar desde las 10:45 am para entrar con calma.",
+      ],
+      text: "Lo mas importante antes del despegue.",
     },
     livestream: {
-      enabled: false,
-      title: "Livestream",
-      url: "",
+      enabled: true,
+      title: "Transmision en vivo",
+      text: "Si no puedes venir, tendremos una senal privada para ver el festejo.",
+      url: "https://www.youtube.com/watch?v=21X5lGlDOfg",
     },
     transport: {
-      enabled: false,
+      enabled: true,
       title: "Transporte",
-      text: "",
+      text: "Si vienes en auto, usa la entrada principal. Si vienes en taxi o app, comparte la ubicacion del mapa para llegar directo.",
     },
     lodging: {
-      enabled: false,
+      enabled: true,
       title: "Hospedaje",
-      text: "",
+      text: "Si vienes de fuera de CDMX, te recomendamos hospedarte cerca de Xochimilco o Coapa para llegar mas rapido el dia del evento.",
     },
   },
   share: {
-    og_title: "Cumple 7 de Luis Arturo | Invitacion Premium Astronautas",
-    og_description: "La mision es que nos acompanes a celebrar en Jardin del Valle.",
+    og_title: "Cumple 7 de Luis Arturo | Invitación Premium Astronautas",
+    og_description: "La misión es que nos acompañes a celebrar en Jardín del Valle.",
     og_image_url:
       "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1200&q=80",
     og_type: "website",
   },
   expired_page: {
-    title: "Este evento ya paso",
-    message: "Gracias por tu interes. Descubre nuevas invitaciones premium.",
+    title: "Este evento ya pasó",
+    message: "Gracias por tu interés. Descubre nuevas invitaciones premium.",
     primary_cta: {
       text: "Ver invitaciones y precios",
       href: "/",
     },
     secondary_cta: {
       text: "Cotizar por WhatsApp",
-      href: createWhatsAppUrl("5527225459", "Hola, quiero cotizar una invitacion como la de astronautas."),
+      href: createWhatsAppUrl("5527225459", "Hola, quiero cotizar una invitación como la de astronautas."),
     },
   },
   client_view_token: "astronautas-token-demo",
@@ -224,9 +261,9 @@ export const demoSiteSettings: SiteSettingsRecord = {
         title: "Paquetes",
         items: [
           {
-            name: "Essential",
+            name: "Esencial",
             price: "$1,490 MXN",
-            description: "Invitacion mobile-first con RSVP y secciones clave.",
+            description: "Invitacion pensada para movil con RSVP y secciones clave.",
             features: ["1 tema", "Mapa embebido", "RSVP basico"],
           },
           {
@@ -293,7 +330,7 @@ export const demoResponses: RsvpResponse[] = [
     name: "Mariana",
     attending: true,
     guests_count: 3,
-    message: "Nos vemos en la mision.",
+    message: "Nos vemos en la misión.",
     created_at: now,
   },
   {

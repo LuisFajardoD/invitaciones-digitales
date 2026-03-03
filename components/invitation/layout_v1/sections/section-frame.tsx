@@ -14,6 +14,7 @@ type InvitationSectionFrameProps = {
   title: string;
   subtitle?: string;
   tone?: "default" | "aurora" | "gold";
+  surface?: "default" | "bare";
   children: React.ReactNode;
 };
 
@@ -23,6 +24,7 @@ export function InvitationSectionFrame({
   title,
   subtitle,
   tone = "default",
+  surface = "default",
   children,
 }: InvitationSectionFrameProps) {
   const reducedMotion = Boolean(useReducedMotion());
@@ -33,15 +35,26 @@ export function InvitationSectionFrame({
   return (
     <motion.section
       id={id}
-      className={`invitation-section invitation-section--${tone}`}
+      className={`invitation-section invitation-section--${tone} ${
+        surface === "bare" ? "invitation-section--bare" : ""
+      }`}
       variants={revealVariants}
       initial="hidden"
       whileInView="visible"
       viewport={sectionViewport}
     >
-      <div className="invitation-section__curve invitation-section__curve--top" />
-      <div className="invitation-section__curve invitation-section__curve--bottom" />
-      <motion.div className="invitation-section__inner" variants={staggerVariants}>
+      {surface === "bare" ? null : (
+        <>
+          <div className="invitation-section__curve invitation-section__curve--top" />
+          <div className="invitation-section__curve invitation-section__curve--bottom" />
+        </>
+      )}
+      <motion.div
+        className={`invitation-section__inner ${
+          surface === "bare" ? "invitation-section__inner--bare" : ""
+        }`}
+        variants={staggerVariants}
+      >
         <motion.p className="mission-eyebrow" variants={childVariants}>
           {eyebrow}
         </motion.p>

@@ -1,11 +1,27 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
-import { updateInvitation } from "@/lib/repository";
+import { getInvitationById, updateInvitation } from "@/lib/repository";
 import type { InvitationRecord } from "@/types/invitations";
 
 type Params = {
   params: Promise<{ id: string }>;
 };
+
+export async function GET(_request: Request, { params }: Params) {
+  const session = await getAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const invitation = await getInvitationById(id);
+
+  if (!invitation) {
+    return NextResponse.json({ error: "Invitacion no encontrada." }, { status: 404 });
+  }
+
+  return NextResponse.json({ invitation });
+}
 
 export async function PATCH(request: Request, { params }: Params) {
   const session = await getAdminSession();

@@ -10,7 +10,7 @@ type RsvpDashboardProps = {
 export function RsvpDashboard({ invitation, summary, isClientView = false }: RsvpDashboardProps) {
   return (
     <section className="admin-panel">
-      <p className="eyebrow">{isClientView ? "Cliente" : "Admin RSVP"}</p>
+      <p className="eyebrow">{isClientView ? "Cliente" : "Panel RSVP"}</p>
       <h2>{invitation.sections.hero.title}</h2>
       <div className="metric-grid" style={{ marginTop: 18 }}>
         <div className="metric-card">

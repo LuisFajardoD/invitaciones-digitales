@@ -12,7 +12,7 @@ export function NotesSection({ data }: NotesSectionProps) {
     <InvitationSectionFrame
       eyebrow="Checklist"
       title="Antes del despegue"
-      subtitle="Detalles clave para que la mision salga perfecta."
+      subtitle="Detalles clave para que la misión salga perfecta."
       tone="default"
     >
       <div className="notes-list notes-list--mission">

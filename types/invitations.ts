@@ -1,5 +1,14 @@
 export type InvitationStatus = "draft" | "published";
 export type AnimationProfile = "lite" | "pro" | "max";
+export type BackgroundMediaType = "default" | "image" | "video";
+export type BackgroundMode = "default_app" | "inherit_hero" | "custom";
+export type KenBurnsStrength = "low" | "medium" | "high";
+export type HeroAstronautPosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left"
+  | "center";
 
 export type SectionKey =
   | "hero"
@@ -47,12 +56,42 @@ export interface SectionBase {
   enabled: boolean;
 }
 
+export interface KenBurnsConfig {
+  enabled: boolean;
+  strength: KenBurnsStrength;
+}
+
+export interface BackgroundMediaConfig {
+  type: BackgroundMediaType;
+  image_url: string;
+  video_url: string;
+  poster_url: string;
+  kenburns?: KenBurnsConfig;
+}
+
+export interface HeroAstronautConfig {
+  enabled: boolean;
+  image_url: string;
+  position: HeroAstronautPosition;
+  opacity: number;
+}
+
+export interface InvitationBackgroundConfig {
+  mode: BackgroundMode;
+  kenburns?: KenBurnsConfig;
+  custom: Omit<BackgroundMediaConfig, "type"> & {
+    type: Exclude<BackgroundMediaType, "default">;
+  };
+}
+
 export interface HeroSectionData extends SectionBase {
   title: string;
   subtitle: string;
   badge: string;
   accent: string;
   background_image_url: string;
+  background?: BackgroundMediaConfig;
+  astronaut?: HeroAstronautConfig;
 }
 
 export interface EventInfoSectionData extends SectionBase {
@@ -80,6 +119,7 @@ export interface MapSectionData extends SectionBase {
   };
   address_text: string;
   maps_url: string;
+  dark?: boolean | null;
 }
 
 export interface GallerySectionData extends SectionBase {
@@ -143,6 +183,7 @@ export interface InvitationRecord {
   event_start_at: string;
   rsvp_until: string;
   active_until: string;
+  background?: InvitationBackgroundConfig;
   sections_order: SectionKey[];
   sections: InvitationSections;
   share: InvitationShare;

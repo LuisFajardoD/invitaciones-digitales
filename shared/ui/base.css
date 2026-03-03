@@ -1,0 +1,83 @@
+@import "./layout.css";
+
+.app-admin,
+.app-admin *,
+.app-admin *::before,
+.app-admin *::after {
+  box-sizing: border-box;
+}
+
+.app-admin {
+  color-scheme: light;
+  color: var(--admin-text, var(--ui-color-text));
+  font-family: var(--ui-font-sans);
+  line-height: var(--ui-lh-base);
+  text-rendering: optimizeLegibility;
+}
+
+.app-admin :where(button, input, textarea, select) {
+  color: inherit;
+  font: inherit;
+}
+
+.app-admin :where(a) {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-admin :where(img) {
+  display: block;
+  max-width: 100%;
+}
+
+.app-viewer {
+  isolation: isolate;
+  color-scheme: light;
+  --admin-shell-bg: initial;
+  --admin-panel-bg: initial;
+  --admin-surface-bg: initial;
+  --admin-note-bg: initial;
+  --admin-note-border: initial;
+  --admin-border: initial;
+  --admin-border-strong: initial;
+  --admin-text: initial;
+  --admin-text-soft: initial;
+  --admin-accent: initial;
+  --admin-button-bg: initial;
+  --admin-button-text: initial;
+  --admin-secondary-bg: initial;
+  --admin-phone-shadow: initial;
+}
+
+.app-viewer .theme-viewer {
+  color-scheme: light;
+  --bg: #021122;
+  --bg-2: #081b3a;
+  --card: rgba(10, 24, 55, 0.82);
+  --card-strong: #0f2a59;
+  --line: rgba(122, 200, 255, 0.18);
+  --text: #f3f8ff;
+  --muted: #adc9ec;
+  --accent: #f8c94b;
+  --aqua: #76f7ff;
+  --danger: #ff8c7a;
+  --success: #7dffc4;
+  --shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+  --radius: 24px;
+  --mission-panel-radius: 24px;
+  --mission-tile-radius: 24px;
+  --mission-input-radius: 18px;
+  font-family: var(--font-body, "Segoe UI", sans-serif);
+  color: var(--text, #f3f8ff);
+  line-height: 1.5;
+}
+
+.app-viewer .theme-viewer :where(button, input, textarea, select) {
+  color: inherit;
+  font: inherit;
+}
+
+.app-viewer .theme-viewer :where(a) {
+  color: inherit;
+  text-decoration: none;
+}

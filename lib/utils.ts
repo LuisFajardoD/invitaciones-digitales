@@ -11,6 +11,27 @@ export function createWhatsAppUrl(number?: string, message?: string) {
   return `https://wa.me/${cleanNumber}?text=${text}`;
 }
 
+export function optimizeMediaUrl(url?: string, width = 1200) {
+  if (!url) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes("images.unsplash.com")) {
+      parsed.searchParams.set("auto", "format");
+      parsed.searchParams.set("fit", "crop");
+      parsed.searchParams.set("w", String(width));
+      parsed.searchParams.set("q", "80");
+      return parsed.toString();
+    }
+  } catch {
+    return url;
+  }
+
+  return url;
+}
+
 export function formatDateLabel(input: string, timezone = "America/Mexico_City") {
   return new Intl.DateTimeFormat("es-MX", {
     timeZone: timezone,

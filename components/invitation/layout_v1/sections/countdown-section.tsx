@@ -24,7 +24,7 @@ export function CountdownSection({ data }: CountdownSectionProps) {
   const reducedMotion = Boolean(useReducedMotion());
   const cells = useMemo(
     () => [
-      ["Dias", remaining.days],
+      ["Días", remaining.days],
       ["Horas", remaining.hours],
       ["Min", remaining.minutes],
       ["Seg", remaining.seconds],
@@ -44,27 +44,29 @@ export function CountdownSection({ data }: CountdownSectionProps) {
     <InvitationSectionFrame
       eyebrow="Cuenta regresiva"
       title={data.label}
-      subtitle="Cada segundo nos acerca al despegue."
       tone="default"
     >
-      <div className="countdown-grid countdown-grid--mission">
-        {cells.map(([label, value]) => (
-          <motion.div
-            key={label}
-            className="countdown-cell countdown-cell--mission"
-            animate={reducedMotion ? undefined : { y: [0, -3, 0] }}
-            transition={{
-              duration: 2.8,
-              repeat: Number.POSITIVE_INFINITY,
-              repeatDelay: 0.4,
-              delay: Number(value) * 0.02,
-            }}
-          >
-            <strong>{value}</strong>
-            <span className="mission-caption">{label}</span>
-          </motion.div>
-        ))}
+      <div className="countdown-grid-shell">
+        <div className="countdown-grid countdown-grid--mission">
+          {cells.map(([label, value]) => (
+            <motion.div
+              key={label}
+              className="countdown-cell countdown-cell--mission"
+              animate={reducedMotion ? undefined : { y: [0, -3, 0] }}
+              transition={{
+                duration: 2.8,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatDelay: 0.4,
+                delay: Number(value) * 0.02,
+              }}
+            >
+              <strong>{value}</strong>
+              <span className="mission-caption">{label}</span>
+            </motion.div>
+          ))}
+        </div>
       </div>
+      <p className="mission-caption">Cada segundo nos acerca al despegue.</p>
     </InvitationSectionFrame>
   );
 }

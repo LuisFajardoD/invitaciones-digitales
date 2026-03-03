@@ -21,7 +21,7 @@ export default async function AdminRsvpPage({ params }: AdminRsvpPageProps) {
 
   return (
     <AdminShell
-      title="Dashboard RSVP"
+      title="Panel de RSVP"
       description="Totales, tabla de respuestas y exportacion CSV."
     >
       <RsvpDashboard invitation={invitation} summary={summary} />

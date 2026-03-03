@@ -37,9 +37,9 @@ export function LoginForm({ useMock }: { useMock: boolean }) {
   }
 
   return (
-    <div className="auth-wrap">
+    <div className="app-admin auth-wrap">
       <section className="auth-card">
-        <p className="eyebrow">Admin Auth</p>
+        <p className="eyebrow">Acceso administrativo</p>
         <h1>Acceso al CRM</h1>
         <p className="muted">
           Inicia sesion con Supabase Auth (email/password).
@@ -56,7 +56,7 @@ export function LoginForm({ useMock }: { useMock: boolean }) {
             />
           </label>
           <label className="field">
-            <span>Password</span>
+            <span>Contrasena</span>
             <input
               type="password"
               value={password}

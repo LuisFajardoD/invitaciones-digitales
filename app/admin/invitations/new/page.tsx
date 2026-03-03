@@ -10,7 +10,7 @@ export default async function NewInvitationPage() {
   return (
     <AdminShell
       title="Crear invitacion"
-      description="Paso 1 del flujo: crea un draft y redirecciona al editor."
+      description="Paso 1 del flujo: crea un borrador y redirecciona al editor."
     >
       <NewInvitationForm themes={themes} />
     </AdminShell>

@@ -69,7 +69,7 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
         throw new Error(responsePayload.error || "No se pudo guardar.");
       }
       setDraft(previewData());
-      setStatus("Landing guardada.");
+      setStatus("Portada guardada.");
       router.refresh();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "No se pudo guardar.");
@@ -81,11 +81,11 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
   return (
     <div className="two-column">
       <section className="admin-panel">
-        <p className="eyebrow">Site settings</p>
-        <h2>Editar landing</h2>
+        <p className="eyebrow">Configuracion del sitio</p>
+        <h2>Editar portada</h2>
         <div className="form-grid" style={{ marginTop: 18 }}>
           <label className="field-wide">
-            <span>Blocks order (coma separada)</span>
+            <span>Orden de bloques (separados por coma)</span>
             <input
               value={draft.blocks_order.join(",")}
               onChange={(event) =>
@@ -116,7 +116,7 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
             <span>Hero activo</span>
           </label>
           <label className="field-wide">
-            <span>Hero title</span>
+            <span>Titulo principal</span>
             <input
               value={draft.blocks.hero.title}
               onChange={(event) =>
@@ -131,7 +131,7 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
             />
           </label>
           <label className="field-wide">
-            <span>Hero subtitle</span>
+            <span>Subtitulo principal</span>
             <textarea
               value={draft.blocks.hero.subtitle}
               onChange={(event) =>
@@ -146,11 +146,11 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
             />
           </label>
           <label className="field-wide">
-            <span>Examples items (JSON)</span>
+            <span>Ejemplos (JSON)</span>
             <textarea value={examplesJson} onChange={(event) => setExamplesJson(event.target.value)} />
           </label>
           <label className="field-wide">
-            <span>Packages items (JSON)</span>
+            <span>Paquetes (JSON)</span>
             <textarea value={packagesJson} onChange={(event) => setPackagesJson(event.target.value)} />
           </label>
           <label className="field-wide">
@@ -158,11 +158,11 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
             <textarea value={extrasText} onChange={(event) => setExtrasText(event.target.value)} />
           </label>
           <label className="field-wide">
-            <span>How it works (una por linea)</span>
+            <span>Como funciona (una por linea)</span>
             <textarea value={howItWorksText} onChange={(event) => setHowItWorksText(event.target.value)} />
           </label>
           <label className="field-wide">
-            <span>FAQ items (JSON)</span>
+            <span>Preguntas frecuentes (JSON)</span>
             <textarea value={faqJson} onChange={(event) => setFaqJson(event.target.value)} />
           </label>
           <label className="field">
@@ -181,7 +181,7 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
             />
           </label>
           <label className="field-wide">
-            <span>Prefill WhatsApp</span>
+            <span>Mensaje precargado de WhatsApp</span>
             <textarea
               value={draft.blocks.contact.whatsapp_prefill_text}
               onChange={(event) =>
@@ -208,8 +208,8 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
         {error ? <p className="error-text">{error}</p> : null}
       </section>
       <section className="admin-panel">
-        <p className="eyebrow">Preview</p>
-        <h2>Landing /</h2>
+        <p className="eyebrow">Vista previa</p>
+        <h2>Inicio /</h2>
         <SiteHome settings={previewData()} />
       </section>
     </div>

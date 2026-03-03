@@ -59,10 +59,10 @@ export function NewInvitationForm({ themes }: NewInvitationFormProps) {
   return (
     <section className="admin-panel">
       <p className="eyebrow">Nueva invitacion</p>
-      <h2>Crear draft</h2>
+      <h2>Crear borrador</h2>
       <form onSubmit={handleSubmit} className="form-grid" style={{ marginTop: 18 }}>
         <label className="field">
-          <span>Slug</span>
+          <span>Slug publico</span>
           <input value={slug} onChange={(event) => setSlug(event.target.value)} required />
         </label>
         <label className="field">

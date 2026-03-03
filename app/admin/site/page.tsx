@@ -9,8 +9,8 @@ export default async function AdminSitePage() {
 
   return (
     <AdminShell
-      title="Landing editable"
-      description="Administra bloques de / usando site_settings."
+      title="Portada editable"
+      description="Administra los bloques de / desde la configuracion del sitio."
     >
       <SiteSettingsForm initialData={siteSettings.data} />
     </AdminShell>
