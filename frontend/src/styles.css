@@ -1988,24 +1988,24 @@ code {
   object-position: center;
 }
 
-.viewer-list {
+.legacy-admin .viewer-list {
   display: grid;
   gap: 10px;
   margin-top: 18px;
 }
 
-.viewer-list__item {
+.legacy-admin .viewer-list__item {
   padding: 14px 16px;
 }
 
-.viewer-form {
+.legacy-admin .viewer-form {
   display: grid;
   gap: 14px;
   margin-top: 18px;
   align-content: start;
 }
 
-.viewer-editor-marker {
+.legacy-admin .viewer-editor-marker {
   display: grid;
   gap: 6px;
   padding: 18px 20px 17px;
@@ -2027,7 +2027,7 @@ code {
     linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
 }
 
-.viewer-editor-marker__eyebrow {
+.legacy-admin .viewer-editor-marker__eyebrow {
   margin: 0;
   color: #76f7ff;
   text-transform: uppercase;
@@ -2036,13 +2036,13 @@ code {
   font-weight: 700;
 }
 
-.viewer-editor-marker__title {
+.legacy-admin .viewer-editor-marker__title {
   margin: 0;
   font-size: clamp(1.02rem, 2vw, 1.28rem);
   line-height: 1.15;
 }
 
-.viewer-editor-marker__description {
+.legacy-admin .viewer-editor-marker__description {
   margin: 0;
   color: #b9d2f4;
   line-height: 1.42;
@@ -2986,30 +2986,30 @@ code {
 }
 
 @media (min-width: 1024px) {
-  .viewer-form {
+  .legacy-admin .viewer-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
 
-  .viewer-form .viewer-field--wide,
-  .viewer-form .viewer-editor-marker {
+  .legacy-admin .viewer-form .viewer-field--wide,
+  .legacy-admin .viewer-form .viewer-editor-marker {
     grid-column: 1 / -1;
   }
 
-  .viewer-section-order-list {
+  .legacy-admin .viewer-section-order-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
-  .viewer-stack-list {
+  .legacy-admin .viewer-stack-list {
     gap: 10px;
   }
 
-  .viewer-admin-shell--split {
+  .legacy-admin .viewer-admin-shell--split {
     grid-template-columns: minmax(0, 1.38fr) minmax(470px, 560px);
   }
 
-  .viewer-preview-toolbar {
+  .legacy-admin .viewer-preview-toolbar {
     grid-template-columns: minmax(0, 1fr) minmax(160px, 200px) auto;
     align-items: end;
   }
@@ -3017,155 +3017,155 @@ code {
 }
 
 @media (min-width: 1380px) {
-  .viewer-form {
+  .legacy-admin .viewer-form {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .viewer-form .viewer-field--wide,
-  .viewer-form .viewer-editor-marker {
+  .legacy-admin .viewer-form .viewer-field--wide,
+  .legacy-admin .viewer-form .viewer-editor-marker {
     grid-column: 1 / -1;
   }
 
-  .viewer-section-order-list {
+  .legacy-admin .viewer-section-order-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1200px) {
-  .viewer-admin-shell {
+  .legacy-admin .viewer-admin-shell {
     padding-top: 24px;
     padding-bottom: 40px;
   }
 
-  .viewer-admin-shell--split {
+  .legacy-admin .viewer-admin-shell--split {
     gap: 14px;
     grid-template-columns: minmax(0, 1.42fr) minmax(430px, 520px);
   }
 
-  .viewer-admin-theme .viewer-card {
+  .legacy-admin .viewer-admin-theme .viewer-card {
     border-radius: 22px;
     padding: 22px;
   }
 
-  .viewer-admin-topbar {
+  .legacy-admin .viewer-admin-topbar {
     gap: 12px;
     padding: 14px 16px;
     margin: -2px -2px 12px;
     border-radius: 20px;
   }
 
-  .viewer-module-nav {
+  .legacy-admin .viewer-module-nav {
     gap: 8px;
     margin-bottom: 12px;
   }
 
-  .viewer-module-chip {
+  .legacy-admin .viewer-module-chip {
     min-height: 32px;
     padding: 0 12px;
     font-size: 0.8rem;
   }
 
-  .viewer-admin-theme .viewer-card h1 {
+  .legacy-admin .viewer-admin-theme .viewer-card h1 {
     font-size: clamp(1.52rem, 1.2vw, 1.86rem);
   }
 
-  .viewer-admin-theme .viewer-card h2 {
+  .legacy-admin .viewer-admin-theme .viewer-card h2 {
     font-size: clamp(1.16rem, 0.96vw, 1.42rem);
   }
 
-  .viewer-admin-theme .viewer-card h3,
-  .viewer-admin-theme .viewer-editor-marker__title {
+  .legacy-admin .viewer-admin-theme .viewer-card h3,
+  .legacy-admin .viewer-admin-theme .viewer-editor-marker__title {
     font-size: clamp(0.96rem, 0.74vw, 1.12rem);
   }
 
-  .viewer-form {
+  .legacy-admin .viewer-form {
     gap: 12px;
     margin-top: 14px;
   }
 
-  .viewer-editor-marker {
+  .legacy-admin .viewer-editor-marker {
     gap: 5px;
     padding: 16px 18px 15px;
     border-radius: 20px;
   }
 
-  .viewer-field {
+  .legacy-admin .viewer-field {
     gap: 6px;
   }
 
-  .viewer-field span {
+  .legacy-admin .viewer-field span {
     font-size: 0.84rem;
   }
 
-  .viewer-field input,
-  .viewer-field select,
-  .viewer-field textarea {
+  .legacy-admin .viewer-field input,
+  .legacy-admin .viewer-field select,
+  .legacy-admin .viewer-field textarea {
     min-height: 44px;
     padding: 10px 14px;
     border-radius: 14px;
   }
 
-  .viewer-theme-toggle {
+  .legacy-admin .viewer-theme-toggle {
     min-height: 40px;
     padding: 8px 14px;
     border-radius: 14px;
   }
 
-  .preview-panel {
+  .legacy-admin .preview-panel {
     gap: 8px;
   }
 
-  .viewer-preview-mode-tabs {
+  .legacy-admin .viewer-preview-mode-tabs {
     gap: 6px;
     margin-bottom: 0;
   }
 
-  .viewer-preview-mode-tab {
+  .legacy-admin .viewer-preview-mode-tab {
     min-height: 40px;
     border-radius: 14px;
     font-size: 0.84rem;
   }
 
-  .viewer-preview-note {
+  .legacy-admin .viewer-preview-note {
     margin-top: 0;
     padding: 10px 12px;
     border-radius: 14px;
     font-size: 0.8rem;
   }
 
-  .viewer-preview-toolbar {
+  .legacy-admin .viewer-preview-toolbar {
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
     margin-top: 0;
   }
 
-  .viewer-preview-meta {
+  .legacy-admin .viewer-preview-meta {
     gap: 6px 10px;
     margin-top: 0;
     font-size: 0.78rem;
   }
 
-  .viewer-admin-actions {
+  .legacy-admin .viewer-admin-actions {
     gap: 10px;
   }
 
-  .preview-actions {
+  .legacy-admin .preview-actions {
     gap: 8px;
   }
 
-  .viewer-admin-actions--sticky {
+  .legacy-admin .viewer-admin-actions--sticky {
     margin-top: 14px;
     padding-top: 10px;
   }
 
-  .viewer-admin-theme .viewer-link {
+  .legacy-admin .viewer-admin-theme .viewer-link {
     min-height: 48px;
     margin-top: 14px;
     padding: 12px 14px;
     border-radius: 18px;
   }
 
-  .preview-actions > .viewer-link {
+  .legacy-admin .preview-actions > .viewer-link {
     min-height: 42px;
     margin-top: 0;
     padding: 10px 8px;
@@ -3173,13 +3173,13 @@ code {
     font-size: 0.8rem;
   }
 
-  .viewer-mini-button {
+  .legacy-admin .viewer-mini-button {
     min-height: 36px;
     padding: 8px 12px;
     border-radius: 12px;
   }
 
-  .viewer-card--sticky {
+  .legacy-admin .viewer-card--sticky {
     top: 14px;
   }
 }
