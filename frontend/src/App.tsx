@@ -921,6 +921,20 @@ export function App() {
     void requestEditorPreviewScreenshot();
   }, [route.mode, editorDraft?.id, previewDeviceId, previewCaptureMode, editorPreviewVersion, editorPreviewMode]);
 
+  useEffect(() => {
+    if (route.mode !== "admin-login" || adminAuthState !== "authenticated") {
+      return;
+    }
+
+    const targetPath = getSafeAdminRedirectPath(new URLSearchParams(window.location.search).get("redirect"));
+    const currentPath = `${window.location.pathname}${window.location.search}`;
+    if (currentPath === targetPath) {
+      return;
+    }
+
+    window.location.replace(targetPath);
+  }, [adminAuthState, route.mode]);
+
   async function handleSaveEditor() {
     if (!editorDraft) {
       return;

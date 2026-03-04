@@ -1,6 +1,28 @@
 import { resolveBackendOrigin } from "../../shared/origins";
 import type { BackgroundMediaConfig, InvitationRecord, KenBurnsConfig } from "./viewer-types";
 
+declare global {
+  interface ImportMeta {
+    readonly env?: {
+      VITE_BACKEND_ORIGIN?: string;
+    };
+  }
+}
+
+function getConfiguredBackendOrigin() {
+  const viteOrigin = import.meta.env?.VITE_BACKEND_ORIGIN;
+
+  if (viteOrigin) {
+    return viteOrigin;
+  }
+
+  if (typeof process !== "undefined") {
+    return process.env.NEXT_PUBLIC_BACKEND_ORIGIN || "";
+  }
+
+  return "";
+}
+
 export function getSlugFromPath(pathname: string) {
   const match = pathname.match(/^\/i\/([^/]+)\/?$/);
   return match ? decodeURIComponent(match[1]) : "";
@@ -76,7 +98,7 @@ export function getViewerRoute(pathname: string, search: string) {
 }
 
 export function getBackendAssetOrigin() {
-  return resolveBackendOrigin(window.location, import.meta.env.VITE_BACKEND_ORIGIN);
+  return resolveBackendOrigin(window.location, getConfiguredBackendOrigin());
 }
 
 export function resolveMediaUrl(url: string, assetOrigin: string) {
