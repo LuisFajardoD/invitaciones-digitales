@@ -55,25 +55,6 @@ img {
   display: block;
 }
 
-.legacy-admin .site-shell,
-.legacy-admin .page-shell {
-  width: min(1160px, calc(100% - 32px));
-  margin: 0 auto;
-}
-
-.legacy-admin .site-topbar,
-.legacy-admin .admin-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 0;
-  backdrop-filter: blur(18px);
-}
-
 .ghost-link,
 .button-secondary,
 .button-primary,
@@ -124,29 +105,12 @@ img {
   color: var(--muted);
 }
 
-.legacy-admin .site-hero,
-.legacy-admin .content-panel,
-.legacy-admin .promo-strip,
-.legacy-admin .contact-panel,
 .invitation-card,
-.legacy-admin .admin-panel,
-.legacy-admin .auth-card {
+.invitation-card {
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-}
-
-.legacy-admin .site-hero {
-  margin: 18px 0 28px;
-  padding: 56px clamp(24px, 4vw, 48px);
-}
-
-.legacy-admin .site-hero h1 {
-  margin: 10px 0;
-  font-size: clamp(2.3rem, 8vw, 4.8rem);
-  line-height: 0.95;
-  max-width: 10ch;
 }
 
 .action-row {
@@ -154,104 +118,6 @@ img {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 24px;
-}
-
-.legacy-admin .content-panel,
-.legacy-admin .contact-panel,
-.legacy-admin .admin-panel {
-  margin: 0 0 24px;
-  padding: clamp(20px, 3vw, 32px);
-}
-
-.legacy-admin .promo-strip {
-  display: grid;
-  gap: 8px;
-  margin: 0 0 24px;
-  padding: 22px 24px;
-  background: linear-gradient(135deg, rgba(248, 201, 75, 0.2), rgba(118, 247, 255, 0.08));
-}
-
-.legacy-admin .section-head h2,
-.legacy-admin .contact-panel h2,
-.legacy-admin .admin-panel h2,
-.legacy-admin .auth-card h1 {
-  margin: 8px 0 0;
-  font-size: clamp(1.7rem, 4vw, 2.8rem);
-}
-
-.legacy-admin .card-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  margin-top: 20px;
-}
-
-.legacy-admin .preview-card,
-.legacy-admin .package-card,
-.legacy-admin .faq-card,
-.legacy-admin .list-row,
-.legacy-admin .metric-card,
-.legacy-admin .response-row {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.legacy-admin .preview-card,
-.legacy-admin .package-card,
-.legacy-admin .faq-card {
-  padding: 16px;
-}
-
-.legacy-admin .preview-card h3,
-.legacy-admin .package-card h3,
-.legacy-admin .faq-card h3,
-.legacy-admin .metric-card strong {
-  margin: 12px 0 8px;
-}
-
-.legacy-admin .preview-media {
-  border-radius: 18px;
-  min-height: 180px;
-  background-position: center;
-  background-size: cover;
-}
-
-.legacy-admin .package-price {
-  margin: 0;
-  color: var(--accent);
-  font-weight: 700;
-}
-
-.legacy-admin .package-card ul {
-  margin: 14px 0 0;
-  padding-left: 18px;
-  color: var(--muted);
-}
-
-.legacy-admin .stack-list {
-  display: grid;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.legacy-admin .list-row {
-  padding: 14px 16px;
-}
-
-.legacy-admin .faq-grid {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  margin-top: 18px;
-}
-
-.legacy-admin .contact-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 48px;
 }
 
 .app-viewer .empty-state,
@@ -272,122 +138,6 @@ img {
 
 .public-viewer__frame {
   width: 100%;
-}
-
-.legacy-admin .two-column {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
-}
-
-.legacy-admin .panel-stack {
-  display: grid;
-  gap: 24px;
-}
-
-.legacy-admin .admin-grid {
-  display: grid;
-  gap: 24px;
-}
-
-.legacy-admin .form-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.legacy-admin .field,
-.legacy-admin .field-wide {
-  display: grid;
-  gap: 8px;
-}
-
-.legacy-admin .field-wide {
-  grid-column: 1 / -1;
-}
-
-.legacy-admin .field input,
-.legacy-admin .field select,
-.legacy-admin .field textarea,
-.legacy-admin .field-wide input,
-.legacy-admin .field-wide textarea {
-  width: 100%;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.18);
-  color: var(--text);
-  padding: 12px 14px;
-}
-
-.legacy-admin .field textarea,
-.legacy-admin .field-wide textarea {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.legacy-admin .checkbox-row,
-.legacy-admin .nav-row,
-.legacy-admin .metric-grid,
-.legacy-admin .response-table {
-  display: grid;
-  gap: 12px;
-}
-
-.legacy-admin .checkbox-row {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.legacy-admin .checkbox-tile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.legacy-admin .nav-row {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  margin-bottom: 24px;
-}
-
-.legacy-admin .metric-grid {
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-}
-
-.legacy-admin .metric-card {
-  padding: 18px;
-}
-
-.legacy-admin .response-table {
-  margin-top: 18px;
-}
-
-.legacy-admin .response-row {
-  display: grid;
-  gap: 10px;
-  padding: 14px;
-}
-
-.legacy-admin .response-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
-.legacy-admin .auth-wrap {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-}
-
-.legacy-admin .auth-card {
-  width: min(540px, 100%);
-  padding: 32px;
 }
 
 .auth-card form {
@@ -787,88 +537,6 @@ img {
 
 .simple-list-editor__remove {
   white-space: nowrap;
-}
-
-.legacy-admin .section-order-list {
-  display: grid;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.legacy-admin .section-order-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.legacy-admin .section-order-item--dragging {
-  border-color: rgba(118, 247, 255, 0.22);
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
-}
-
-.legacy-admin .section-order-item__main {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.legacy-admin .section-order-item__title {
-  font-weight: 700;
-}
-
-.legacy-admin .section-order-item__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.legacy-admin .section-order-item__handle {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border: 1px solid rgba(118, 247, 255, 0.12);
-  border-radius: 14px;
-  background: rgba(118, 247, 255, 0.04);
-  color: var(--aqua);
-  cursor: grab;
-}
-
-.legacy-admin .section-order-item__handle span {
-  display: block;
-  width: 16px;
-  height: 2px;
-  border-radius: 999px;
-  background: currentColor;
-}
-
-.legacy-admin .mobile-preview-shell {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-.legacy-admin .mobile-preview-device {
-  width: min(100%, 424px);
-  padding: 14px;
-  border-radius: 38px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-    linear-gradient(160deg, rgba(4, 14, 30, 0.94), rgba(2, 8, 18, 0.98));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 22px 48px rgba(0, 0, 0, 0.28);
 }
 
 .mobile-preview-device__camera {

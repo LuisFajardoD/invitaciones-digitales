@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { InvitationEditorForm } from "@/components/admin/invitation-editor-form";
-import { ReactViewerBridge } from "@/components/invitation/react-viewer-bridge";
 import { requireAdminSession } from "@/lib/auth";
 import { getInvitationById } from "@/lib/repository";
 
@@ -21,16 +20,11 @@ export default async function AdminInvitationEditorPage({
   }
 
   return (
-    <ReactViewerBridge
-      path={`/admin/invitations/${encodeURIComponent(invitation.id)}`}
-      title="CRM React de editor de invitacion"
+    <AdminShell
+      title="Editor de invitacion"
+      description="Edita datos del evento, secciones, OG, expiracion y vista previa movil."
     >
-      <AdminShell
-        title="Editor de invitacion"
-        description="Edita datos del evento, secciones, OG, expiracion y vista previa movil."
-      >
-        <InvitationEditorForm invitation={invitation} />
-      </AdminShell>
-    </ReactViewerBridge>
+      <InvitationEditorForm invitation={invitation} />
+    </AdminShell>
   );
 }
