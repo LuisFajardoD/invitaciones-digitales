@@ -15,6 +15,7 @@ Esta carpeta ya no solo guarda documentos funcionales. Tambien sirve para handof
 - `ESTADO_ACTUAL.md`
   - Estado real del proyecto hoy
   - Migracion Next -> React
+  - Que rutas ya montan React dentro de Next
   - Preview con Playwright
   - Rutas y flujo local recomendado
   - Problemas conocidos y siguientes pasos
@@ -57,4 +58,4 @@ Esta carpeta ya no solo guarda documentos funcionales. Tambien sirve para handof
 
 ## Nota importante
 
-La referencia mas util para retomar trabajo hoy es `ESTADO_ACTUAL.md`. Ese archivo resume cambios recientes que no necesariamente estaban documentados en los docs mas viejos.
+La referencia mas util para retomar trabajo hoy es `ESTADO_ACTUAL.md`. Ese archivo resume cambios recientes que no necesariamente estaban documentados en los docs mas viejos, incluyendo la eliminacion del bridge legacy y que el admin/viewer principales ya entran por React dentro de Next.

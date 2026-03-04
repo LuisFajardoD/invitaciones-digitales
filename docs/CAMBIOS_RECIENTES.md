@@ -4,6 +4,14 @@ Changelog corto para que un chat nuevo entienda rapido que se movio sin leer tod
 
 ## Ultima actualizacion
 
+- Se limpio CSS legacy muerto del admin en:
+  - `frontend/src/styles.css`
+  - `app/globals.css`
+- Se elimino el bridge legacy:
+  - `components/invitation/react-viewer-bridge.tsx`
+- Se actualizaron fallbacks de Next del admin para no depender de ese bridge
+- Se conecto el entorno local a Supabase via `.env.local`
+- Se sincronizo la invitacion `cumple-7-luis-arturo-astronautas` desde mock local hacia Supabase
 - Se actualizo el handoff general en:
   - `README.md`
   - `docs/README.md`
@@ -12,18 +20,14 @@ Changelog corto para que un chat nuevo entienda rapido que se movio sin leer tod
 ## Migracion Next -> React
 
 - Se creo un frontend React con Vite en `frontend/`
-- Ya existe viewer publico React para:
+- El viewer publico de Next ahora monta React en:
   - `/i/[slug]`
   - `/i/[slug]/rsvp?token=...`
-- Ya existe CRM React inicial para:
+- El admin principal de Next ahora monta React en:
+  - `/admin`
   - `/admin/invitations`
   - `/admin/invitations/[id]`
-
-## Bridge local
-
-- En local, Next puede detectar que `:5173` esta activo y mandar hacia React
-- Esto ya aplica a rutas publicas y a parte del admin
-- Existe bypass con `?no_react_bridge=1`
+- `:5173` se mantiene como entorno aislado de desarrollo, no como puente obligatorio
 
 ## Preview real con Playwright
 
@@ -60,6 +64,15 @@ Ya existen perfiles para:
   - `demo@invitaciones.local`
   - `demo12345`
 
+## Produccion / Hostinger
+
+- El deploy requiere estas variables:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `ADMIN_EMAIL`
+- El correo de `ADMIN_EMAIL` debe existir en Supabase Auth
+
 ## Scripts mas importantes
 
 - `npm.cmd run dev`
@@ -87,4 +100,4 @@ Ya existen perfiles para:
 
 1. Mejorar el diseno del CRM React en serio
 2. Seguir afinando la consistencia visual del preview
-3. Continuar desacoplando Next para dejarlo como backend/API
+3. Continuar desacoplando Next para dejarlo como backend/API y migrar las pantallas admin legacy que aun faltan

@@ -43,19 +43,21 @@ Pendiente:
 La migracion esta avanzada, pero incompleta.
 
 Pendiente:
-- mover mas UI admin al frontend React
+- migrar lo que aun sigue en Next:
+  - `/admin/invitations/new`
+  - `/admin/rsvp/[id]`
+  - `/admin/site`
 - revisar que el editor React cubra el 100% del caso real
 - mantener Next principalmente como backend/API
-- definir punto de corte para dejar de depender del CRM historico de Next
+- terminar de retirar el CRM historico de Next cuando ya no quede ninguna ruta activa
 
 ### 5. Revisar estrategia de produccion
 
 Hoy el deploy principal sigue siendo Next.
 
 Pendiente:
-- decidir como se desplegara el frontend React
-- decidir si React vivira como app separada o embebida detras del mismo dominio
-- validar que Hostinger no rompa la integracion cuando se mueva la capa visual
+- decidir si React seguira montado dentro de Next o si despues se separa
+- validar que Hostinger siga estable con el montaje actual del `App` React dentro de Next
 
 ### 6. Mejorar el flujo de preview y editor
 
@@ -76,8 +78,8 @@ Pendiente:
 ### 8. Limpieza tecnica
 
 Pendiente:
-- revisar CSS muerto heredado de iteraciones anteriores
-- revisar componentes de preview y bridge para simplificar
+- seguir revisando CSS muerto heredado de iteraciones anteriores
+- revisar si quedan fallbacks legacy del admin que ya no aporten
 - evitar duplicar logica entre Next y React cuando ya exista source unico
 
 ## Regla para retomar

@@ -2,18 +2,19 @@
 
 Plataforma para crear y administrar invitaciones digitales animadas. Hoy conviven dos capas:
 - Next.js sigue siendo el backend principal y la base del deploy actual.
-- Un frontend React con Vite en `frontend/` esta en migracion y ya cubre buena parte del viewer publico y del CRM.
+- Un frontend React con Vite en `frontend/` ya cubre el viewer publico y el CRM principal; Next hoy lo monta en produccion.
 
 Este README ya no solo describe el proyecto; tambien sirve como handoff rapido para retomar el trabajo en un chat nuevo.
 
 ## Resumen ejecutivo
 
 - Produccion actual:
-  - Sigue dependiendo de Next (`/`, `/i/[slug]`, `/admin`, APIs).
+  - Next sigue siendo el servidor, middleware y APIs.
+  - El viewer publico (`/i/*`) y el CRM principal (`/admin`, `/admin/invitations`, `/admin/invitations/[id]`) ya montan el frontend React dentro de Next.
 - Migracion en curso:
-  - El frontend React en `frontend/` ya renderiza viewer publico, vista cliente RSVP y un editor CRM en migracion.
+  - Aun quedan pantallas administrativas legacy de Next (`/admin/invitations/new`, `/admin/rsvp/[id]`, `/admin/site`) y la portada `/`.
 - En local:
-  - Si el viewer React esta activo en `:5173`, Next detecta eso y redirige/puentea varias rutas hacia React.
+  - `:5173` sigue siendo util para probar el frontend React aislado, pero el flujo integrado ya entra por `:3000`.
 - Vista previa "real":
   - El editor usa un pipeline de screenshots con Playwright para generar capturas reales por dispositivo.
 
@@ -58,17 +59,19 @@ Este README ya no solo describe el proyecto; tambien sirve como handoff rapido p
 - Middleware / auth
 - APIs admin y publicas
 - Portada `/`
-- Parte del CRM historico
-- Fallback completo cuando el frontend React no esta levantado
+- CRM historico residual:
+  - `/admin/invitations/new`
+  - `/admin/rsvp/[id]`
+  - `/admin/site`
 
-### Comportamiento del bridge local
-- En local, si `:5173` esta activo:
-  - `/i/[slug]` puede usar el viewer React
-  - `/i/[slug]/rsvp` puede usar el viewer React
-  - `/admin/invitations`
-  - `/admin/invitations/[id]`
-- Si `:5173` no esta activo:
-  - todo cae al render normal de Next
+### Rutas React montadas por Next
+- `/:3000/admin`
+- `/:3000/admin/invitations`
+- `/:3000/admin/invitations/[id]`
+- `/:3000/i/[slug]`
+- `/:3000/i/[slug]/rsvp?token=...`
+
+En esas rutas, Next ya no muestra el fallback viejo: monta el mismo `App` de `frontend/`.
 
 ## Rutas principales
 
@@ -85,7 +88,7 @@ Este README ya no solo describe el proyecto; tambien sirve como handoff rapido p
 - `/admin/rsvp/[id]` - Panel RSVP
 - `/admin/site` - Editor de portada
 
-### APIs nuevas relevantes para la migracion
+### APIs relevantes
 - `/api/public/invitations/[slug]` - JSON publico de invitacion
 - `/api/public/invitations/[slug]/client-rsvp` - JSON de vista cliente RSVP
 - `/api/preview` - Genera screenshot real con Playwright
@@ -141,10 +144,12 @@ Crea `.env.local` en la raiz con:
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
+ADMIN_EMAIL=...
 ```
 
 Importante:
 - `SUPABASE_SERVICE_ROLE_KEY` solo se usa del lado servidor.
+- `ADMIN_EMAIL` restringe el acceso del CRM a un correo especifico.
 - Si no existe `.env.local`, la app entra en modo demo persistente local.
 
 ### 3) Modo demo (sin Supabase)
@@ -219,12 +224,12 @@ npm run frontend:preview
 ## Flujo local recomendado
 
 1. Correr `npm.cmd run dev:all`
-2. Abrir `http://localhost:3000/admin`
-3. Iniciar sesion con las credenciales demo si aplica
-4. Entrar a:
+2. Abrir `http://localhost:3000/`
+3. Navegar desde la portada a `Acceso CRM`
+4. Iniciar sesion con credenciales demo o Supabase segun aplique
+5. Entrar a:
    - `http://localhost:3000/admin/invitations`
    - `http://localhost:3000/admin/invitations/11111111-1111-4111-8111-111111111111`
-5. Si el bridge local detecta React, la ruta se movera al CRM React automaticamente
 
 ## Documentacion recomendada para retomar trabajo
 
@@ -245,3 +250,14 @@ npm run frontend:preview
 - Si `now > rsvp_until`, el RSVP se cierra aunque la invitacion siga vigente
 - Si `rsvp.enabled=false`, no se muestra el bloque RSVP
 - Para compartir en WhatsApp, usa `share.og_image_url` (recomendado: 1200x630)
+
+## Nota de deploy
+
+Para Hostinger / produccion:
+- el build actual debe salir desde `main`
+- el deploy requiere las 4 variables:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `ADMIN_EMAIL`
+- ademas, el usuario de `ADMIN_EMAIL` debe existir en Supabase Auth

@@ -6,7 +6,7 @@ Este archivo existe para que un chat nuevo entienda rapido donde va el proyecto,
 
 - Next sigue siendo la app principal y el deploy actual.
 - Ya existe una migracion en curso a React + Vite dentro de `frontend/`.
-- En local, Next puede puentear varias rutas hacia el frontend React si este esta levantado en `:5173`.
+- El admin principal y el viewer publico ya se montan dentro de Next usando el `App` de React; el bridge local viejo ya se elimino.
 - El preview del CRM React ya puede usar capturas reales por dispositivo generadas con Playwright.
 - Sin Supabase, el proyecto trabaja en modo demo persistente local con `.mock-data/store.json`.
 
@@ -18,7 +18,10 @@ Este archivo existe para que un chat nuevo entienda rapido donde va el proyecto,
 - Middleware y login
 - APIs admin y publicas
 - Portada `/`
-- Fallbacks cuando React no esta activo
+- Pantallas admin legacy residuales:
+  - `/admin/invitations/new`
+  - `/admin/rsvp/[id]`
+  - `/admin/site`
 
 ### Ya migrado o parcialmente migrado a React
 
@@ -28,6 +31,7 @@ Ubicacion:
 Rutas React ya funcionales:
 - `/i/[slug]`
 - `/i/[slug]/rsvp?token=...`
+- `/admin`
 - `/admin/invitations`
 - `/admin/invitations/[id]`
 
@@ -45,26 +49,18 @@ Cobertura actual del editor React:
 - modulos extra
 - preview dentro de marco tipo telefono
 
-## Bridge local Next -> React
+## Rutas montadas por React dentro de Next
 
-Objetivo:
-- seguir entrando por `localhost:3000`, pero usar React si esta disponible
-
-Comportamiento:
-- si `http://localhost:5173` responde en local, Next redirige o puentea hacia React en varias rutas
-- si `:5173` no esta activo, todo cae al render de Next
-
-Rutas donde esto ya importa:
-- `/i/[slug]`
-- `/i/[slug]/rsvp`
+Hoy Next ya monta el `App` de React en produccion y en local para estas rutas:
+- `/admin`
 - `/admin/invitations`
 - `/admin/invitations/[id]`
+- `/i/[slug]`
+- `/i/[slug]/rsvp`
 
-Archivo clave:
-- `components/invitation/react-viewer-bridge.tsx`
-
-Nota:
-- existe bypass de bridge via `?no_react_bridge=1`, usado por el renderer de Playwright
+Eso significa:
+- el dominio productivo ya no depende del bridge local para esas rutas
+- `:5173` sigue siendo util como entorno aislado de desarrollo, pero no es el camino principal del flujo integrado
 
 ## Preview real con Playwright
 
@@ -140,6 +136,8 @@ Credenciales demo:
 - Email: `demo@invitaciones.local`
 - Password: `demo12345`
 
+Si si existe `.env.local`, la app usa Supabase real y deja de leer `.mock-data/store.json`.
+
 ## Flujo local recomendado
 
 ### Arranque
@@ -155,7 +153,7 @@ Eso levanta:
 ### Login
 
 1. abrir `http://localhost:3000/admin`
-2. iniciar sesion con usuario demo si aplica
+2. iniciar sesion con usuario demo o cuenta real de Supabase segun aplique
 
 ### Trabajo diario
 
@@ -201,12 +199,12 @@ Si vuelve a haber "saltos", revisar:
 - `app/api/preview/devices/route.ts`
 - `app/api/preview/cleanup/route.ts`
 
-### Bridge y rutas Next
-- `components/invitation/react-viewer-bridge.tsx`
+### Rutas Next que montan React
+- `app/admin/page.tsx`
+- `app/i/viewer-react-app.tsx`
 - `app/i/[slug]/page.tsx`
 - `app/i/[slug]/rsvp/page.tsx`
-- `app/admin/invitations/page.tsx`
-- `app/admin/invitations/[id]/page.tsx`
+- `middleware.ts`
 
 ### Frontend React
 - `frontend/src/App.tsx`
@@ -228,9 +226,10 @@ Si vuelve a haber "saltos", revisar:
    - estabilizar tamaños globales del admin si vuelve a "verse agrandado"
 
 3. Seguir desacoplando Next del frontend
-   - mantener Next como backend/API
-   - mover mas UI publica y admin a React
+- mantener Next como backend/API
+- migrar el resto del admin legacy (`new`, `rsvp`, `site`)
 
 4. Definir estrategia de produccion
-   - hoy el deploy principal sigue siendo Next
-   - la capa React aun esta pensada para migracion local y progresiva
+- hoy el deploy principal sigue siendo Next
+- React ya corre montado dentro de Next en las rutas principales
+- queda decidir si el admin/viewer terminaran embebidos asi o si se separaran despues

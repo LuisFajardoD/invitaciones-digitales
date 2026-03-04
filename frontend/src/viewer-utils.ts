@@ -2,12 +2,7 @@ import { resolveBackendOrigin } from "../../shared/origins";
 import type { BackgroundMediaConfig, InvitationRecord, KenBurnsConfig } from "./viewer-types";
 
 function getConfiguredBackendOrigin() {
-  const viteMeta = import.meta as ImportMeta & {
-    env?: {
-      VITE_BACKEND_ORIGIN?: string;
-    };
-  };
-  const viteOrigin = viteMeta.env?.VITE_BACKEND_ORIGIN;
+  const viteOrigin = import.meta.env?.VITE_BACKEND_ORIGIN;
 
   if (viteOrigin) {
     return viteOrigin;

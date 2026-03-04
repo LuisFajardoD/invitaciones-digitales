@@ -599,7 +599,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--ui-space-4);
-  align-items: end;
+  align-items: flex-end;
 }
 
 .app-admin .cover-card__controls-row--astronaut {

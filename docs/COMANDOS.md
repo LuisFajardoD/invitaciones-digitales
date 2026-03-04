@@ -55,6 +55,13 @@ Si no hay `.env.local`, usa:
 - Email: `demo@invitaciones.local`
 - Password: `demo12345`
 
+## Login con Supabase real
+
+Si ya existe `.env.local`, el login usa Supabase:
+
+- Email: el de `ADMIN_EMAIL`
+- Password: la del usuario creado en Supabase Auth
+
 ## Rutas utiles
 
 ### Login admin
@@ -81,6 +88,13 @@ Si no hay `.env.local`, usa:
 ### Viewer React directo
 
 - `http://localhost:5173/i/cumple-7-luis-arturo-astronautas`
+
+## Flujo integrado recomendado
+
+1. Abre `http://localhost:3000/`
+2. Entra por `Acceso CRM`
+3. Navega dentro del CRM
+4. Desde el editor usa `Abrir publica` para validar la invitacion
 
 ## Si algo se rompe raro
 
