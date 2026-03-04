@@ -10,6 +10,7 @@ type SiteHomeProps = {
 
 export function SiteHome({ settings }: SiteHomeProps) {
   const now = new Date();
+  const blockOrder = Array.isArray(settings?.blocks_order) ? settings.blocks_order : [];
 
   return (
     <main className="app-admin site-shell">
@@ -19,7 +20,7 @@ export function SiteHome({ settings }: SiteHomeProps) {
           Acceso CRM
         </Link>
       </header>
-      {settings.blocks_order.map((key) => renderBlock(key, settings, now))}
+      {blockOrder.map((key) => renderBlock(key, settings, now))}
     </main>
   );
 }
@@ -59,7 +60,7 @@ function renderBlock(key: SiteBlockKey, settings: SiteSettingsData, now: Date) {
             <h2>{block.title}</h2>
           </div>
           <div className="card-grid">
-            {block.items.map((item) => (
+            {(Array.isArray(block.items) ? block.items : []).map((item) => (
               <Link key={item.slug} href={`/i/${item.slug}`} className="preview-card">
                 <div
                   className="preview-media"
@@ -98,13 +99,13 @@ function renderBlock(key: SiteBlockKey, settings: SiteSettingsData, now: Date) {
             <h2>{block.title}</h2>
           </div>
           <div className="card-grid">
-            {block.items.map((item) => (
+            {(Array.isArray(block.items) ? block.items : []).map((item) => (
               <article key={item.name} className="package-card">
                 <p className="package-price">{item.price}</p>
                 <h3>{item.name}</h3>
                 <p>{item.description}</p>
                 <ul>
-                  {item.features.map((feature) => (
+                  {(Array.isArray(item.features) ? item.features : []).map((feature) => (
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
@@ -126,7 +127,7 @@ function renderBlock(key: SiteBlockKey, settings: SiteSettingsData, now: Date) {
             <h2>{block.title}</h2>
           </div>
           <div className="stack-list">
-            {block.items.map((item) => (
+            {(Array.isArray(block.items) ? block.items : []).map((item) => (
               <div key={item} className="list-row">
                 {item}
               </div>
@@ -147,7 +148,7 @@ function renderBlock(key: SiteBlockKey, settings: SiteSettingsData, now: Date) {
             <h2>{block.title}</h2>
           </div>
           <div className="stack-list">
-            {block.items.map((item) => (
+            {(Array.isArray(block.items) ? block.items : []).map((item) => (
               <div key={item} className="list-row">
                 {item}
               </div>
@@ -168,7 +169,7 @@ function renderBlock(key: SiteBlockKey, settings: SiteSettingsData, now: Date) {
             <h2>{block.title}</h2>
           </div>
           <div className="faq-grid">
-            {block.items.map((item) => (
+            {(Array.isArray(block.items) ? block.items : []).map((item) => (
               <article key={item.question} className="faq-card">
                 <h3>{item.question}</h3>
                 <p>{item.answer}</p>
