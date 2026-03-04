@@ -1,10 +1,14 @@
+import { DEFAULT_SECTION_ORDER } from "@/lib/constants";
+import { demoInvitation } from "@/lib/demo-data";
 import type {
   BackgroundMediaConfig,
+  GenericTextSectionData,
   HeroAstronautConfig,
   InvitationBackgroundConfig,
   InvitationRecord,
   InvitationSections,
   KenBurnsConfig,
+  QuickActionItem,
 } from "@/types/invitations";
 
 export const INVITATION_BACKGROUND_STORAGE_KEY = "__invitation_background";
@@ -41,6 +45,57 @@ export const DEFAULT_HERO_ASTRONAUT: HeroAstronautConfig = {
   position: "bottom-right",
   opacity: 0.24,
 };
+
+function normalizeStringList(value: unknown, fallback: string[] = []) {
+  if (!Array.isArray(value)) {
+    return [...fallback];
+  }
+
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function normalizeGenericSection(
+  value: Partial<GenericTextSectionData> | null | undefined,
+  fallback: GenericTextSectionData,
+): GenericTextSectionData {
+  const candidate = value || {};
+
+  return {
+    ...fallback,
+    ...candidate,
+    items: normalizeStringList(candidate.items, fallback.items || []),
+  };
+}
+
+function normalizeQuickActionItems(value: unknown, fallback: QuickActionItem[]) {
+  if (!Array.isArray(value)) {
+    return [...fallback];
+  }
+
+  const normalized = value
+    .map((item, index) => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const candidate = item as Partial<QuickActionItem>;
+      const fallbackItem = fallback[index] || fallback[0];
+
+      return {
+        type:
+          candidate.type === "confirm" ||
+          candidate.type === "location" ||
+          candidate.type === "calendar" ||
+          candidate.type === "share"
+            ? candidate.type
+            : fallbackItem.type,
+        label: typeof candidate.label === "string" ? candidate.label : fallbackItem.label,
+      };
+    })
+    .filter((item): item is QuickActionItem => item !== null);
+
+  return normalized.length ? normalized : [...fallback];
+}
 
 export function normalizeKenBurns(value?: Partial<KenBurnsConfig> | null): KenBurnsConfig {
   const candidate = value || {};
@@ -133,26 +188,84 @@ export function normalizeHeroAstronaut(value?: Partial<HeroAstronautConfig> | nu
 }
 
 export function normalizeInvitationRecord(invitation: InvitationRecord): InvitationRecord {
-  const rawSections = invitation.sections as InvitationSections & Record<string, unknown>;
+  const fallbackRecord = demoInvitation;
+  const rawSections = ((invitation.sections || {}) as Partial<InvitationSections>) as Partial<InvitationSections> &
+    Record<string, unknown>;
   const storedBackground = rawSections[INVITATION_BACKGROUND_STORAGE_KEY] as InvitationBackgroundConfig | undefined;
-  const hero = invitation.sections.hero;
-
-  return {
-    ...invitation,
-    background: normalizeInvitationBackground(invitation.background || storedBackground),
-    sections: {
-      ...invitation.sections,
-      hero: {
-        ...hero,
-        background: normalizeBackgroundMedia(hero.background, hero.background_image_url),
-        astronaut: normalizeHeroAstronaut(hero.astronaut),
-      },
-      map: {
-        ...invitation.sections.map,
-        dark:
-          typeof invitation.sections.map.dark === "boolean" ? invitation.sections.map.dark : null,
+  const hero = {
+    ...fallbackRecord.sections.hero,
+    ...(rawSections.hero || {}),
+  };
+  const mapSection = {
+    ...fallbackRecord.sections.map,
+    ...(rawSections.map || {}),
+  };
+  const quickActionsSection = {
+    ...fallbackRecord.sections.quick_actions,
+    ...(rawSections.quick_actions || {}),
+    items: normalizeQuickActionItems(rawSections.quick_actions?.items, fallbackRecord.sections.quick_actions.items),
+  };
+  const gallerySection = {
+    ...fallbackRecord.sections.gallery,
+    ...(rawSections.gallery || {}),
+    image_urls: normalizeStringList(rawSections.gallery?.image_urls, fallbackRecord.sections.gallery.image_urls),
+  };
+  const notesSection = {
+    ...fallbackRecord.sections.notes,
+    ...(rawSections.notes || {}),
+    items: normalizeStringList(rawSections.notes?.items, fallbackRecord.sections.notes.items),
+  };
+  const normalizedSections: InvitationSections = {
+    hero: {
+      ...hero,
+      background: normalizeBackgroundMedia(hero.background, hero.background_image_url),
+      astronaut: normalizeHeroAstronaut(hero.astronaut),
+    },
+    event_info: {
+      ...fallbackRecord.sections.event_info,
+      ...(rawSections.event_info || {}),
+    },
+    quick_actions: quickActionsSection,
+    countdown: {
+      ...fallbackRecord.sections.countdown,
+      ...(rawSections.countdown || {}),
+    },
+    map: {
+      ...mapSection,
+      dark: typeof mapSection.dark === "boolean" ? mapSection.dark : null,
+    },
+    gallery: gallerySection,
+    notes: notesSection,
+    rsvp: {
+      ...fallbackRecord.sections.rsvp,
+      ...(rawSections.rsvp || {}),
+      fields: {
+        ...fallbackRecord.sections.rsvp.fields,
+        ...(rawSections.rsvp?.fields || {}),
       },
     },
+    contact: {
+      ...fallbackRecord.sections.contact,
+      ...(rawSections.contact || {}),
+    },
+    itinerary: normalizeGenericSection(rawSections.itinerary, fallbackRecord.sections.itinerary),
+    dress_code: normalizeGenericSection(rawSections.dress_code, fallbackRecord.sections.dress_code),
+    gifts: normalizeGenericSection(rawSections.gifts, fallbackRecord.sections.gifts),
+    faq: normalizeGenericSection(rawSections.faq, fallbackRecord.sections.faq),
+    livestream: normalizeGenericSection(rawSections.livestream, fallbackRecord.sections.livestream),
+    transport: normalizeGenericSection(rawSections.transport, fallbackRecord.sections.transport),
+    lodging: normalizeGenericSection(rawSections.lodging, fallbackRecord.sections.lodging),
+  };
+  const normalizedSectionOrder = Array.isArray(invitation.sections_order)
+    ? invitation.sections_order.filter((value): value is InvitationRecord["sections_order"][number] => typeof value === "string")
+    : DEFAULT_SECTION_ORDER;
+
+  return {
+    ...fallbackRecord,
+    ...invitation,
+    background: normalizeInvitationBackground(invitation.background || storedBackground),
+    sections_order: normalizedSectionOrder,
+    sections: normalizedSections,
   };
 }
 
