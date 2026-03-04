@@ -198,6 +198,21 @@
   margin: 0;
 }
 
+.app-admin .auth-card .viewer-section__subtitle {
+  margin: 0;
+}
+
+.app-admin .auth-card .viewer-stack-list {
+  margin-top: 1rem;
+}
+
+.app-admin .auth-card .viewer-response-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
 .app-admin .nav-row,
 .app-admin .inline-actions,
 .app-admin .viewer-inline-actions {
@@ -281,6 +296,22 @@
 .app-admin .viewer-mini-button,
 .app-admin .viewer-theme-toggle {
   background: var(--admin-secondary-bg);
+}
+
+.app-admin .viewer-theme-toggle--icon {
+  inline-size: 3rem;
+  block-size: 3rem;
+  min-height: 3rem;
+  padding: 0;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.app-admin .viewer-theme-icon {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  display: block;
+  color: currentColor;
 }
 
 .app-admin .viewer-link {

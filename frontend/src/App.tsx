@@ -1492,16 +1492,31 @@ export function App() {
 
   if (route.mode === "unknown") {
     return (
-      <main className="viewer-shell viewer-shell--centered">
-        <section className="viewer-card">
-          <p className="viewer-eyebrow">Frontend React</p>
-          <h1>Viewer publico y CRM en migracion</h1>
-          <p>Rutas soportadas:</p>
-          <p><code>/i/cumple-7-luis-arturo-astronautas</code></p>
-          <p><code>/i/cumple-7-luis-arturo-astronautas/rsvp?token=...</code></p>
-          <p><code>/admin/login</code></p>
-          <p><code>/admin/invitations</code></p>
-          <p><code>/admin/invitations/[id]</code></p>
+      <main className={`app-admin auth-wrap viewer-admin-theme viewer-admin-theme--${adminTheme}`}>
+        <section className="auth-card viewer-card">
+          <div className="viewer-admin-topbar viewer-admin-topbar--compact">
+            <div>
+              <p className="viewer-eyebrow">Editor</p>
+              <h1>CRM React</h1>
+            </div>
+            <button
+              type="button"
+              className="viewer-theme-toggle viewer-theme-toggle--icon"
+              aria-label={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+              title={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+              onClick={() => setAdminTheme((current) => (current === "dark" ? "light" : "dark"))}
+            >
+              <ThemeIcon theme={adminTheme} />
+            </button>
+          </div>
+          <p className="viewer-section__subtitle">Rutas soportadas desde este frontend:</p>
+          <div className="viewer-stack-list">
+            <p><code>/i/cumple-7-luis-arturo-astronautas</code></p>
+            <p><code>/i/cumple-7-luis-arturo-astronautas/rsvp?token=...</code></p>
+            <p><code>/admin/login</code></p>
+            <p><code>/admin/invitations</code></p>
+            <p><code>/admin/invitations/[id]</code></p>
+          </div>
         </section>
       </main>
     );
@@ -1511,10 +1526,23 @@ export function App() {
     const redirectTarget = getSafeAdminRedirectPath(new URLSearchParams(window.location.search).get("redirect"));
 
     return (
-      <main className="viewer-shell viewer-shell--centered">
-        <section className="viewer-card">
-          <p className="viewer-eyebrow">Acceso administrativo</p>
-          <h1>Login del CRM</h1>
+      <main className={`app-admin auth-wrap viewer-admin-theme viewer-admin-theme--${adminTheme}`}>
+        <section className="auth-card viewer-card">
+          <div className="viewer-admin-topbar viewer-admin-topbar--compact">
+            <div>
+              <p className="viewer-eyebrow">Editor</p>
+              <h1>Login del CRM</h1>
+            </div>
+            <button
+              type="button"
+              className="viewer-theme-toggle viewer-theme-toggle--icon"
+              aria-label={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+              title={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+              onClick={() => setAdminTheme((current) => (current === "dark" ? "light" : "dark"))}
+            >
+              <ThemeIcon theme={adminTheme} />
+            </button>
+          </div>
           <p className="viewer-section__subtitle">Inicia sesion para continuar con el panel administrativo.</p>
           <form className="viewer-stack-list" onSubmit={handleAdminLoginSubmit}>
             <label className="viewer-field">
@@ -1555,11 +1583,24 @@ export function App() {
 
     return (
       <RequireAuth enabled={isProtectedAdminRoute} authState={adminAuthState} redirectPath={currentPath} fallback={adminGuardFallback}>
-        <main className="viewer-shell viewer-shell--centered">
-          <section className="viewer-card">
-            <p className="viewer-eyebrow">CRM React</p>
-            <h1>Esta ruta solo existe en el panel Next</h1>
-            <p>
+        <main className={`app-admin auth-wrap viewer-admin-theme viewer-admin-theme--${adminTheme}`}>
+          <section className="auth-card viewer-card">
+            <div className="viewer-admin-topbar viewer-admin-topbar--compact">
+              <div>
+                <p className="viewer-eyebrow">Editor</p>
+                <h1>Ruta historica</h1>
+              </div>
+              <button
+                type="button"
+                className="viewer-theme-toggle viewer-theme-toggle--icon"
+                aria-label={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+                title={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+                onClick={() => setAdminTheme((current) => (current === "dark" ? "light" : "dark"))}
+              >
+                <ThemeIcon theme={adminTheme} />
+              </button>
+            </div>
+            <p className="viewer-section__subtitle">
               {isSameOriginFallback
                 ? "Abre esta ruta desde el backend de Next para usar el formulario historico."
                 : "Abriendo el formulario del panel Next..."}

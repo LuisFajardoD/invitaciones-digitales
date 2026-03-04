@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { InvitationRenderer } from "@/components/invitation/layout_v1/invitation-renderer";
-import { ReactViewerBridge } from "@/components/invitation/react-viewer-bridge";
+import { ViewerReactApp } from "@/app/i/viewer-react-app";
 import { getPublicInvitationBySlug } from "@/lib/repository";
 
 export const dynamic = "force-dynamic";
@@ -86,9 +85,7 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
     <div className="app-viewer public-viewer">
       <div className="theme-viewer">
         <div className="public-viewer__frame">
-          <ReactViewerBridge path={`/i/${encodeURIComponent(invitation.slug)}`} title="Viewer React de invitacion publica">
-            <InvitationRenderer invitation={invitation} />
-          </ReactViewerBridge>
+          <ViewerReactApp />
         </div>
       </div>
     </div>
