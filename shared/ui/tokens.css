@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&display=swap");
 
 :root {
+  color-scheme: light dark;
   --ui-font-sans:
     "Bricolage Grotesque",
     ui-sans-serif,
@@ -53,4 +54,20 @@
   --ui-control-gap: 0.625rem;
   --ui-container-max: 1320px;
   --ui-container-pad: 1.5rem;
+  --bg: #021122;
+  --bg-2: #081b3a;
+  --card: rgba(10, 24, 55, 0.82);
+  --card-strong: #0f2a59;
+  --line: rgba(122, 200, 255, 0.18);
+  --text: #f3f8ff;
+  --muted: #adc9ec;
+  --accent: #f8c94b;
+  --aqua: #76f7ff;
+  --danger: #ff8c7a;
+  --success: #7dffc4;
+  --shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+  --radius: 24px;
+  --mission-panel-radius: 24px;
+  --mission-tile-radius: 24px;
+  --mission-input-radius: 18px;
 }

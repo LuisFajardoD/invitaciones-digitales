@@ -1265,3 +1265,39 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.ghost-link,
+.button-secondary,
+.button-primary,
+.button-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 12px 18px;
+  min-height: 46px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.ghost-link,
+.button-ghost,
+.button-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.button-primary {
+  background: linear-gradient(135deg, var(--accent), #f58e3a);
+  color: #07121f;
+  font-weight: 700;
+}
+
+.button-primary:hover,
+.button-secondary:hover,
+.button-ghost:hover,
+.ghost-link:hover {
+  transform: translateY(-2px);
+}
