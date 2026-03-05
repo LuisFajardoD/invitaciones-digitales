@@ -14,6 +14,28 @@
   color: var(--landing-text);
 }
 
+.landing-root--dark {
+  --landing-bg: #0f1115;
+  --landing-bg-soft: #171a20;
+  --landing-text: #f4f5f7;
+  --landing-muted: #a8adba;
+  --landing-border: rgba(255, 255, 255, 0.12);
+  --landing-card: rgba(255, 255, 255, 0.05);
+  --landing-shadow: 0 18px 48px rgba(6, 8, 16, 0.28);
+  --landing-accent: #ffffff;
+}
+
+.landing-root--light {
+  --landing-bg: #f4f6fa;
+  --landing-bg-soft: #ffffff;
+  --landing-text: #111318;
+  --landing-muted: #5e6678;
+  --landing-border: rgba(17, 19, 24, 0.14);
+  --landing-card: rgba(255, 255, 255, 0.92);
+  --landing-shadow: 0 20px 50px rgba(11, 18, 36, 0.1);
+  --landing-accent: #111318;
+}
+
 .landing-root--examples {
   padding-top: 22px;
 }
@@ -26,6 +48,13 @@
     radial-gradient(1200px 600px at 90% -10%, rgba(255, 255, 255, 0.08), transparent 58%),
     radial-gradient(900px 500px at -20% 10%, rgba(178, 219, 255, 0.08), transparent 56%),
     linear-gradient(180deg, #111318 0%, #0c0f15 100%);
+}
+
+.landing-root--light .landing-backdrop {
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(17, 19, 24, 0.08), transparent 58%),
+    radial-gradient(900px 500px at -20% 10%, rgba(92, 117, 162, 0.1), transparent 56%),
+    linear-gradient(180deg, #f6f8fc 0%, #eff2f8 100%);
 }
 
 .landing-header {
@@ -42,6 +71,10 @@
   border-radius: 999px;
   background: rgba(12, 14, 18, 0.75);
   backdrop-filter: blur(8px);
+}
+
+.landing-root--light .landing-header {
+  background: rgba(255, 255, 255, 0.75);
 }
 
 .landing-brand {
@@ -78,6 +111,44 @@
   background: rgba(255, 255, 255, 0.05);
   color: var(--landing-text);
   font-weight: 600;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.landing-crm:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.landing-crm:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.landing-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.landing-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--landing-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--landing-text);
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .landing-hero {
@@ -225,9 +296,65 @@
 }
 
 .landing-demo-media {
+  position: relative;
+  overflow: hidden;
   aspect-ratio: 16 / 10;
-  background-size: cover;
-  background-position: center;
+  border-bottom: 1px solid var(--landing-border);
+  background:
+    linear-gradient(145deg, rgba(88, 98, 120, 0.3), rgba(40, 48, 66, 0.22)),
+    linear-gradient(180deg, rgba(8, 8, 12, 0.12), rgba(8, 8, 12, 0.62));
+}
+
+.landing-demo-media--placeholder::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.14) 45%, transparent 100%);
+  transform: translateX(-120%);
+  animation: landing-shimmer 1.8s ease-in-out infinite;
+}
+
+.landing-demo-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  object-fit: cover;
+  transition: opacity 0.24s ease;
+}
+
+.landing-demo-image--ready {
+  opacity: 1;
+}
+
+.landing-demo-fallback-label {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--landing-border);
+  background: rgba(8, 10, 16, 0.52);
+  color: #d7dce8;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+@keyframes landing-shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(120%);
+  }
 }
 
 .landing-demo-copy {
@@ -361,44 +488,31 @@
   max-width: 66ch;
 }
 
-@media (prefers-color-scheme: light) {
-  .landing-root {
-    --landing-bg: #f4f6fa;
-    --landing-bg-soft: #ffffff;
-    --landing-text: #111318;
-    --landing-muted: #5e6678;
-    --landing-border: rgba(17, 19, 24, 0.14);
-    --landing-card: rgba(255, 255, 255, 0.92);
-    --landing-shadow: 0 20px 50px rgba(11, 18, 36, 0.1);
-    --landing-accent: #111318;
-  }
+.landing-root--light .landing-kicker,
+.landing-root--light .landing-preview-label,
+.landing-root--light .landing-section-head p,
+.landing-root--light .landing-contact > div > p:first-child,
+.landing-root--light .landing-package-name {
+  color: #61697a;
+}
 
-  .landing-backdrop {
-    background:
-      radial-gradient(1200px 600px at 90% -10%, rgba(17, 19, 24, 0.08), transparent 58%),
-      radial-gradient(900px 500px at -20% 10%, rgba(92, 117, 162, 0.1), transparent 56%),
-      linear-gradient(180deg, #f6f8fc 0%, #eff2f8 100%);
-  }
+.landing-root--light .landing-cta-primary {
+  color: #ffffff;
+}
 
-  .landing-header {
-    background: rgba(255, 255, 255, 0.75);
-  }
+.landing-root--light .landing-package-card li::before {
+  background: rgba(17, 19, 24, 0.48);
+}
 
-  .landing-kicker,
-  .landing-preview-label,
-  .landing-section-head p,
-  .landing-contact > div > p:first-child,
-  .landing-package-name {
-    color: #61697a;
-  }
+.landing-root--light .landing-crm:hover {
+  border-color: rgba(17, 19, 24, 0.25);
+  background: rgba(17, 19, 24, 0.06);
+  box-shadow: 0 8px 20px rgba(17, 19, 24, 0.12);
+}
 
-  .landing-cta-primary {
-    color: #ffffff;
-  }
-
-  .landing-package-card li::before {
-    background: rgba(17, 19, 24, 0.48);
-  }
+.landing-root--light .landing-demo-fallback-label {
+  background: rgba(255, 255, 255, 0.78);
+  color: #3f4658;
 }
 
 @media (max-width: 920px) {
@@ -434,6 +548,14 @@
     padding: 18px;
   }
 
+  .landing-header-actions {
+    width: 100%;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .landing-theme-toggle,
   .landing-crm,
   .landing-cta-primary,
   .landing-cta-secondary {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createWhatsAppUrl } from "@/lib/utils";
 import type { SiteSettingsData } from "@/types/invitations";
@@ -23,6 +24,10 @@ type PackageItem = {
   description: string;
   features: string[];
 };
+
+type ThemeMode = "dark" | "light";
+
+const THEME_STORAGE_KEY = "site-theme-mode";
 
 const FALLBACK_DEMOS: DemoItem[] = [
   {
@@ -118,6 +123,8 @@ function resolveFeatured(demos: DemoItem[]): DemoItem {
 }
 
 export function Landing({ settings, variant = "home" }: LandingProps) {
+  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
+  const [coverStatus, setCoverStatus] = useState<Record<string, "loaded" | "error">>({});
   const demos = buildDemos(settings);
   const packages = buildPackages(settings);
   const featured = resolveFeatured(demos);
@@ -125,9 +132,30 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
   const heroSubtitle =
     settings?.blocks?.hero?.subtitle ||
     "Diseno limpio, performance alto y flujo directo para convertir por WhatsApp.";
+  const rootThemeClass =
+    themeMode === "light" ? styles["landing-root--light"] : styles["landing-root--dark"];
+
+  useEffect(() => {
+    const savedMode = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedMode === "light" || savedMode === "dark") {
+      setThemeMode(savedMode);
+      return;
+    }
+
+    const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+    setThemeMode(prefersLight ? "light" : "dark");
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
+  }, [themeMode]);
 
   return (
-    <main className={`${styles["landing-root"]} ${variant === "examples" ? styles["landing-root--examples"] : ""}`}>
+    <main
+      className={`${styles["landing-root"]} ${rootThemeClass} ${
+        variant === "examples" ? styles["landing-root--examples"] : ""
+      }`}
+    >
       <div className={styles["landing-backdrop"]} aria-hidden="true" />
 
       <header className={styles["landing-header"]}>
@@ -141,9 +169,20 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
           <a href="#contacto">Contacto</a>
         </nav>
 
-        <Link href="/admin" className={styles["landing-crm"]}>
-          Acceso CRM
-        </Link>
+        <div className={styles["landing-header-actions"]}>
+          <button
+            type="button"
+            className={styles["landing-theme-toggle"]}
+            onClick={() => setThemeMode((prev) => (prev === "dark" ? "light" : "dark"))}
+            aria-label={`Cambiar a tema ${themeMode === "dark" ? "claro" : "oscuro"}`}
+          >
+            {themeMode === "dark" ? "Modo claro" : "Modo oscuro"}
+          </button>
+
+          <Link href="/admin" className={styles["landing-crm"]}>
+            Acceso CRM
+          </Link>
+        </div>
       </header>
 
       <section className={styles["landing-hero"]}>
@@ -177,22 +216,51 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
         </div>
 
         <div className={styles["landing-demos-grid"]}>
-          {demos.map((item) => (
-            <article key={`${item.slug}-${item.title}`} className={styles["landing-demo-card"]}>
-              <div
-                className={styles["landing-demo-media"]}
-                style={{
-                  backgroundImage: `linear-gradient(180deg, rgba(8, 8, 12, 0.05), rgba(8, 8, 12, 0.55)), url(${item.cover_url})`,
-                }}
-                aria-hidden="true"
-              />
-              <div className={styles["landing-demo-copy"]}>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-                <Link href={`/i/${item.slug}`}>Ver invitacion</Link>
-              </div>
-            </article>
-          ))}
+          {demos.map((item) => {
+            const demoKey = `${item.slug}-${item.title}`;
+            const coverUrl = item.cover_url?.trim() || "";
+            const hasCover = coverUrl.length > 0;
+            const status = coverStatus[demoKey];
+            const showPlaceholder = !hasCover || status === "error" || status !== "loaded";
+
+            return (
+              <article key={demoKey} className={styles["landing-demo-card"]}>
+                <div
+                  className={`${styles["landing-demo-media"]} ${
+                    showPlaceholder ? styles["landing-demo-media--placeholder"] : ""
+                  }`}
+                  aria-hidden="true"
+                >
+                  {hasCover ? (
+                    <img
+                      src={coverUrl}
+                      alt=""
+                      loading="lazy"
+                      className={`${styles["landing-demo-image"]} ${
+                        status === "loaded" ? styles["landing-demo-image--ready"] : ""
+                      }`}
+                      onLoad={() => {
+                        setCoverStatus((prev) => ({ ...prev, [demoKey]: "loaded" }));
+                      }}
+                      onError={() => {
+                        setCoverStatus((prev) => ({ ...prev, [demoKey]: "error" }));
+                      }}
+                    />
+                  ) : null}
+
+                  {showPlaceholder ? (
+                    <span className={styles["landing-demo-fallback-label"]}>Vista previa</span>
+                  ) : null}
+                </div>
+
+                <div className={styles["landing-demo-copy"]}>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                  <Link href={`/i/${item.slug}`}>Ver invitacion</Link>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
