@@ -7,15 +7,11 @@
     "prebuild": "npm run css:guard && node scripts/prebuild.mjs",
     "css:guard": "node scripts/css-guard.mjs",
     "dev": "next dev",
-    "dev:all": "node scripts/dev-stack.mjs",
     "dev:clean": "node scripts/dev-clean.mjs",
     "build": "next build",
     "start": "next start -p $PORT",
     "serve": "next start -p 3000",
     "preview": "next build && next start -p 3000",
-    "frontend:dev": "npm --prefix frontend run dev",
-    "frontend:build": "npm --prefix frontend run build",
-    "frontend:preview": "npm --prefix frontend run preview",
     "test:smoke": "node scripts/smoke-e2e.mjs"
   },
   "engines": {
