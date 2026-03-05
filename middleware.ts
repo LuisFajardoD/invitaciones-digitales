@@ -9,6 +9,13 @@ export function middleware(request: NextRequest) {
   const isAdminLogin = pathname === "/admin/login";
   const isProtectedAdminRoute = pathname.startsWith("/admin") && !isAdminRoot && !isAdminLogin;
 
+  if (isAdminLogin && token) {
+    const adminHomeUrl = request.nextUrl.clone();
+    adminHomeUrl.pathname = "/admin/invitations";
+    adminHomeUrl.search = "";
+    return NextResponse.redirect(adminHomeUrl);
+  }
+
   if (isAdminRoot && !token) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/admin/login";

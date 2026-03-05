@@ -4,6 +4,8 @@ import { ADMIN_COOKIE_NAME, DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD } from "@/lib/
 import { getAdminAuthPolicyError, getAllowedAdminEmail, isDemoAuthEnabled } from "@/lib/auth";
 import { createAnonSupabaseClient } from "@/lib/supabase/server";
 
+const ADMIN_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+
 export async function POST(request: Request) {
   const body = (await request.json()) as {
     email?: string;
@@ -45,7 +47,7 @@ export async function POST(request: Request) {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 8,
+      maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
     });
     return NextResponse.json({ ok: true });
   }
@@ -69,7 +71,7 @@ export async function POST(request: Request) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: data.session.expires_in || 60 * 60,
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
   });
 
   return NextResponse.json({ ok: true });
