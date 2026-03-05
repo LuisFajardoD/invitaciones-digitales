@@ -1,7 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./App";
-import "./styles.css";
+import "./viewer.css";
+import "./admin.css";
 import "../../shared/ui/tokens.css";
 import "../../shared/ui/base.css";
 import "../../shared/ui/components.css";
