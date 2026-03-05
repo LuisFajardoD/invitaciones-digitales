@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 export type AdminAuthState = "checking" | "authenticated" | "unauthenticated";
 
@@ -33,11 +33,19 @@ export function RequireAuth({
   fallback?: ReactNode;
   children: ReactNode;
 }) {
+  const hasRedirectedRef = useRef(false);
+
   useEffect(() => {
     if (!enabled || authState !== "unauthenticated") {
+      hasRedirectedRef.current = false;
       return;
     }
 
+    if (hasRedirectedRef.current) {
+      return;
+    }
+
+    hasRedirectedRef.current = true;
     window.location.replace(buildAdminLoginRedirectTarget(redirectPath));
   }, [authState, enabled, redirectPath]);
 

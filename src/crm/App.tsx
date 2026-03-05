@@ -532,6 +532,8 @@ export function App() {
     startScrollTop: 0,
   });
   const [isLivePreviewDragging, setIsLivePreviewDragging] = useState(false);
+  const hasRedirectedToAdminNewRef = useRef(false);
+  const hasRedirectedAfterLoginRef = useRef(false);
 
   function stopLivePreviewDrag() {
     if (!livePreviewDragStateRef.current.active) {
@@ -836,6 +838,11 @@ export function App() {
 
   useEffect(() => {
     if (route.mode !== "admin-new" || adminAuthState !== "authenticated") {
+      hasRedirectedToAdminNewRef.current = false;
+      return;
+    }
+
+    if (hasRedirectedToAdminNewRef.current) {
       return;
     }
 
@@ -844,6 +851,7 @@ export function App() {
       return;
     }
 
+    hasRedirectedToAdminNewRef.current = true;
     const timeoutId = window.setTimeout(() => {
       window.location.replace(targetUrl);
     }, 40);
@@ -878,6 +886,11 @@ export function App() {
 
   useEffect(() => {
     if (route.mode !== "admin-login" || adminAuthState !== "authenticated") {
+      hasRedirectedAfterLoginRef.current = false;
+      return;
+    }
+
+    if (hasRedirectedAfterLoginRef.current) {
       return;
     }
 
@@ -887,6 +900,7 @@ export function App() {
       return;
     }
 
+    hasRedirectedAfterLoginRef.current = true;
     window.location.replace(targetPath);
   }, [adminAuthState, route.mode]);
 
