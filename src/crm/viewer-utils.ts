@@ -15,7 +15,9 @@ export function getSlugFromPath(pathname: string) {
 }
 
 export function getViewerRoute(pathname: string, search: string) {
-  const adminLoginMatch = pathname.match(/^\/admin(?:\/login)?\/?$/);
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+
+  const adminLoginMatch = normalizedPath.match(/^\/admin(?:\/login)?$/);
   if (adminLoginMatch) {
     return {
       slug: "",
@@ -25,7 +27,7 @@ export function getViewerRoute(pathname: string, search: string) {
     };
   }
 
-  const adminNewMatch = pathname.match(/^\/admin\/invitations\/new\/?$/);
+  const adminNewMatch = normalizedPath.match(/^\/admin\/invitations\/new$/);
   if (adminNewMatch) {
     return {
       slug: "",
@@ -35,7 +37,7 @@ export function getViewerRoute(pathname: string, search: string) {
     };
   }
 
-  const adminEditorMatch = pathname.match(/^\/admin\/invitations\/([^/]+)\/?$/);
+  const adminEditorMatch = normalizedPath.match(/^\/admin\/invitations\/([^/]+)$/);
   if (adminEditorMatch) {
     return {
       slug: "",
@@ -45,7 +47,7 @@ export function getViewerRoute(pathname: string, search: string) {
     };
   }
 
-  const adminListMatch = pathname.match(/^\/admin\/invitations\/?$/);
+  const adminListMatch = normalizedPath.match(/^\/admin\/invitations$/);
   if (adminListMatch) {
     return {
       slug: "",
@@ -55,7 +57,7 @@ export function getViewerRoute(pathname: string, search: string) {
     };
   }
 
-  const invitationMatch = pathname.match(/^\/i\/([^/]+)\/?$/);
+  const invitationMatch = normalizedPath.match(/^\/i\/([^/]+)$/);
   if (invitationMatch) {
     return {
       slug: decodeURIComponent(invitationMatch[1]),
@@ -65,12 +67,21 @@ export function getViewerRoute(pathname: string, search: string) {
     };
   }
 
-  const clientRsvpMatch = pathname.match(/^\/i\/([^/]+)\/rsvp\/?$/);
+  const clientRsvpMatch = normalizedPath.match(/^\/i\/([^/]+)\/rsvp$/);
   if (clientRsvpMatch) {
     return {
       slug: decodeURIComponent(clientRsvpMatch[1]),
       mode: "client-rsvp" as const,
       token: new URLSearchParams(search).get("token")?.trim() || "",
+      id: "",
+    };
+  }
+
+  if (normalizedPath.startsWith("/admin")) {
+    return {
+      slug: "",
+      mode: "admin-login" as const,
+      token: "",
       id: "",
     };
   }

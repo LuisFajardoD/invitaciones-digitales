@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
@@ -504,12 +505,15 @@ function InvitationViewerCanvas({
 }
 
 export function App() {
-  const route = useMemo(() => getViewerRoute(window.location.pathname, window.location.search), []);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = useMemo(() => {
+    const serialized = searchParams.toString();
+    return serialized ? `?${serialized}` : "";
+  }, [searchParams]);
+  const route = useMemo(() => getViewerRoute(pathname, search), [pathname, search]);
   const assetOrigin = useMemo(() => getBackendAssetOrigin(), []);
-  const currentPath = useMemo(
-    () => `${window.location.pathname}${window.location.search}${window.location.hash}`,
-    [],
-  );
+  const currentPath = useMemo(() => `${pathname}${search}`, [pathname, search]);
   const isDataRoute = route.mode !== "unknown" && route.mode !== "admin-new" && route.mode !== "admin-login";
   const isProtectedAdminRoute = isProtectedAdminMode(route.mode);
   const [invitation, setInvitation] = useState<InvitationRecord | null>(null);
