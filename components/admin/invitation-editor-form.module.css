@@ -99,6 +99,102 @@
   padding-right: 42px;
 }
 
+.inv-editor-flow {
+  display: grid;
+  gap: 12px;
+}
+
+.inv-editor-flow-list {
+  display: grid;
+  gap: 10px;
+}
+
+.inv-editor-flow-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--admin-surface-bg) 94%, transparent);
+  padding: 12px;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.inv-editor-flow-item--dragging {
+  border-style: dashed;
+  border-color: var(--admin-border-strong);
+  opacity: 0.48;
+}
+
+.inv-editor-flow-item--overlay {
+  opacity: 1;
+  transform: rotate(-0.4deg) scale(1.01);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+.inv-editor-flow-handle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: color-mix(in srgb, var(--admin-surface-bg) 92%, transparent);
+  cursor: grab;
+}
+
+.inv-editor-flow-handle:active {
+  cursor: grabbing;
+}
+
+.inv-editor-flow-handle span {
+  width: 12px;
+  height: 2px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: var(--admin-text-soft);
+}
+
+.inv-editor-flow-title {
+  min-width: 0;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.inv-editor-flow-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--admin-text-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.inv-editor-flow-toggle-label {
+  white-space: nowrap;
+}
+
+.inv-editor-flow-toggle-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: color-mix(in srgb, var(--admin-surface-bg) 96%, transparent);
+  padding: 0 10px;
+}
+
+.inv-editor-flow-toggle-control input {
+  margin: 0;
+}
+
 .inv-editor-preview-column {
   position: sticky;
   top: 18px;
@@ -186,6 +282,12 @@
   overflow: hidden;
   border: 1px solid var(--admin-border);
   background: #07090f;
+  cursor: grab;
+  touch-action: none;
+}
+
+.inv-editor-device-screen--dragging {
+  cursor: grabbing;
 }
 
 .inv-editor-device-iframe {
@@ -193,6 +295,7 @@
   width: 100%;
   height: 100%;
   border: 0;
+  pointer-events: none;
 }
 
 .inv-editor-save-card {
@@ -221,6 +324,15 @@
 
   .inv-editor-device-frame {
     width: min(100%, var(--device-width, clamp(246px, 23vw, 332px)));
+  }
+
+  .inv-editor-flow-item {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .inv-editor-flow-toggle {
+    justify-content: space-between;
   }
 }
 

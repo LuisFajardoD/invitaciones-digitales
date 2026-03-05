@@ -1,14 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  type WheelEvent as ReactWheelEvent,
+} from "react";
 import {
   closestCenter,
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -138,7 +149,7 @@ const DEVICE_PRESET_STORAGE_KEY = "inv-editor-device-preset";
 const DEVICE_PRESETS: Record<DevicePresetKey, DevicePreset> = {
   iphone_15_pro_max: {
     label: "iPhone 15 Pro Max",
-    ratio: 19.5 / 9,
+    ratio: 9 / 19.5,
     frameWidth: "clamp(250px, 23vw, 334px)",
     frameRadius: 38,
     bezel: 10,
@@ -148,7 +159,7 @@ const DEVICE_PRESETS: Record<DevicePresetKey, DevicePreset> = {
   },
   iphone_13_14: {
     label: "iPhone 13/14",
-    ratio: 19 / 9,
+    ratio: 9 / 19.2,
     frameWidth: "clamp(246px, 22.5vw, 326px)",
     frameRadius: 36,
     bezel: 10,
@@ -158,7 +169,7 @@ const DEVICE_PRESETS: Record<DevicePresetKey, DevicePreset> = {
   },
   galaxy_ultra: {
     label: "Galaxy S23/S24 Ultra",
-    ratio: 19.4 / 9,
+    ratio: 9 / 19.4,
     frameWidth: "clamp(248px, 23vw, 332px)",
     frameRadius: 32,
     bezel: 9,
@@ -168,7 +179,7 @@ const DEVICE_PRESETS: Record<DevicePresetKey, DevicePreset> = {
   },
   pixel_8: {
     label: "Pixel 8",
-    ratio: 20 / 9,
+    ratio: 9 / 20,
     frameWidth: "clamp(244px, 22.3vw, 322px)",
     frameRadius: 34,
     bezel: 10,
@@ -178,7 +189,7 @@ const DEVICE_PRESETS: Record<DevicePresetKey, DevicePreset> = {
   },
   ipad: {
     label: "iPad",
-    ratio: 4 / 3,
+    ratio: 3 / 4,
     frameWidth: "clamp(300px, 27vw, 410px)",
     frameRadius: 24,
     bezel: 12,
@@ -236,6 +247,17 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
   const [devicePresetKey, setDevicePresetKey] = useState<DevicePresetKey>("iphone_15_pro_max");
   const [previewVersion, setPreviewVersion] = useState(0);
   const [livePreviewVersion, setLivePreviewVersion] = useState(0);
+  const [activeDragSection, setActiveDragSection] = useState<SectionKey | null>(null);
+  const [isPreviewDragging, setIsPreviewDragging] = useState(false);
+  const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
+  const previewDragStateRef = useRef({
+    active: false,
+    pointerId: -1,
+    startX: 0,
+    startY: 0,
+    startScrollLeft: 0,
+    startScrollTop: 0,
+  });
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -273,6 +295,115 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
 
     return () => window.clearTimeout(timer);
   }, [previewMode, draft]);
+
+  function getPreviewScrollElement() {
+    const frame = previewFrameRef.current;
+    const doc = frame?.contentDocument;
+    if (!doc) {
+      return null;
+    }
+
+    return (doc.scrollingElement || doc.documentElement || doc.body) as HTMLElement | null;
+  }
+
+  function applyPreviewFrameEnhancements(frame: HTMLIFrameElement | null) {
+    const doc = frame?.contentDocument;
+    if (!doc) {
+      return;
+    }
+
+    if (!doc.getElementById("inv-editor-scrollbar-hide")) {
+      const styleEl = doc.createElement("style");
+      styleEl.id = "inv-editor-scrollbar-hide";
+      styleEl.textContent = `
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          min-height: 100% !important;
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar,
+        *::-webkit-scrollbar {
+          width: 0 !important;
+          height: 0 !important;
+          background: transparent !important;
+        }
+      `;
+      doc.head.appendChild(styleEl);
+    }
+  }
+
+  function stopPreviewDrag() {
+    if (!previewDragStateRef.current.active) {
+      return;
+    }
+
+    previewDragStateRef.current.active = false;
+    previewDragStateRef.current.pointerId = -1;
+    setIsPreviewDragging(false);
+  }
+
+  function handlePreviewWheel(event: ReactWheelEvent<HTMLDivElement>) {
+    const scrollElement = getPreviewScrollElement();
+    if (!scrollElement) {
+      return;
+    }
+
+    event.preventDefault();
+    scrollElement.scrollTop += event.deltaY;
+    scrollElement.scrollLeft += event.deltaX;
+  }
+
+  function handlePreviewPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) {
+      return;
+    }
+
+    const scrollElement = getPreviewScrollElement();
+    if (!scrollElement) {
+      return;
+    }
+
+    previewDragStateRef.current.active = true;
+    previewDragStateRef.current.pointerId = event.pointerId;
+    previewDragStateRef.current.startX = event.clientX;
+    previewDragStateRef.current.startY = event.clientY;
+    previewDragStateRef.current.startScrollLeft = scrollElement.scrollLeft;
+    previewDragStateRef.current.startScrollTop = scrollElement.scrollTop;
+    setIsPreviewDragging(true);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  }
+
+  function handlePreviewPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    const dragState = previewDragStateRef.current;
+    if (!dragState.active || dragState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const scrollElement = getPreviewScrollElement();
+    if (!scrollElement) {
+      return;
+    }
+
+    scrollElement.scrollTop = dragState.startScrollTop - (event.clientY - dragState.startY);
+    scrollElement.scrollLeft = dragState.startScrollLeft - (event.clientX - dragState.startX);
+    event.preventDefault();
+  }
+
+  function handlePreviewPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    if (previewDragStateRef.current.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    stopPreviewDrag();
+  }
 
   function updateDraft(next: InvitationRecord) {
     setDraft(normalizeInvitationRecord(next));
@@ -557,6 +688,8 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
 
   function handleSectionDragEnd(event: DragEndEvent) {
     const { active, over } = event;
+    setActiveDragSection(null);
+
     if (!over || active.id === over.id) {
       return;
     }
@@ -571,6 +704,10 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
       ...draft,
       sections_order: arrayMove(orderedSectionKeys, oldIndex, newIndex),
     });
+  }
+
+  function handleSectionDragStart(event: DragStartEvent) {
+    setActiveDragSection(event.active.id as SectionKey);
   }
 
   function previewInvitation(): InvitationRecord {
@@ -737,25 +874,39 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             title="Orden y estado de secciones"
             description="Arrastra, activa u oculta bloques. La invitacion publica respeta exactamente esta lista."
           >
-            <div className="field-wide">
-          <div className="helper-text">
-            Arrastra cada bloque desde el asa para cambiar el orden. La invitacion publica respeta exactamente esta lista.
-          </div>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSectionDragEnd}>
-            <SortableContext items={orderedSectionKeys} strategy={verticalListSortingStrategy}>
-              <div className="section-order-list">
-                {orderedSectionKeys.map((key) => (
-                  <SortableSectionItem
-                    key={key}
-                    id={key}
-                    label={editableSectionLabels[key]}
-                    enabled={draft.sections[key].enabled}
-                    onToggle={(enabled) => updateSectionEnabled(key, enabled)}
-                  />
-                ))}
+            <div className={styles["inv-editor-flow"]}>
+              <div className="helper-text">
+                Arrastra cada bloque desde el asa para cambiar el orden. La invitacion publica respeta exactamente esta lista.
               </div>
-            </SortableContext>
-          </DndContext>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleSectionDragStart}
+                onDragCancel={() => setActiveDragSection(null)}
+                onDragEnd={handleSectionDragEnd}
+              >
+                <SortableContext items={orderedSectionKeys} strategy={verticalListSortingStrategy}>
+                  <div className={styles["inv-editor-flow-list"]}>
+                    {orderedSectionKeys.map((key) => (
+                      <SortableSectionItem
+                        key={key}
+                        id={key}
+                        label={editableSectionLabels[key]}
+                        enabled={draft.sections[key].enabled}
+                        onToggle={(enabled) => updateSectionEnabled(key, enabled)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+                <DragOverlay>
+                  {activeDragSection ? (
+                    <FlowOverlayCard
+                      label={editableSectionLabels[activeDragSection]}
+                      enabled={draft.sections[activeDragSection].enabled}
+                    />
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
             </div>
           </EditorSection>
           ) : null}
@@ -1698,12 +1849,24 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
         <div className={styles["inv-editor-device-shell"]}>
           <div className={styles["inv-editor-device-frame"]} style={deviceFrameVars}>
             <div className={styles["inv-editor-device-camera"]} aria-hidden="true" />
-            <div className={styles["inv-editor-device-screen"]}>
+            <div
+              className={`${styles["inv-editor-device-screen"]} ${
+                isPreviewDragging ? styles["inv-editor-device-screen--dragging"] : ""
+              }`}
+              onWheel={handlePreviewWheel}
+              onPointerDown={handlePreviewPointerDown}
+              onPointerMove={handlePreviewPointerMove}
+              onPointerUp={handlePreviewPointerUp}
+              onPointerCancel={stopPreviewDrag}
+              onLostPointerCapture={stopPreviewDrag}
+            >
               <iframe
                 key={activePreviewFrameUrl}
+                ref={previewFrameRef}
                 className={styles["inv-editor-device-iframe"]}
                 title="Vista real de la invitacion"
                 src={activePreviewFrameUrl}
+                onLoad={(event) => applyPreviewFrameEnhancements(event.currentTarget)}
               />
             </div>
           </div>
@@ -1821,21 +1984,55 @@ function SortableSectionItem({
   return (
     <div
       ref={setNodeRef}
-      className={`section-order-item${isDragging ? " section-order-item--dragging" : ""}`}
+      className={`${styles["inv-editor-flow-item"]} ${
+        isDragging ? styles["inv-editor-flow-item--dragging"] : ""
+      }`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
-      <div className="section-order-item__main">
-        <span className="section-order-item__title">{label}</span>
-        <label className="section-order-item__toggle">
-          <input type="checkbox" checked={enabled} onChange={(event) => onToggle(event.target.checked)} />
-          <span>{enabled ? "Activa" : "Oculta"}</span>
-        </label>
-      </div>
-      <button type="button" className="section-order-item__handle" aria-label={`Reordenar ${label}`} {...attributes} {...listeners}>
+      <button
+        type="button"
+        className={styles["inv-editor-flow-handle"]}
+        aria-label={`Reordenar ${label}`}
+        {...attributes}
+        {...listeners}
+      >
         <span />
         <span />
         <span />
       </button>
+      <span className={styles["inv-editor-flow-title"]}>{label}</span>
+      <label className={styles["inv-editor-flow-toggle"]}>
+        <span className={styles["inv-editor-flow-toggle-label"]}>Activa</span>
+        <span className={styles["inv-editor-flow-toggle-control"]}>
+          <input type="checkbox" checked={enabled} onChange={(event) => onToggle(event.target.checked)} />
+          <span>{enabled ? "Si" : "No"}</span>
+        </span>
+      </label>
+    </div>
+  );
+}
+
+function FlowOverlayCard({
+  label,
+  enabled,
+}: {
+  label: string;
+  enabled: boolean;
+}) {
+  return (
+    <div className={`${styles["inv-editor-flow-item"]} ${styles["inv-editor-flow-item--overlay"]}`}>
+      <span className={styles["inv-editor-flow-handle"]} aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </span>
+      <span className={styles["inv-editor-flow-title"]}>{label}</span>
+      <span className={styles["inv-editor-flow-toggle"]}>
+        <span className={styles["inv-editor-flow-toggle-label"]}>Activa</span>
+        <span className={styles["inv-editor-flow-toggle-control"]}>
+          <span>{enabled ? "Si" : "No"}</span>
+        </span>
+      </span>
     </div>
   );
 }
