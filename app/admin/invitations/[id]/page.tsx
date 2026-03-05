@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
-import { AdminShell } from "@/components/admin/admin-shell";
 import { InvitationEditorForm } from "@/components/admin/invitation-editor-form";
+import { PublicShell } from "@/components/site/PublicShell";
 import { requireAdminSession } from "@/lib/auth";
 import { getInvitationById } from "@/lib/repository";
+import styles from "@/components/admin/invitation-editor-form.module.css";
 
 type AdminInvitationEditorPageProps = {
   params: Promise<{ id: string }>;
@@ -20,11 +21,10 @@ export default async function AdminInvitationEditorPage({
   }
 
   return (
-    <AdminShell
-      title="Editor de invitacion"
-      description="Edita datos del evento, secciones, OG, expiracion y vista previa movil."
-    >
-      <InvitationEditorForm invitation={invitation} />
-    </AdminShell>
+    <PublicShell showSiteLink>
+      <section className={styles["inv-editor-route"]}>
+        <InvitationEditorForm invitation={invitation} />
+      </section>
+    </PublicShell>
   );
 }

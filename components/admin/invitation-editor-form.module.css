@@ -1,3 +1,7 @@
+.inv-editor-route {
+  margin-top: -68px;
+}
+
 .inv-editor-page {
   display: grid;
   grid-template-columns: 220px minmax(640px, 1fr) minmax(320px, 380px);
@@ -456,5 +460,11 @@
 
   .inv-editor-preview-column {
     position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .inv-editor-route {
+    margin-top: -58px;
   }
 }
