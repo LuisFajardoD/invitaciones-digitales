@@ -255,8 +255,10 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
     pointerId: -1,
     startX: 0,
     startY: 0,
-    startScrollLeft: 0,
-    startScrollTop: 0,
+    elementStartScrollLeft: 0,
+    elementStartScrollTop: 0,
+    windowStartScrollLeft: 0,
+    windowStartScrollTop: 0,
   });
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -303,7 +305,42 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
       return null;
     }
 
+    const preferredCandidates: Array<HTMLElement | null> = [
+      doc.querySelector<HTMLElement>("[data-preview-scroll]"),
+      doc.querySelector<HTMLElement>(".viewer-public-frame"),
+      doc.querySelector<HTMLElement>(".app-viewer"),
+      doc.querySelector<HTMLElement>("main.viewer-shell--public"),
+      doc.scrollingElement as HTMLElement | null,
+      doc.documentElement,
+      doc.body,
+    ];
+
+    const isScrollable = (element: HTMLElement | null) =>
+      Boolean(element && element.scrollHeight > element.clientHeight + 1);
+
+    const preferredScrollable = preferredCandidates.find((element) => isScrollable(element));
+    if (preferredScrollable) {
+      return preferredScrollable;
+    }
+
+    const nodes = Array.from(doc.querySelectorAll<HTMLElement>("*"));
+    for (const node of nodes) {
+      const style = doc.defaultView?.getComputedStyle(node);
+      if (!style) {
+        continue;
+      }
+
+      const allowsVerticalScroll = style.overflowY === "auto" || style.overflowY === "scroll";
+      if (allowsVerticalScroll && isScrollable(node)) {
+        return node;
+      }
+    }
+
     return (doc.scrollingElement || doc.documentElement || doc.body) as HTMLElement | null;
+  }
+
+  function getPreviewFrameWindow() {
+    return previewFrameRef.current?.contentWindow || null;
   }
 
   function applyPreviewFrameEnhancements(frame: HTMLIFrameElement | null) {
@@ -321,6 +358,14 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           padding: 0 !important;
           width: 100% !important;
           min-height: 100% !important;
+          overflow-x: hidden !important;
+          overflow-y: auto !important;
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+        .viewer-public-frame,
+        main.viewer-shell--public,
+        .app-viewer {
           scrollbar-width: none !important;
           -ms-overflow-style: none !important;
         }
@@ -348,13 +393,30 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
 
   function handlePreviewWheel(event: ReactWheelEvent<HTMLDivElement>) {
     const scrollElement = getPreviewScrollElement();
-    if (!scrollElement) {
+    if (scrollElement) {
+      const beforeTop = scrollElement.scrollTop;
+      const beforeLeft = scrollElement.scrollLeft;
+      scrollElement.scrollTop += event.deltaY;
+      scrollElement.scrollLeft += event.deltaX;
+      const didScroll =
+        scrollElement.scrollTop !== beforeTop || scrollElement.scrollLeft !== beforeLeft;
+      if (didScroll) {
+        event.preventDefault();
+        return;
+      }
+    }
+
+    const frameWindow = getPreviewFrameWindow();
+    if (!frameWindow) {
       return;
     }
 
     event.preventDefault();
-    scrollElement.scrollTop += event.deltaY;
-    scrollElement.scrollLeft += event.deltaX;
+    frameWindow.scrollBy({
+      top: event.deltaY,
+      left: event.deltaX,
+      behavior: "auto",
+    });
   }
 
   function handlePreviewPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
@@ -363,7 +425,8 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
     }
 
     const scrollElement = getPreviewScrollElement();
-    if (!scrollElement) {
+    const frameWindow = getPreviewFrameWindow();
+    if (!scrollElement && !frameWindow) {
       return;
     }
 
@@ -371,8 +434,10 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
     previewDragStateRef.current.pointerId = event.pointerId;
     previewDragStateRef.current.startX = event.clientX;
     previewDragStateRef.current.startY = event.clientY;
-    previewDragStateRef.current.startScrollLeft = scrollElement.scrollLeft;
-    previewDragStateRef.current.startScrollTop = scrollElement.scrollTop;
+    previewDragStateRef.current.elementStartScrollLeft = scrollElement?.scrollLeft ?? 0;
+    previewDragStateRef.current.elementStartScrollTop = scrollElement?.scrollTop ?? 0;
+    previewDragStateRef.current.windowStartScrollLeft = frameWindow?.scrollX ?? 0;
+    previewDragStateRef.current.windowStartScrollTop = frameWindow?.scrollY ?? 0;
     setIsPreviewDragging(true);
     event.currentTarget.setPointerCapture?.(event.pointerId);
   }
@@ -384,12 +449,31 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
     }
 
     const scrollElement = getPreviewScrollElement();
-    if (!scrollElement) {
+    const frameWindow = getPreviewFrameWindow();
+    if (!scrollElement && !frameWindow) {
       return;
     }
 
-    scrollElement.scrollTop = dragState.startScrollTop - (event.clientY - dragState.startY);
-    scrollElement.scrollLeft = dragState.startScrollLeft - (event.clientX - dragState.startX);
+    const deltaX = event.clientX - dragState.startX;
+    const deltaY = event.clientY - dragState.startY;
+
+    let didScrollElement = false;
+    if (scrollElement) {
+      const beforeTop = scrollElement.scrollTop;
+      const beforeLeft = scrollElement.scrollLeft;
+      scrollElement.scrollTop = dragState.elementStartScrollTop - deltaY;
+      scrollElement.scrollLeft = dragState.elementStartScrollLeft - deltaX;
+      didScrollElement = scrollElement.scrollTop !== beforeTop || scrollElement.scrollLeft !== beforeLeft;
+    }
+
+    if (!didScrollElement && frameWindow) {
+      frameWindow.scrollTo({
+        top: dragState.windowStartScrollTop - deltaY,
+        left: dragState.windowStartScrollLeft - deltaX,
+        behavior: "auto",
+      });
+    }
+
     event.preventDefault();
   }
 
@@ -1358,13 +1442,26 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           <div className="field-wide">
             <span>Acciones rapidas</span>
             <div className="admin-subpanel quick-actions-editor">
-              <div className="quick-actions-editor__list">
-                {draft.sections.quick_actions.items.length ? (
-                  draft.sections.quick_actions.items.map((item, index) => (
-                    <div key={`${item.type}-${item.label}-${index}`} className="quick-actions-editor__item">
-                      <label className="field">
-                        <span>Tipo</span>
+              <EditorGridList
+                columnsTemplate="minmax(0, 0.9fr) minmax(0, 1.1fr) auto"
+                headers={["Tipo", "Texto del boton", "Acciones"]}
+                emptyState={
+                  <p className={styles["inv-editor-grid-empty"]}>
+                    No hay acciones todavia. Agrega una para que aparezca en la invitacion.
+                  </p>
+                }
+                hasRows={draft.sections.quick_actions.items.length > 0}
+              >
+                {draft.sections.quick_actions.items.map((item, index) => (
+                  <EditorGridRow
+                    key={`${item.type}-${item.label}-${index}`}
+                    columnsTemplate="minmax(0, 0.9fr) minmax(0, 1.1fr) auto"
+                  >
+                    <div className={styles["inv-editor-grid-cell"]}>
+                      <label className="field" htmlFor={`quick-action-type-${index}`}>
+                        <span className={styles["inv-editor-sr-only"]}>Tipo</span>
                         <select
+                          id={`quick-action-type-${index}`}
                           value={getEditableQuickActionType(String(item.type))}
                           onChange={(event) =>
                             updateQuickAction(index, {
@@ -1379,9 +1476,12 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                           ))}
                         </select>
                       </label>
-                      <label className="field">
-                        <span>Texto del boton</span>
+                    </div>
+                    <div className={styles["inv-editor-grid-cell"]}>
+                      <label className="field" htmlFor={`quick-action-label-${index}`}>
+                        <span className={styles["inv-editor-sr-only"]}>Texto del boton</span>
                         <input
+                          id={`quick-action-label-${index}`}
                           value={item.label}
                           onChange={(event) =>
                             updateQuickAction(index, {
@@ -1390,6 +1490,8 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                           }
                         />
                       </label>
+                    </div>
+                    <div className={styles["inv-editor-grid-row-actions"]}>
                       <button
                         type="button"
                         className="button-secondary quick-actions-editor__remove"
@@ -1398,13 +1500,9 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                         Quitar
                       </button>
                     </div>
-                  ))
-                ) : (
-                  <p style={{ margin: 0, opacity: 0.76 }}>
-                    No hay acciones todavia. Agrega una para que aparezca en la invitacion.
-                  </p>
-                )}
-              </div>
+                  </EditorGridRow>
+                ))}
+              </EditorGridList>
               <button type="button" className="button-secondary" onClick={addQuickAction}>
                 Agregar accion
               </button>
@@ -1436,18 +1534,30 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                   />
                 </label>
               </div>
-              <div className="simple-list-editor__list">
-                {draft.sections.gallery.image_urls.length ? (
-                  draft.sections.gallery.image_urls.map((item, index) => (
-                    <div key={`gallery-${index}`} className="simple-list-editor__item">
-                      <label className="field">
-                        <span>URL de imagen {index + 1}</span>
+              <EditorGridList
+                columnsTemplate="minmax(0, 1fr) auto"
+                headers={["URL de imagen", "Acciones"]}
+                emptyState={
+                  <p className={styles["inv-editor-grid-empty"]}>
+                    No hay imagenes todavia. Agrega una para que aparezca en Archivo visual.
+                  </p>
+                }
+                hasRows={draft.sections.gallery.image_urls.length > 0}
+              >
+                {draft.sections.gallery.image_urls.map((item, index) => (
+                  <EditorGridRow key={`gallery-${index}`} columnsTemplate="minmax(0, 1fr) auto">
+                    <div className={styles["inv-editor-grid-cell"]}>
+                      <label className="field" htmlFor={`gallery-url-${index}`}>
+                        <span className={styles["inv-editor-sr-only"]}>URL de imagen</span>
                         <input
+                          id={`gallery-url-${index}`}
                           value={item}
                           onChange={(event) => updateGalleryItem(index, event.target.value)}
                           placeholder="https://..."
                         />
                       </label>
+                    </div>
+                    <div className={styles["inv-editor-grid-row-actions"]}>
                       <button
                         type="button"
                         className="button-secondary simple-list-editor__remove"
@@ -1456,13 +1566,9 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                         Quitar
                       </button>
                     </div>
-                  ))
-                ) : (
-                  <p style={{ margin: 0, opacity: 0.76 }}>
-                    No hay imagenes todavia. Agrega una para que aparezca en Archivo visual.
-                  </p>
-                )}
-              </div>
+                  </EditorGridRow>
+                ))}
+              </EditorGridList>
               <button type="button" className="button-secondary" onClick={addGalleryItem}>
                 Agregar imagen
               </button>
@@ -1471,18 +1577,30 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           <div className="field-wide">
             <span>Checklist</span>
             <div className="admin-subpanel simple-list-editor">
-              <div className="simple-list-editor__list">
-                {draft.sections.notes.items.length ? (
-                  draft.sections.notes.items.map((item, index) => (
-                    <div key={`note-${index}`} className="simple-list-editor__item">
-                      <label className="field">
-                        <span>Punto {index + 1}</span>
+              <EditorGridList
+                columnsTemplate="minmax(0, 1fr) auto"
+                headers={["Punto", "Acciones"]}
+                emptyState={
+                  <p className={styles["inv-editor-grid-empty"]}>
+                    No hay puntos todavia. Agrega uno para que aparezca en Checklist.
+                  </p>
+                }
+                hasRows={draft.sections.notes.items.length > 0}
+              >
+                {draft.sections.notes.items.map((item, index) => (
+                  <EditorGridRow key={`note-${index}`} columnsTemplate="minmax(0, 1fr) auto">
+                    <div className={styles["inv-editor-grid-cell"]}>
+                      <label className="field" htmlFor={`note-item-${index}`}>
+                        <span className={styles["inv-editor-sr-only"]}>Punto</span>
                         <input
+                          id={`note-item-${index}`}
                           value={item}
                           onChange={(event) => updateNoteItem(index, event.target.value)}
                           placeholder="Escribe un detalle"
                         />
                       </label>
+                    </div>
+                    <div className={styles["inv-editor-grid-row-actions"]}>
                       <button
                         type="button"
                         className="button-secondary simple-list-editor__remove"
@@ -1491,13 +1609,9 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                         Quitar
                       </button>
                     </div>
-                  ))
-                ) : (
-                  <p style={{ margin: 0, opacity: 0.76 }}>
-                    No hay puntos todavia. Agrega uno para que aparezca en Checklist.
-                  </p>
-                )}
-              </div>
+                  </EditorGridRow>
+                ))}
+              </EditorGridList>
               <button type="button" className="button-secondary" onClick={addNoteItem}>
                 Agregar punto
               </button>
@@ -1545,18 +1659,30 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                   </label>
                 </div>
                 <div className="simple-list-editor" style={{ marginTop: 14 }}>
-                  <div className="simple-list-editor__list">
-                    {(draft.sections[key].items || []).length ? (
-                      (draft.sections[key].items || []).map((item, index) => (
-                        <div key={`${key}-item-${index}`} className="simple-list-editor__item">
-                          <label className="field">
-                            <span>Punto {index + 1}</span>
+                  <EditorGridList
+                    columnsTemplate="minmax(0, 1fr) auto"
+                    headers={["Punto", "Acciones"]}
+                    emptyState={
+                      <p className={styles["inv-editor-grid-empty"]}>
+                        No hay puntos todavia. Agrega los que necesites para esta seccion.
+                      </p>
+                    }
+                    hasRows={(draft.sections[key].items || []).length > 0}
+                  >
+                    {(draft.sections[key].items || []).map((item, index) => (
+                      <EditorGridRow key={`${key}-item-${index}`} columnsTemplate="minmax(0, 1fr) auto">
+                        <div className={styles["inv-editor-grid-cell"]}>
+                          <label className="field" htmlFor={`${key}-item-${index}`}>
+                            <span className={styles["inv-editor-sr-only"]}>Punto</span>
                             <input
+                              id={`${key}-item-${index}`}
                               value={item}
                               onChange={(event) => updateExtraSectionItem(key, index, event.target.value)}
                               placeholder="Escribe un punto"
                             />
                           </label>
+                        </div>
+                        <div className={styles["inv-editor-grid-row-actions"]}>
                           <button
                             type="button"
                             className="button-secondary simple-list-editor__remove"
@@ -1565,13 +1691,9 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                             Quitar
                           </button>
                         </div>
-                      ))
-                    ) : (
-                      <p style={{ margin: 0, opacity: 0.76 }}>
-                        No hay puntos todavia. Agrega los que necesites para esta seccion.
-                      </p>
-                    )}
-                  </div>
+                      </EditorGridRow>
+                    ))}
+                  </EditorGridList>
                   <button type="button" className="button-secondary" onClick={() => addExtraSectionItem(key)}>
                     Agregar punto
                   </button>
@@ -1787,37 +1909,8 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
       <section className={`admin-panel ${styles["inv-editor-preview-sticky"]}`}>
         <p className="eyebrow">Vista movil real</p>
         <h2>Vista previa en telefono</h2>
-        <p className="helper-text">Este marco siempre carga la ruta publica real. Si el viewer React local esta activo, esa misma ruta lo usa automaticamente; si no, cae al render actual de Next.</p>
-        <p className="helper-text" style={{ marginTop: 8 }}>
-          Fuente activa: <strong>Ruta publica real</strong>
-        </p>
-        <div className={styles["inv-editor-preview-tabs"]} role="tablist" aria-label="Modo de vista previa">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={previewMode === "live"}
-            className={`${styles["inv-editor-preview-tab"]} ${
-              previewMode === "live" ? styles["inv-editor-preview-tab--active"] : ""
-            }`}
-            onClick={() => setPreviewMode("live")}
-          >
-            Vista en vivo
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={previewMode === "capture"}
-            className={`${styles["inv-editor-preview-tab"]} ${
-              previewMode === "capture" ? styles["inv-editor-preview-tab--active"] : ""
-            }`}
-            onClick={() => setPreviewMode("capture")}
-          >
-            Vista real (captura)
-          </button>
-        </div>
         <div className={styles["inv-editor-preview-tools"]}>
           <label className={`field ${styles["inv-editor-device-select"]}`}>
-            <span>Dispositivo</span>
             <select
               value={devicePresetKey}
               onChange={(event) => setDevicePresetKey(event.target.value as DevicePresetKey)}
@@ -1829,22 +1922,6 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
               ))}
             </select>
           </label>
-          <div className="inline-actions">
-            <button
-              type="button"
-              className="button-secondary"
-              onClick={() =>
-                previewMode === "live"
-                  ? setLivePreviewVersion((current) => current + 1)
-                  : setPreviewVersion((current) => current + 1)
-              }
-            >
-              {previewMode === "live" ? "Sincronizar vista" : "Actualizar captura"}
-            </button>
-          <a href={activePreviewFrameUrl} className="button-ghost" target="_blank" rel="noreferrer">
-            Abrir vista actual
-          </a>
-          </div>
         </div>
         <div className={styles["inv-editor-device-shell"]}>
           <div className={styles["inv-editor-device-frame"]} style={deviceFrameVars}>
@@ -1875,7 +1952,6 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
       <section className={`admin-panel ${styles["inv-editor-save-card"]}`}>
         <p className="eyebrow">Publicacion</p>
         <h2>Guardar y probar</h2>
-        <p className="helper-text">Guarda cambios y abre la invitacion publica o la vista del formulario RSVP.</p>
         <div className={`inline-actions editor-actions ${styles["inv-editor-save-actions"]}`}>
           <button type="button" className="button-primary" onClick={handleSave} disabled={loading}>
             {loading ? "Guardando..." : "Guardar cambios"}
@@ -1965,6 +2041,49 @@ function EditorSection({
       </div>
       <div className="editor-module__body">{children}</div>
     </section>
+  );
+}
+
+function EditorGridList({
+  columnsTemplate,
+  headers,
+  hasRows,
+  emptyState,
+  children,
+}: {
+  columnsTemplate: string;
+  headers: string[];
+  hasRows: boolean;
+  emptyState?: ReactNode;
+  children: ReactNode;
+}) {
+  const style = { "--inv-editor-grid-cols": columnsTemplate } as CSSProperties;
+
+  return (
+    <div className={styles["inv-editor-grid-list"]}>
+      <div className={styles["inv-editor-grid-list-head"]} style={style} aria-hidden="true">
+        {headers.map((header) => (
+          <span key={header} className={styles["inv-editor-grid-header-cell"]}>
+            {header}
+          </span>
+        ))}
+      </div>
+      <div className={styles["inv-editor-grid-list-body"]}>{hasRows ? children : emptyState}</div>
+    </div>
+  );
+}
+
+function EditorGridRow({
+  columnsTemplate,
+  children,
+}: {
+  columnsTemplate: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={styles["inv-editor-grid-row"]} style={{ "--inv-editor-grid-cols": columnsTemplate } as CSSProperties}>
+      {children}
+    </div>
   );
 }
 
