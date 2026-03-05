@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHome } from "@/components/site/site-home";
+import { normalizeSiteSettingsData } from "@/lib/site-settings-defaults";
 import { safeJsonParse } from "@/lib/utils";
 import type { SiteSettingsData } from "@/types/invitations";
 
@@ -12,12 +13,19 @@ type SiteSettingsFormProps = {
 
 export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
   const router = useRouter();
-  const [draft, setDraft] = useState(initialData);
-  const [examplesJson, setExamplesJson] = useState(JSON.stringify(draft.blocks.examples.items, null, 2));
-  const [packagesJson, setPackagesJson] = useState(JSON.stringify(draft.blocks.packages.items, null, 2));
-  const [faqJson, setFaqJson] = useState(JSON.stringify(draft.blocks.faq.items, null, 2));
-  const [extrasText, setExtrasText] = useState(draft.blocks.extras.items.join("\n"));
-  const [howItWorksText, setHowItWorksText] = useState(draft.blocks.how_it_works.items.join("\n"));
+  const safeInitialData = normalizeSiteSettingsData(initialData);
+  const [draft, setDraft] = useState<SiteSettingsData>(safeInitialData);
+  const [examplesJson, setExamplesJson] = useState(
+    JSON.stringify(safeInitialData.blocks.examples.items ?? [], null, 2),
+  );
+  const [packagesJson, setPackagesJson] = useState(
+    JSON.stringify(safeInitialData.blocks.packages.items ?? [], null, 2),
+  );
+  const [faqJson, setFaqJson] = useState(JSON.stringify(safeInitialData.blocks.faq.items ?? [], null, 2));
+  const [extrasText, setExtrasText] = useState((safeInitialData.blocks.extras.items ?? []).join("\n"));
+  const [howItWorksText, setHowItWorksText] = useState(
+    (safeInitialData.blocks.how_it_works.items ?? []).join("\n"),
+  );
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,7 +76,7 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
       if (!response.ok) {
         throw new Error(responsePayload.error || "No se pudo guardar.");
       }
-      setDraft(previewData());
+      setDraft(normalizeSiteSettingsData(previewData()));
       setStatus("Portada guardada.");
       router.refresh();
     } catch (submitError) {
