@@ -8,6 +8,10 @@ const PublicReactApp = dynamic(() => import("@/src/crm/App").then((module) => mo
 });
 
 export function ViewerReactApp() {
-  return <PublicReactApp />;
+  return (
+    <div className="app-viewer">
+      <PublicReactApp />
+    </div>
+  );
 }
 

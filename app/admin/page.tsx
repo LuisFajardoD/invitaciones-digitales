@@ -8,6 +8,10 @@ const AdminReactApp = dynamic(() => import("@/src/crm/App").then((module) => mod
 });
 
 export default function AdminPage() {
-  return <AdminReactApp />;
+  return (
+    <div className="app-admin">
+      <AdminReactApp />
+    </div>
+  );
 }
 

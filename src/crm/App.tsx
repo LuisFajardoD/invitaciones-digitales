@@ -54,6 +54,7 @@ import {
   trimList,
 } from "./viewer-utils";
 import { RequireAuth, getSafeAdminRedirectPath, isProtectedAdminMode, type AdminAuthState } from "./RequireAuth";
+import { PublicLoginShell } from "@/components/site/PublicLoginShell";
 
 function formatResponseDate(input: string) {
   return new Intl.DateTimeFormat("es-MX", {
@@ -1526,23 +1527,10 @@ export function App() {
     const redirectTarget = getSafeAdminRedirectPath(new URLSearchParams(window.location.search).get("redirect"));
 
     return (
-      <main className={`app-admin auth-wrap viewer-admin-theme viewer-admin-theme--${adminTheme}`}>
+      <PublicLoginShell>
         <section className="auth-card viewer-card">
-          <div className="viewer-admin-topbar viewer-admin-topbar--compact">
-            <div>
-              <p className="viewer-eyebrow">Editor</p>
-              <h1>Login del CRM</h1>
-            </div>
-            <button
-              type="button"
-              className="viewer-theme-toggle viewer-theme-toggle--icon"
-              aria-label={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-              title={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-              onClick={() => setAdminTheme((current) => (current === "dark" ? "light" : "dark"))}
-            >
-              <ThemeIcon theme={adminTheme} />
-            </button>
-          </div>
+          <p className="viewer-eyebrow">Acceso administrativo</p>
+          <h1>Login del CRM</h1>
           <p className="viewer-section__subtitle">Inicia sesion para continuar con el panel administrativo.</p>
           <form className="viewer-stack-list" onSubmit={handleAdminLoginSubmit}>
             <label className="viewer-field">
@@ -1573,7 +1561,7 @@ export function App() {
             </p>
           </form>
         </section>
-      </main>
+      </PublicLoginShell>
     );
   }
 

@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&display=swap");
 
-:root {
+.app-admin,
+.app-viewer {
   color-scheme: dark;
   font-family: "Segoe UI", sans-serif;
   --viewer-font-display: "Orbitron", "Segoe UI", sans-serif;
@@ -10,45 +11,42 @@
   --mission-panel-radius: 32px;
   --mission-tile-radius: 26px;
   --mission-input-radius: 20px;
-  background: #020915;
-  color: #f3f8ff;
-}
-
-:where(*, *::before, *::after) {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  min-height: 100vh;
-  margin: 0;
-}
-
-:where(body) {
-  line-height: 1.5;
   background:
     radial-gradient(circle at 12% 8%, rgba(117, 95, 255, 0.08), transparent 24%),
     radial-gradient(circle at 88% 14%, rgba(255, 170, 95, 0.06), transparent 22%),
     linear-gradient(180deg, #040404 0%, #07090d 44%, #0b1020 100%);
+  color: #f3f8ff;
+  line-height: 1.5;
+  min-height: 100vh;
+  margin: 0;
 }
 
-img {
+:where(
+  .app-admin *,
+  .app-admin *::before,
+  .app-admin *::after,
+  .app-viewer *,
+  .app-viewer *::before,
+  .app-viewer *::after
+) {
+  box-sizing: border-box;
+}
+
+:where(.app-admin img, .app-viewer img) {
   display: block;
   max-width: 100%;
 }
 
-button,
-a {
+:where(.app-admin button, .app-admin a, .app-viewer button, .app-viewer a) {
   font: inherit;
 }
 
-a {
+:where(.app-admin a, .app-viewer a) {
   color: inherit;
   text-decoration: none;
 }
 
-code {
+:where(.app-admin code, .app-viewer code) {
   font-family: "Cascadia Code", "Consolas", monospace;
 }
 
