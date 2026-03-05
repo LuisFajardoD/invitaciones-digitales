@@ -179,7 +179,7 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
             {themeMode === "dark" ? "Modo claro" : "Modo oscuro"}
           </button>
 
-          <Link href="/admin" className={styles["landing-crm"]}>
+          <Link href="/admin/login" className={styles["landing-crm"]}>
             Acceso CRM
           </Link>
         </div>
