@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import {
   closestCenter,
   DndContext,
@@ -27,7 +27,7 @@ import {
   normalizeInvitationRecord,
 } from "@/lib/invitation-defaults";
 import { sectionDisplayLabels } from "@/lib/section-labels";
-import { fromLocalDatetimeValue, toLocalDatetimeValue } from "@/lib/utils";
+import { createWhatsAppUrl, fromLocalDatetimeValue, toLocalDatetimeValue } from "@/lib/utils";
 import type {
   BackgroundMediaConfig,
   GenericTextSectionData,
@@ -61,6 +61,26 @@ type EditorCategoryKey =
   | "contenido"
   | "atencion"
   | "extras";
+
+type PreviewMode = "live" | "capture";
+
+type DevicePresetKey =
+  | "iphone_15_pro_max"
+  | "iphone_13_14"
+  | "galaxy_ultra"
+  | "pixel_8"
+  | "ipad";
+
+type DevicePreset = {
+  label: string;
+  ratio: number;
+  frameWidth: string;
+  frameRadius: number;
+  bezel: number;
+  cameraWidth: string;
+  cameraHeight: string;
+  cameraRadius: string;
+};
 
 const allSectionKeys: SectionKey[] = [
   "hero",
@@ -113,6 +133,61 @@ const editorCategories: Array<{ key: EditorCategoryKey; label: string }> = [
   { key: "extras", label: "Extras" },
 ];
 
+const DEVICE_PRESET_STORAGE_KEY = "inv-editor-device-preset";
+
+const DEVICE_PRESETS: Record<DevicePresetKey, DevicePreset> = {
+  iphone_15_pro_max: {
+    label: "iPhone 15 Pro Max",
+    ratio: 19.5 / 9,
+    frameWidth: "clamp(250px, 23vw, 334px)",
+    frameRadius: 38,
+    bezel: 10,
+    cameraWidth: "120px",
+    cameraHeight: "20px",
+    cameraRadius: "999px",
+  },
+  iphone_13_14: {
+    label: "iPhone 13/14",
+    ratio: 19 / 9,
+    frameWidth: "clamp(246px, 22.5vw, 326px)",
+    frameRadius: 36,
+    bezel: 10,
+    cameraWidth: "114px",
+    cameraHeight: "20px",
+    cameraRadius: "999px",
+  },
+  galaxy_ultra: {
+    label: "Galaxy S23/S24 Ultra",
+    ratio: 19.4 / 9,
+    frameWidth: "clamp(248px, 23vw, 332px)",
+    frameRadius: 32,
+    bezel: 9,
+    cameraWidth: "16px",
+    cameraHeight: "16px",
+    cameraRadius: "999px",
+  },
+  pixel_8: {
+    label: "Pixel 8",
+    ratio: 20 / 9,
+    frameWidth: "clamp(244px, 22.3vw, 322px)",
+    frameRadius: 34,
+    bezel: 10,
+    cameraWidth: "14px",
+    cameraHeight: "14px",
+    cameraRadius: "999px",
+  },
+  ipad: {
+    label: "iPad",
+    ratio: 4 / 3,
+    frameWidth: "clamp(300px, 27vw, 410px)",
+    frameRadius: 24,
+    bezel: 12,
+    cameraWidth: "56px",
+    cameraHeight: "8px",
+    cameraRadius: "999px",
+  },
+};
+
 function getStatusLabel(status: InvitationRecord["status"]) {
   return status === "published" ? "Publicada" : "Borrador";
 }
@@ -157,12 +232,47 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("live");
+  const [devicePresetKey, setDevicePresetKey] = useState<DevicePresetKey>("iphone_15_pro_max");
   const [previewVersion, setPreviewVersion] = useState(0);
+  const [livePreviewVersion, setLivePreviewVersion] = useState(0);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
   const orderedSectionKeys = getOrderedSectionKeys(draft.sections_order);
+
+  useEffect(() => {
+    const savedPreset =
+      typeof window !== "undefined" ? window.localStorage.getItem(DEVICE_PRESET_STORAGE_KEY) : null;
+    if (!savedPreset) {
+      return;
+    }
+
+    if (savedPreset in DEVICE_PRESETS) {
+      setDevicePresetKey(savedPreset as DevicePresetKey);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(DEVICE_PRESET_STORAGE_KEY, devicePresetKey);
+  }, [devicePresetKey]);
+
+  useEffect(() => {
+    if (previewMode !== "live") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setLivePreviewVersion((current) => current + 1);
+    }, 520);
+
+    return () => window.clearTimeout(timer);
+  }, [previewMode, draft]);
 
   function updateDraft(next: InvitationRecord) {
     setDraft(normalizeInvitationRecord(next));
@@ -504,10 +614,29 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
   const invitationBackground = normalizeInvitationBackground(draft.background);
   const heroAstronaut = normalizeHeroAstronaut(draft.sections.hero.astronaut);
   const mapUsesDarkDefault = draft.theme_id === "astronautas";
-  const currentPreviewFrameUrl = `/i/${encodeURIComponent(draft.slug)}?crm_preview=${previewVersion}`;
-  const activePreviewFrameUrl = currentPreviewFrameUrl;
+  const encodedSlug = encodeURIComponent(draft.slug);
+  const livePreviewFrameUrl = `/i/${encodedSlug}?crm_live=${livePreviewVersion}`;
+  const capturePreviewFrameUrl = `/i/${encodedSlug}?crm_preview=${previewVersion}`;
+  const activePreviewFrameUrl = previewMode === "live" ? livePreviewFrameUrl : capturePreviewFrameUrl;
   const activeCategoryLabel =
     editorCategories.find((category) => category.key === selectedCategory)?.label || "Base";
+  const selectedDevicePreset = useMemo(
+    () => DEVICE_PRESETS[devicePresetKey] || DEVICE_PRESETS.iphone_15_pro_max,
+    [devicePresetKey],
+  );
+  const deviceFrameVars = useMemo(
+    () =>
+      ({
+        "--device-ratio": String(selectedDevicePreset.ratio),
+        "--device-width": selectedDevicePreset.frameWidth,
+        "--device-radius": `${selectedDevicePreset.frameRadius}px`,
+        "--device-bezel": `${selectedDevicePreset.bezel}px`,
+        "--device-camera-width": selectedDevicePreset.cameraWidth,
+        "--device-camera-height": selectedDevicePreset.cameraHeight,
+        "--device-camera-radius": selectedDevicePreset.cameraRadius,
+      }) as CSSProperties,
+    [selectedDevicePreset],
+  );
 
   return (
     <div className={styles["inv-editor-page"]}>
@@ -533,7 +662,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             title="Configuracion general"
             description="Datos tecnicos del enlace, fechas y estado de publicacion."
           >
-            <div className="form-grid">
+            <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
           <label className="field">
             <span>Slug publico</span>
             <input value={draft.slug} onChange={(event) => updateDraft({ ...draft, slug: event.target.value })} />
@@ -574,7 +703,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             <span>Zona horaria</span>
             <input value={draft.timezone} onChange={(event) => updateDraft({ ...draft, timezone: event.target.value })} />
           </label>
-          <label className="field">
+          <label className="field-wide">
             <span>Inicio del evento</span>
             <input
               type="datetime-local"
@@ -582,7 +711,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
               onChange={(event) => updateDraft({ ...draft, event_start_at: fromLocalDatetimeValue(event.target.value) })}
             />
           </label>
-          <label className="field">
+          <label className="field-wide">
             <span>RSVP abierto hasta</span>
             <input
               type="datetime-local"
@@ -590,7 +719,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
               onChange={(event) => updateDraft({ ...draft, rsvp_until: fromLocalDatetimeValue(event.target.value) })}
             />
           </label>
-          <label className="field">
+          <label className="field-wide">
             <span>Activa hasta</span>
             <input
               type="datetime-local"
@@ -631,19 +760,15 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           </EditorSection>
           ) : null}
 
-          {["portada", "evento", "contenido", "atencion", "extras", "base"].includes(selectedCategory) ? (
+          {["portada", "evento", "contenido", "atencion", "extras"].includes(selectedCategory) ? (
           <EditorSection
-            eyebrow="Edicion"
-            title="Contenido de la invitacion"
-            description="Todo el contenido editable del sitio, ahora agrupado por bloques dentro del mismo panel."
+            eyebrow={activeCategoryLabel}
+            title={`Ajustes de ${activeCategoryLabel}`}
+            description="Solo se muestran los ajustes de la categoria seleccionada."
           >
-            <div className="form-grid">
+            <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
           {selectedCategory === "portada" ? (
           <>
-          <div className="field-wide editor-subsection">
-            <p className="editor-subsection__eyebrow">Portada</p>
-            <h3 className="editor-subsection__title">Hero y ambientacion</h3>
-          </div>
           <label className="field">
             <span>Titulo principal</span>
             <input
@@ -664,6 +789,30 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 updateDraft({
                   ...draft,
                   sections: { ...draft.sections, hero: { ...draft.sections.hero, subtitle: event.target.value } },
+                })
+              }
+            />
+          </label>
+          <label className="field">
+            <span>Badge de portada</span>
+            <input
+              value={draft.sections.hero.badge}
+              onChange={(event) =>
+                updateDraft({
+                  ...draft,
+                  sections: { ...draft.sections, hero: { ...draft.sections.hero, badge: event.target.value } },
+                })
+              }
+            />
+          </label>
+          <label className="field">
+            <span>Linea de acento</span>
+            <input
+              value={draft.sections.hero.accent}
+              onChange={(event) =>
+                updateDraft({
+                  ...draft,
+                  sections: { ...draft.sections, hero: { ...draft.sections.hero, accent: event.target.value } },
                 })
               }
             />
@@ -885,10 +1034,6 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
 
           {selectedCategory === "evento" ? (
           <>
-          <div className="field-wide editor-subsection">
-            <p className="editor-subsection__eyebrow">Evento</p>
-            <h3 className="editor-subsection__title">Datos del evento y mapa</h3>
-          </div>
           <label className="field">
             <span>Lugar</span>
             <input
@@ -916,6 +1061,18 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                   },
                 });
               }}
+            />
+          </label>
+          <label className="field">
+            <span>Dia de la semana</span>
+            <input
+              value={draft.sections.event_info.weekday_text}
+              onChange={(event) =>
+                updateDraft({
+                  ...draft,
+                  sections: { ...draft.sections, event_info: { ...draft.sections.event_info, weekday_text: event.target.value } },
+                })
+              }
             />
           </label>
           <label className="field">
@@ -954,6 +1111,22 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
               }
             />
           </label>
+          <label className="field-wide">
+            <span>Fecha/hora objetivo de cuenta regresiva</span>
+            <input
+              type="datetime-local"
+              value={toLocalDatetimeValue(draft.sections.countdown.target_at)}
+              onChange={(event) =>
+                updateDraft({
+                  ...draft,
+                  sections: {
+                    ...draft.sections,
+                    countdown: { ...draft.sections.countdown, target_at: fromLocalDatetimeValue(event.target.value) },
+                  },
+                })
+              }
+            />
+          </label>
           <label className="field">
             <span>Latitud del mapa</span>
             <input
@@ -979,6 +1152,24 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                   sections: {
                     ...draft.sections,
                     map: { ...draft.sections.map, embed: { ...draft.sections.map.embed, lng: Number(event.target.value) } },
+                  },
+                })
+              }
+            />
+          </label>
+          <label className="field">
+            <span>Zoom del mapa</span>
+            <input
+              type="number"
+              min="0"
+              max="22"
+              value={String(draft.sections.map.embed.zoom)}
+              onChange={(event) =>
+                updateDraft({
+                  ...draft,
+                  sections: {
+                    ...draft.sections,
+                    map: { ...draft.sections.map, embed: { ...draft.sections.map.embed, zoom: Number(event.target.value) } },
                   },
                 })
               }
@@ -1013,10 +1204,6 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           ) : null}
           {selectedCategory === "contenido" ? (
           <>
-          <div className="field-wide editor-subsection">
-            <p className="editor-subsection__eyebrow">Contenido</p>
-            <h3 className="editor-subsection__title">Acciones y bloques visibles</h3>
-          </div>
           <div className="field-wide">
             <span>Acciones rapidas</span>
             <div className="admin-subpanel quick-actions-editor">
@@ -1075,6 +1262,29 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           <div className="field-wide">
             <span>Archivo visual</span>
             <div className="admin-subpanel simple-list-editor">
+              <div className="form-grid" style={{ marginBottom: 12 }}>
+                <label className="field">
+                  <span>Maximo de imagenes visibles</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={String(draft.sections.gallery.max_images)}
+                    onChange={(event) =>
+                      updateDraft({
+                        ...draft,
+                        sections: {
+                          ...draft.sections,
+                          gallery: {
+                            ...draft.sections.gallery,
+                            max_images: Math.max(1, Number(event.target.value) || 1),
+                          },
+                        },
+                      })
+                    }
+                  />
+                </label>
+              </div>
               <div className="simple-list-editor__list">
                 {draft.sections.gallery.image_urls.length ? (
                   draft.sections.gallery.image_urls.map((item, index) => (
@@ -1146,10 +1356,6 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           ) : null}
           {selectedCategory === "extras" ? (
           <>
-          <div className="field-wide editor-subsection">
-            <p className="editor-subsection__eyebrow">Modulos extra</p>
-            <h3 className="editor-subsection__title">Secciones opcionales</h3>
-          </div>
           <div className="field-wide editor-extra-grid">
             {extraSectionKeys.map((key) => (
               <div key={key} className="admin-subpanel editor-extra-card">
@@ -1226,10 +1432,6 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           ) : null}
           {selectedCategory === "atencion" ? (
           <>
-          <div className="field-wide editor-subsection">
-            <p className="editor-subsection__eyebrow">Atencion</p>
-            <h3 className="editor-subsection__title">RSVP y canal directo</h3>
-          </div>
           <label className="field">
             <span>Mensaje de RSVP cerrado</span>
             <input
@@ -1301,10 +1503,32 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                   ...draft,
                   sections: {
                     ...draft.sections,
-                    contact: { ...draft.sections.contact, whatsapp_number: event.target.value },
+                    contact: {
+                      ...draft.sections.contact,
+                      whatsapp_number: event.target.value,
+                      whatsapp_url: event.target.value.trim()
+                        ? createWhatsAppUrl(event.target.value, `Hola, quiero detalles de ${draft.sections.hero.title}.`)
+                        : draft.sections.contact.whatsapp_url,
+                    },
                   },
                 })
               }
+            />
+          </label>
+          <label className="field">
+            <span>URL de WhatsApp</span>
+            <input
+              value={draft.sections.contact.whatsapp_url}
+              onChange={(event) =>
+                updateDraft({
+                  ...draft,
+                  sections: {
+                    ...draft.sections,
+                    contact: { ...draft.sections.contact, whatsapp_url: event.target.value },
+                  },
+                })
+              }
+              placeholder="https://wa.me/..."
             />
           </label>
           <label className="field">
@@ -1321,82 +1545,85 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           </label>
           </>
           ) : null}
-          {selectedCategory === "base" ? (
-          <>
-          <div className="field-wide editor-subsection">
-            <p className="editor-subsection__eyebrow">Share</p>
-            <h3 className="editor-subsection__title">Metadatos y expiracion</h3>
-          </div>
-          <label className="field">
-            <span>Titulo OG</span>
-            <input value={draft.share.og_title} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_title: event.target.value } })} />
-          </label>
-          <label className="field-wide">
-            <span>Descripcion OG</span>
-            <input value={draft.share.og_description} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_description: event.target.value } })} />
-          </label>
-          <label className="field">
-            <span>URL de imagen OG</span>
-            <input value={draft.share.og_image_url} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_image_url: event.target.value } })} />
-          </label>
-          <label className="field">
-            <span>Titulo al expirar</span>
-            <input value={draft.expired_page.title} onChange={(event) => updateDraft({ ...draft, expired_page: { ...draft.expired_page, title: event.target.value } })} />
-          </label>
-          <label className="field-wide">
-            <span>Mensaje al expirar</span>
-            <input value={draft.expired_page.message} onChange={(event) => updateDraft({ ...draft, expired_page: { ...draft.expired_page, message: event.target.value } })} />
-          </label>
-          <label className="field">
-            <span>CTA primaria texto</span>
-            <input
-              value={draft.expired_page.primary_cta.text}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  expired_page: { ...draft.expired_page, primary_cta: { ...draft.expired_page.primary_cta, text: event.target.value } },
-                })
-              }
-            />
-          </label>
-          <label className="field">
-            <span>CTA primaria href</span>
-            <input
-              value={draft.expired_page.primary_cta.href}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  expired_page: { ...draft.expired_page, primary_cta: { ...draft.expired_page.primary_cta, href: event.target.value } },
-                })
-              }
-            />
-          </label>
-          <label className="field">
-            <span>CTA secundaria texto</span>
-            <input
-              value={draft.expired_page.secondary_cta.text}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  expired_page: { ...draft.expired_page, secondary_cta: { ...draft.expired_page.secondary_cta, text: event.target.value } },
-                })
-              }
-            />
-          </label>
-          <label className="field">
-            <span>CTA secundaria href</span>
-            <input
-              value={draft.expired_page.secondary_cta.href}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  expired_page: { ...draft.expired_page, secondary_cta: { ...draft.expired_page.secondary_cta, href: event.target.value } },
-                })
-              }
-            />
-          </label>
-          </>
+            </div>
+          </EditorSection>
           ) : null}
+
+          {selectedCategory === "base" ? (
+          <EditorSection
+            eyebrow="Share"
+            title="Metadatos y expiracion"
+            description="Configuracion OG y contenido de la pagina de expiracion."
+          >
+            <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
+              <label className="field">
+                <span>Titulo OG</span>
+                <input value={draft.share.og_title} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_title: event.target.value } })} />
+              </label>
+              <label className="field-wide">
+                <span>Descripcion OG</span>
+                <input value={draft.share.og_description} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_description: event.target.value } })} />
+              </label>
+              <label className="field">
+                <span>URL de imagen OG</span>
+                <input value={draft.share.og_image_url} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_image_url: event.target.value } })} />
+              </label>
+              <label className="field">
+                <span>Titulo al expirar</span>
+                <input value={draft.expired_page.title} onChange={(event) => updateDraft({ ...draft, expired_page: { ...draft.expired_page, title: event.target.value } })} />
+              </label>
+              <label className="field-wide">
+                <span>Mensaje al expirar</span>
+                <input value={draft.expired_page.message} onChange={(event) => updateDraft({ ...draft, expired_page: { ...draft.expired_page, message: event.target.value } })} />
+              </label>
+              <label className="field">
+                <span>CTA primaria texto</span>
+                <input
+                  value={draft.expired_page.primary_cta.text}
+                  onChange={(event) =>
+                    updateDraft({
+                      ...draft,
+                      expired_page: { ...draft.expired_page, primary_cta: { ...draft.expired_page.primary_cta, text: event.target.value } },
+                    })
+                  }
+                />
+              </label>
+              <label className="field">
+                <span>CTA primaria href</span>
+                <input
+                  value={draft.expired_page.primary_cta.href}
+                  onChange={(event) =>
+                    updateDraft({
+                      ...draft,
+                      expired_page: { ...draft.expired_page, primary_cta: { ...draft.expired_page.primary_cta, href: event.target.value } },
+                    })
+                  }
+                />
+              </label>
+              <label className="field">
+                <span>CTA secundaria texto</span>
+                <input
+                  value={draft.expired_page.secondary_cta.text}
+                  onChange={(event) =>
+                    updateDraft({
+                      ...draft,
+                      expired_page: { ...draft.expired_page, secondary_cta: { ...draft.expired_page.secondary_cta, text: event.target.value } },
+                    })
+                  }
+                />
+              </label>
+              <label className="field">
+                <span>CTA secundaria href</span>
+                <input
+                  value={draft.expired_page.secondary_cta.href}
+                  onChange={(event) =>
+                    updateDraft({
+                      ...draft,
+                      expired_page: { ...draft.expired_page, secondary_cta: { ...draft.expired_page.secondary_cta, href: event.target.value } },
+                    })
+                  }
+                />
+              </label>
             </div>
           </EditorSection>
           ) : null}
@@ -1413,25 +1640,68 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
         <p className="helper-text" style={{ marginTop: 8 }}>
           Fuente activa: <strong>Ruta publica real</strong>
         </p>
-        <div className="inline-actions" style={{ marginTop: 14 }}>
+        <div className={styles["inv-editor-preview-tabs"]} role="tablist" aria-label="Modo de vista previa">
           <button
             type="button"
-            className="button-secondary"
-            onClick={() => setPreviewVersion((current) => current + 1)}
+            role="tab"
+            aria-selected={previewMode === "live"}
+            className={`${styles["inv-editor-preview-tab"]} ${
+              previewMode === "live" ? styles["inv-editor-preview-tab--active"] : ""
+            }`}
+            onClick={() => setPreviewMode("live")}
           >
-            Actualizar vista
+            Vista en vivo
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={previewMode === "capture"}
+            className={`${styles["inv-editor-preview-tab"]} ${
+              previewMode === "capture" ? styles["inv-editor-preview-tab--active"] : ""
+            }`}
+            onClick={() => setPreviewMode("capture")}
+          >
+            Vista real (captura)
+          </button>
+        </div>
+        <div className={styles["inv-editor-preview-tools"]}>
+          <label className={`field ${styles["inv-editor-device-select"]}`}>
+            <span>Dispositivo</span>
+            <select
+              value={devicePresetKey}
+              onChange={(event) => setDevicePresetKey(event.target.value as DevicePresetKey)}
+            >
+              {(Object.keys(DEVICE_PRESETS) as DevicePresetKey[]).map((presetKey) => (
+                <option key={presetKey} value={presetKey}>
+                  {DEVICE_PRESETS[presetKey].label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="inline-actions">
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() =>
+                previewMode === "live"
+                  ? setLivePreviewVersion((current) => current + 1)
+                  : setPreviewVersion((current) => current + 1)
+              }
+            >
+              {previewMode === "live" ? "Sincronizar vista" : "Actualizar captura"}
+            </button>
           <a href={activePreviewFrameUrl} className="button-ghost" target="_blank" rel="noreferrer">
             Abrir vista actual
           </a>
+          </div>
         </div>
-        <div className="mobile-preview-shell">
-          <div className="mobile-preview-device">
-            <div className="mobile-preview-device__camera" aria-hidden="true" />
-            <div className="mobile-preview-device__viewport">
+        <div className={styles["inv-editor-device-shell"]}>
+          <div className={styles["inv-editor-device-frame"]} style={deviceFrameVars}>
+            <div className={styles["inv-editor-device-camera"]} aria-hidden="true" />
+            <div className={styles["inv-editor-device-screen"]}>
               <iframe
                 key={activePreviewFrameUrl}
-                className="mobile-preview-device__frame"
+                className={styles["inv-editor-device-iframe"]}
                 title="Vista real de la invitacion"
                 src={activePreviewFrameUrl}
               />
