@@ -55,7 +55,7 @@ import {
   trimList,
 } from "./viewer-utils";
 import { RequireAuth, getSafeAdminRedirectPath, isProtectedAdminMode, type AdminAuthState } from "./RequireAuth";
-import { PublicLoginShell } from "@/components/site/PublicLoginShell";
+import { PublicShell } from "@/components/site/PublicShell";
 
 function formatResponseDate(input: string) {
   return new Intl.DateTimeFormat("es-MX", {
@@ -320,36 +320,6 @@ function EditorModuleMarker({
   );
 }
 
-function ThemeIcon({ theme }: { theme: "dark" | "light" }) {
-  if (theme === "dark") {
-    return (
-      <svg viewBox="0 0 24 24" className="viewer-theme-icon" aria-hidden="true">
-        <path
-          d="M12 4.5V2m0 20v-2.5m7.5-7.5H22m-20 0h2.5m12.8 5.3 1.8 1.8m-13-13 1.8 1.8m11.2 0 1.8-1.8m-13 13 1.8-1.8M12 7a5 5 0 1 0 0 10a5 5 0 0 0 0-10Z"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" className="viewer-theme-icon" aria-hidden="true">
-      <path
-        d="M20 14.2A8.4 8.4 0 0 1 9.8 4A8.9 8.9 0 1 0 20 14.2Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function EditorPanelSection({
   title,
   children,
@@ -532,7 +502,6 @@ export function App() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [editorPreviewVersion, setEditorPreviewVersion] = useState(0);
   const [countdown, setCountdown] = useState<Array<{ label: string; value: number }>>([]);
-  const [adminTheme, setAdminTheme] = useState<"dark" | "light">("dark");
   const [draggingSectionKey, setDraggingSectionKey] = useState<SectionKey | null>(null);
   const [activeEditorPanel, setActiveEditorPanel] = useState<EditorPanelKey>("base");
   const [editorPreviewMode, setEditorPreviewMode] = useState<EditorPreviewMode>("live");
@@ -664,25 +633,6 @@ export function App() {
       observer.disconnect();
     };
   }, [route.mode, editorDraft]);
-
-  useEffect(() => {
-    if (route.mode !== "admin-list" && route.mode !== "admin-editor") {
-      return;
-    }
-
-    const savedTheme = window.localStorage.getItem("crm-react-theme");
-    if (savedTheme === "light" || savedTheme === "dark") {
-      setAdminTheme(savedTheme);
-    }
-  }, [route.mode]);
-
-  useEffect(() => {
-    if (route.mode !== "admin-list" && route.mode !== "admin-editor") {
-      return;
-    }
-
-    window.localStorage.setItem("crm-react-theme", adminTheme);
-  }, [adminTheme, route.mode]);
 
   useEffect(() => {
     if (!isProtectedAdminRoute) {
@@ -1497,33 +1447,26 @@ export function App() {
 
   if (route.mode === "unknown") {
     return (
-      <main className={`app-admin auth-wrap viewer-admin-theme viewer-admin-theme--${adminTheme}`}>
-        <section className="auth-card viewer-card">
-          <div className="viewer-admin-topbar viewer-admin-topbar--compact">
-            <div>
-              <p className="viewer-eyebrow">Editor</p>
-              <h1>CRM React</h1>
+      <PublicShell showSiteLink centered>
+        <main className="auth-wrap">
+          <section className="auth-card viewer-card">
+            <div className="viewer-admin-topbar viewer-admin-topbar--compact">
+              <div>
+                <p className="viewer-eyebrow">Editor</p>
+                <h1>CRM React</h1>
+              </div>
             </div>
-            <button
-              type="button"
-              className="viewer-theme-toggle viewer-theme-toggle--icon"
-              aria-label={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-              title={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-              onClick={() => setAdminTheme((current) => (current === "dark" ? "light" : "dark"))}
-            >
-              <ThemeIcon theme={adminTheme} />
-            </button>
-          </div>
-          <p className="viewer-section__subtitle">Rutas soportadas desde este frontend:</p>
-          <div className="viewer-stack-list">
-            <p><code>/i/cumple-7-luis-arturo-astronautas</code></p>
-            <p><code>/i/cumple-7-luis-arturo-astronautas/rsvp?token=...</code></p>
-            <p><code>/admin/login</code></p>
-            <p><code>/admin/invitations</code></p>
-            <p><code>/admin/invitations/[id]</code></p>
-          </div>
-        </section>
-      </main>
+            <p className="viewer-section__subtitle">Rutas soportadas desde este frontend:</p>
+            <div className="viewer-stack-list">
+              <p><code>/i/cumple-7-luis-arturo-astronautas</code></p>
+              <p><code>/i/cumple-7-luis-arturo-astronautas/rsvp?token=...</code></p>
+              <p><code>/admin/login</code></p>
+              <p><code>/admin/invitations</code></p>
+              <p><code>/admin/invitations/[id]</code></p>
+            </div>
+          </section>
+        </main>
+      </PublicShell>
     );
   }
 
@@ -1531,7 +1474,7 @@ export function App() {
     const redirectTarget = getSafeAdminRedirectPath(new URLSearchParams(window.location.search).get("redirect"));
 
     return (
-      <PublicLoginShell>
+      <PublicShell showLogout={false} showSiteLink centered>
         <section className="auth-card viewer-card">
           <p className="viewer-eyebrow">Acceso administrativo</p>
           <h1>Login del CRM</h1>
@@ -1565,7 +1508,7 @@ export function App() {
             </p>
           </form>
         </section>
-      </PublicLoginShell>
+      </PublicShell>
     );
   }
 
@@ -1575,35 +1518,28 @@ export function App() {
 
     return (
       <RequireAuth enabled={isProtectedAdminRoute} authState={adminAuthState} redirectPath={currentPath} fallback={adminGuardFallback}>
-        <main className={`app-admin auth-wrap viewer-admin-theme viewer-admin-theme--${adminTheme}`}>
-          <section className="auth-card viewer-card">
-            <div className="viewer-admin-topbar viewer-admin-topbar--compact">
-              <div>
-                <p className="viewer-eyebrow">Editor</p>
-                <h1>Ruta historica</h1>
+        <PublicShell showSiteLink centered>
+          <main className="auth-wrap">
+            <section className="auth-card viewer-card">
+              <div className="viewer-admin-topbar viewer-admin-topbar--compact">
+                <div>
+                  <p className="viewer-eyebrow">Editor</p>
+                  <h1>Ruta historica</h1>
+                </div>
               </div>
-              <button
-                type="button"
-                className="viewer-theme-toggle viewer-theme-toggle--icon"
-                aria-label={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-                title={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-                onClick={() => setAdminTheme((current) => (current === "dark" ? "light" : "dark"))}
-              >
-                <ThemeIcon theme={adminTheme} />
-              </button>
-            </div>
-            <p className="viewer-section__subtitle">
-              {isSameOriginFallback
-                ? "Abre esta ruta desde el backend de Next para usar el formulario historico."
-                : "Abriendo el formulario del panel Next..."}
-            </p>
-            <p>
-              <a className="viewer-link" href={targetUrl}>
-                Ir a crear invitacion
-              </a>
-            </p>
-          </section>
-        </main>
+              <p className="viewer-section__subtitle">
+                {isSameOriginFallback
+                  ? "Abre esta ruta desde el backend de Next para usar el formulario historico."
+                  : "Abriendo el formulario del panel Next..."}
+              </p>
+              <p>
+                <a className="viewer-link" href={targetUrl}>
+                  Ir a crear invitacion
+                </a>
+              </p>
+            </section>
+          </main>
+        </PublicShell>
       </RequireAuth>
     );
   }
@@ -1634,47 +1570,40 @@ export function App() {
   if (route.mode === "admin-list") {
     return (
       <RequireAuth enabled={isProtectedAdminRoute} authState={adminAuthState} redirectPath={currentPath} fallback={adminGuardFallback}>
-        <main className={`app-admin viewer-admin-shell viewer-admin-theme viewer-admin-theme--${adminTheme}`}>
-          <div className="viewer-admin-container">
-            <section className="viewer-card">
-              <div className="viewer-admin-topbar">
-                <div>
-                  <p className="viewer-eyebrow">CRM React</p>
-                  <h1>Invitaciones</h1>
+        <PublicShell showSiteLink>
+          <main className="viewer-admin-shell">
+            <div className="viewer-admin-container">
+              <section className="viewer-card">
+                <div className="viewer-admin-topbar">
+                  <div>
+                    <p className="viewer-eyebrow">CRM React</p>
+                    <h1>Invitaciones</h1>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  className="viewer-theme-toggle viewer-theme-toggle--icon"
-                  aria-label={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-                  title={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-                  onClick={() => setAdminTheme((current) => (current === "dark" ? "light" : "dark"))}
-                >
-                  <ThemeIcon theme={adminTheme} />
-                </button>
-              </div>
-              <p className="viewer-section__subtitle">Lista inicial del editor migrado. Usa esta vista para entrar al detalle React.</p>
-              <div className="viewer-response-list">
-                {adminInvitations.map((item) => (
-                  <article key={item.id} className="viewer-response-item">
-                    <strong>{item.sections.hero.title}</strong>
-                    <div className="viewer-response-meta">
-                      <span>{item.slug}</span>
-                      <span>{item.status === "published" ? "Publicada" : "Borrador"}</span>
-                    </div>
-                    <div className="viewer-admin-actions">
-                      <a className="viewer-link viewer-link--muted" href={`/admin/invitations/${item.id}`}>
-                        Editar en React
-                      </a>
-                      <a className="viewer-link" href={`/i/${item.slug}`} target="_blank" rel="noreferrer">
-                        Abrir publica
-                      </a>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          </div>
-        </main>
+                <p className="viewer-section__subtitle">Lista inicial del editor migrado. Usa esta vista para entrar al detalle React.</p>
+                <div className="viewer-response-list">
+                  {adminInvitations.map((item) => (
+                    <article key={item.id} className="viewer-response-item">
+                      <strong>{item.sections.hero.title}</strong>
+                      <div className="viewer-response-meta">
+                        <span>{item.slug}</span>
+                        <span>{item.status === "published" ? "Publicada" : "Borrador"}</span>
+                      </div>
+                      <div className="viewer-admin-actions">
+                        <a className="viewer-link viewer-link--muted" href={`/admin/invitations/${item.id}`}>
+                          Editar en React
+                        </a>
+                        <a className="viewer-link" href={`/i/${item.slug}`} target="_blank" rel="noreferrer">
+                          Abrir publica
+                        </a>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </main>
+        </PublicShell>
       </RequireAuth>
     );
   }
@@ -1748,7 +1677,8 @@ export function App() {
 
     return (
       <RequireAuth enabled={isProtectedAdminRoute} authState={adminAuthState} redirectPath={currentPath} fallback={adminGuardFallback}>
-      <main className={`app-admin editor-page viewer-admin-shell viewer-admin-theme viewer-admin-theme--${adminTheme}`}>
+      <PublicShell showSiteLink>
+      <main className="editor-page viewer-admin-shell">
         <div className="viewer-admin-container editor-grid">
           <section className="viewer-card editor-form">
             <div className={`editor-sticky-header${activeEditorPanel !== "base" ? " editor-sticky-header--collapsed" : ""}`}>
@@ -1757,15 +1687,6 @@ export function App() {
               <p className="viewer-eyebrow">Editor</p>
               <h1>Editor de invitación</h1>
             </div>
-            <button
-              type="button"
-              className="viewer-theme-toggle viewer-theme-toggle--icon"
-              aria-label={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-              title={adminTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-              onClick={() => setAdminTheme((current) => (current === "dark" ? "light" : "dark"))}
-            >
-              <ThemeIcon theme={adminTheme} />
-            </button>
           </div>
           <div className="viewer-module-nav editor-module-nav" role="tablist" aria-label="Secciones del editor">
             {editorSections.map((section) => (
@@ -2893,6 +2814,7 @@ export function App() {
         </aside>
         </div>
       </main>
+      </PublicShell>
       </RequireAuth>
     );
   }
