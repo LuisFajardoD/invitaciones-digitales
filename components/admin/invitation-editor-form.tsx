@@ -38,6 +38,7 @@ import type {
   QuickActionItem,
   SectionKey,
 } from "@/types/invitations";
+import styles from "./invitation-editor-form.module.css";
 
 type InvitationEditorFormProps = {
   invitation: InvitationRecord;
@@ -51,6 +52,15 @@ type ExtraSectionKey =
   | "livestream"
   | "transport"
   | "lodging";
+
+type EditorCategoryKey =
+  | "base"
+  | "portada"
+  | "evento"
+  | "flujo"
+  | "contenido"
+  | "atencion"
+  | "extras";
 
 const allSectionKeys: SectionKey[] = [
   "hero",
@@ -93,6 +103,16 @@ const quickActionTypeOptions: Array<{
   { value: "share", label: "Compartir invitacion" },
 ];
 
+const editorCategories: Array<{ key: EditorCategoryKey; label: string }> = [
+  { key: "base", label: "Base" },
+  { key: "portada", label: "Portada" },
+  { key: "evento", label: "Evento" },
+  { key: "flujo", label: "Flujo" },
+  { key: "contenido", label: "Contenido" },
+  { key: "atencion", label: "Atencion" },
+  { key: "extras", label: "Extras" },
+];
+
 function getStatusLabel(status: InvitationRecord["status"]) {
   return status === "published" ? "Publicada" : "Borrador";
 }
@@ -133,6 +153,7 @@ function getEditableQuickActionType(type: string): QuickActionItem["type"] {
 export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) {
   const router = useRouter();
   const [draft, setDraft] = useState<InvitationRecord>(() => normalizeInvitationRecord(invitation));
+  const [selectedCategory, setSelectedCategory] = useState<EditorCategoryKey>("base");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -485,19 +506,28 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
   const mapUsesDarkDefault = draft.theme_id === "astronautas";
   const currentPreviewFrameUrl = `/i/${encodeURIComponent(draft.slug)}?crm_preview=${previewVersion}`;
   const activePreviewFrameUrl = currentPreviewFrameUrl;
+  const activeCategoryLabel =
+    editorCategories.find((category) => category.key === selectedCategory)?.label || "Base";
 
   return (
-    <div className="two-column">
-      <section className="admin-panel">
+    <div className={styles["inv-editor-page"]}>
+      <EditorCategoryNav selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+
+      <section className={styles["inv-editor-main"]}>
+        <section className="admin-panel">
         <div className="inline-actions" style={{ justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <p className="eyebrow">Editor</p>
             <h2>{draft.sections.hero.title}</h2>
+            <p className="helper-text" style={{ margin: "6px 0 0" }}>
+              Categoria activa: <strong>{activeCategoryLabel}</strong>
+            </p>
           </div>
           <span className={`status-pill ${draft.status}`}>{getStatusLabel(draft.status)}</span>
         </div>
 
         <div className="editor-form-shell">
+          {selectedCategory === "base" ? (
           <EditorSection
             eyebrow="Base"
             title="Configuracion general"
@@ -570,7 +600,9 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           </label>
             </div>
           </EditorSection>
+          ) : null}
 
+          {selectedCategory === "flujo" ? (
           <EditorSection
             eyebrow="Flujo"
             title="Orden y estado de secciones"
@@ -597,13 +629,17 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           </DndContext>
             </div>
           </EditorSection>
+          ) : null}
 
+          {["portada", "evento", "contenido", "atencion", "extras", "base"].includes(selectedCategory) ? (
           <EditorSection
             eyebrow="Edicion"
             title="Contenido de la invitacion"
             description="Todo el contenido editable del sitio, ahora agrupado por bloques dentro del mismo panel."
           >
             <div className="form-grid">
+          {selectedCategory === "portada" ? (
+          <>
           <div className="field-wide editor-subsection">
             <p className="editor-subsection__eyebrow">Portada</p>
             <h3 className="editor-subsection__title">Hero y ambientacion</h3>
@@ -844,7 +880,11 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
               </label>
             </div>
           </div>
+          </>
+          ) : null}
 
+          {selectedCategory === "evento" ? (
+          <>
           <div className="field-wide editor-subsection">
             <p className="editor-subsection__eyebrow">Evento</p>
             <h3 className="editor-subsection__title">Datos del evento y mapa</h3>
@@ -969,6 +1009,10 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             />
             <span>Mapa oscuro</span>
           </label>
+          </>
+          ) : null}
+          {selectedCategory === "contenido" ? (
+          <>
           <div className="field-wide editor-subsection">
             <p className="editor-subsection__eyebrow">Contenido</p>
             <h3 className="editor-subsection__title">Acciones y bloques visibles</h3>
@@ -1098,6 +1142,10 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
               </button>
             </div>
           </div>
+          </>
+          ) : null}
+          {selectedCategory === "extras" ? (
+          <>
           <div className="field-wide editor-subsection">
             <p className="editor-subsection__eyebrow">Modulos extra</p>
             <h3 className="editor-subsection__title">Secciones opcionales</h3>
@@ -1174,6 +1222,10 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
               </div>
             ))}
           </div>
+          </>
+          ) : null}
+          {selectedCategory === "atencion" ? (
+          <>
           <div className="field-wide editor-subsection">
             <p className="editor-subsection__eyebrow">Atencion</p>
             <h3 className="editor-subsection__title">RSVP y canal directo</h3>
@@ -1267,6 +1319,10 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
               }
             />
           </label>
+          </>
+          ) : null}
+          {selectedCategory === "base" ? (
+          <>
           <div className="field-wide editor-subsection">
             <p className="editor-subsection__eyebrow">Share</p>
             <h3 className="editor-subsection__title">Metadatos y expiracion</h3>
@@ -1339,37 +1395,18 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
               }
             />
           </label>
+          </>
+          ) : null}
             </div>
           </EditorSection>
+          ) : null}
 
-          <EditorSection
-            eyebrow="Publicacion"
-            title="Guardar y probar"
-            description="Guarda cambios y abre la invitacion publica o la vista del formulario RSVP."
-          >
-            <div className="inline-actions editor-actions">
-              <button type="button" className="button-primary" onClick={handleSave} disabled={loading}>
-                {loading ? "Guardando..." : "Guardar cambios"}
-              </button>
-              <a href={`/i/${draft.slug}`} className="button-secondary" target="_blank" rel="noreferrer">
-                Abrir invitacion publica
-              </a>
-              <a
-                href={`/i/${draft.slug}/rsvp?token=${draft.client_view_token}`}
-                className="button-secondary"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Vista cliente RSVP
-              </a>
-            </div>
-            {status ? <p className="success-text" style={{ margin: 0 }}>{status}</p> : null}
-            {error ? <p className="error-text" style={{ margin: 0 }}>{error}</p> : null}
-          </EditorSection>
         </div>
       </section>
+      </section>
 
-      <section className="admin-panel">
+      <aside className={styles["inv-editor-preview-column"]}>
+      <section className={`admin-panel ${styles["inv-editor-preview-sticky"]}`}>
         <p className="eyebrow">Vista movil real</p>
         <h2>Vista previa en telefono</h2>
         <p className="helper-text">Este marco siempre carga la ruta publica real. Si el viewer React local esta activo, esa misma ruta lo usa automaticamente; si no, cae al render actual de Next.</p>
@@ -1402,7 +1439,76 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           </div>
         </div>
       </section>
+      <section className={`admin-panel ${styles["inv-editor-save-card"]}`}>
+        <p className="eyebrow">Publicacion</p>
+        <h2>Guardar y probar</h2>
+        <p className="helper-text">Guarda cambios y abre la invitacion publica o la vista del formulario RSVP.</p>
+        <div className={`inline-actions editor-actions ${styles["inv-editor-save-actions"]}`}>
+          <button type="button" className="button-primary" onClick={handleSave} disabled={loading}>
+            {loading ? "Guardando..." : "Guardar cambios"}
+          </button>
+          <a href={`/i/${draft.slug}`} className="button-secondary" target="_blank" rel="noreferrer">
+            Abrir invitacion publica
+          </a>
+          <a
+            href={`/i/${draft.slug}/rsvp?token=${draft.client_view_token}`}
+            className="button-secondary"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Vista cliente RSVP
+          </a>
+        </div>
+        {status ? <p className="success-text" style={{ margin: 0 }}>{status}</p> : null}
+        {error ? <p className="error-text" style={{ margin: 0 }}>{error}</p> : null}
+      </section>
+      </aside>
     </div>
+  );
+}
+
+function EditorCategoryNav({
+  selectedCategory,
+  onSelectCategory,
+}: {
+  selectedCategory: EditorCategoryKey;
+  onSelectCategory: (category: EditorCategoryKey) => void;
+}) {
+  return (
+    <nav className={styles["inv-editor-nav"]} aria-label="Categorias del editor">
+      <section className={`admin-panel ${styles["inv-editor-nav-panel"]}`}>
+        <p className="eyebrow">Categorias</p>
+        <label className={styles["inv-editor-nav-select-wrap"]}>
+          <span>Selecciona categoria</span>
+          <select
+            value={selectedCategory}
+            onChange={(event) => onSelectCategory(event.target.value as EditorCategoryKey)}
+          >
+            {editorCategories.map((category) => (
+              <option key={category.key} value={category.key}>
+                {category.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className={styles["inv-editor-nav-list"]} role="tablist" aria-label="Categorias del editor">
+          {editorCategories.map((category) => (
+            <button
+              key={category.key}
+              type="button"
+              role="tab"
+              aria-selected={selectedCategory === category.key}
+              className={`${styles["inv-editor-nav-button"]} ${
+                selectedCategory === category.key ? styles["inv-editor-nav-button--active"] : ""
+              }`}
+              onClick={() => onSelectCategory(category.key)}
+            >
+              {category.label}
+            </button>
+          ))}
+        </div>
+      </section>
+    </nav>
   );
 }
 

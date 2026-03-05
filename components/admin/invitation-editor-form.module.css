@@ -1,0 +1,128 @@
+.inv-editor-page {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) minmax(320px, 420px);
+  gap: 16px;
+  align-items: start;
+}
+
+.inv-editor-nav {
+  position: sticky;
+  top: 18px;
+  align-self: start;
+}
+
+.inv-editor-nav-panel {
+  padding: 14px;
+}
+
+.inv-editor-nav-select-wrap {
+  display: none;
+  margin-top: 10px;
+}
+
+.inv-editor-nav-select-wrap span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  color: var(--admin-text-soft);
+}
+
+.inv-editor-nav-select-wrap select {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: color-mix(in srgb, var(--admin-surface-bg) 94%, transparent);
+  color: var(--admin-text);
+  padding: 0 12px;
+}
+
+.inv-editor-nav-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.inv-editor-nav-button {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: color-mix(in srgb, var(--admin-surface-bg) 94%, transparent);
+  color: var(--admin-text);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inv-editor-nav-button:hover {
+  border-color: var(--admin-border-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+.inv-editor-nav-button--active {
+  border-color: transparent;
+  background: var(--admin-button-bg);
+  color: var(--admin-button-text);
+}
+
+.inv-editor-main {
+  min-width: 0;
+}
+
+.inv-editor-preview-column {
+  position: sticky;
+  top: 18px;
+  align-self: start;
+  display: grid;
+  gap: 12px;
+}
+
+.inv-editor-preview-sticky {
+  margin-bottom: 0;
+}
+
+.inv-editor-save-card {
+  display: grid;
+  gap: 10px;
+}
+
+.inv-editor-save-actions {
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 1180px) {
+  .inv-editor-page {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .inv-editor-preview-column {
+    position: static;
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .inv-editor-page {
+    grid-template-columns: 1fr;
+  }
+
+  .inv-editor-nav {
+    position: static;
+  }
+
+  .inv-editor-nav-list {
+    display: none;
+  }
+
+  .inv-editor-nav-select-wrap {
+    display: block;
+  }
+
+  .inv-editor-preview-column {
+    position: static;
+  }
+}
