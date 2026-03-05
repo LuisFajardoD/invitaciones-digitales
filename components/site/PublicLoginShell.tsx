@@ -23,7 +23,9 @@ export function PublicLoginShell({ children }: { children: ReactNode }) {
         </Link>
       </header>
 
-      <section className={styles["site-login-card"]}>{children}</section>
+      <div className={styles["site-login-content"]}>
+        <section className={styles["site-login-card"]}>{children}</section>
+      </div>
     </main>
   );
 }

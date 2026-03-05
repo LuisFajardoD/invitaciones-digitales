@@ -3,10 +3,12 @@
   --site-login-muted: #a8adba;
   --site-login-border: rgba(255, 255, 255, 0.12);
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: min(1100px, calc(100% - 40px));
-  min-height: 100vh;
+  min-height: 100svh;
   margin: 0 auto;
-  padding: 28px 0 56px;
+  padding: 28px 0 28px;
   color: var(--site-login-text);
 }
 
@@ -34,6 +36,13 @@
   border-radius: 999px;
   background: rgba(12, 14, 18, 0.75);
   backdrop-filter: blur(8px);
+}
+
+.site-login-content {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 6px 0 18px;
 }
 
 .site-login-brand {
@@ -72,15 +81,23 @@
 }
 
 .site-login-card {
-  width: min(560px, 100%);
-  margin: 0 auto;
-  padding: 24px;
+  width: min(760px, 100%);
+  min-height: clamp(420px, 62vh, 620px);
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: clamp(18px, 3vw, 32px);
   border: 1px solid var(--site-login-border);
   border-radius: 24px;
   background:
     linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03) 36%, rgba(255, 255, 255, 0.01) 100%),
     rgba(255, 255, 255, 0.04);
   box-shadow: 0 18px 48px rgba(6, 8, 16, 0.28);
+}
+
+.site-login-card :global(.auth-card.viewer-card) {
+  width: min(100%, 620px);
+  margin: 0;
 }
 
 @media (max-width: 920px) {
@@ -92,6 +109,7 @@
 @media (max-width: 640px) {
   .site-login-root {
     width: min(100%, calc(100% - 20px));
+    min-height: 100vh;
     padding-top: 18px;
   }
 
@@ -100,7 +118,9 @@
   }
 
   .site-login-card {
-    padding: 18px;
+    width: 100%;
+    min-height: auto;
+    padding: 14px;
     border-radius: 20px;
   }
 }
