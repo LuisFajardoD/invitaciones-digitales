@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { toPublicInvitation } from "@/lib/public-invitation";
 import { getPublicInvitationBySlug } from "@/lib/repository";
 
 type Params = {
@@ -13,5 +14,5 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Invitacion no encontrada." }, { status: 404 });
   }
 
-  return NextResponse.json({ invitation });
+  return NextResponse.json({ invitation: toPublicInvitation(invitation) });
 }

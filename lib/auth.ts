@@ -3,7 +3,28 @@ import { redirect } from "next/navigation";
 import { ADMIN_COOKIE_NAME } from "@/lib/constants";
 import { createAnonSupabaseClient } from "@/lib/supabase/server";
 
+export function isDemoAuthEnabled() {
+  return process.env.NODE_ENV !== "production" && process.env.ENABLE_DEMO_AUTH === "true";
+}
+
+export function getAllowedAdminEmail() {
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase() || "";
+  return email || null;
+}
+
+export function getAdminAuthPolicyError() {
+  if (process.env.NODE_ENV === "production" && !getAllowedAdminEmail()) {
+    return "ADMIN_EMAIL es obligatorio en produccion para habilitar acceso administrativo.";
+  }
+
+  return null;
+}
+
 export async function getAdminSession() {
+  if (getAdminAuthPolicyError()) {
+    return null;
+  }
+
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
 
@@ -12,6 +33,10 @@ export async function getAdminSession() {
   }
 
   if (token === "demo-session") {
+    if (!isDemoAuthEnabled()) {
+      return null;
+    }
+
     return { email: "demo@invitaciones.local" };
   }
 
@@ -25,8 +50,8 @@ export async function getAdminSession() {
     return null;
   }
 
-  const allowedEmail = process.env.ADMIN_EMAIL;
-  if (allowedEmail && data.user.email !== allowedEmail) {
+  const allowedEmail = getAllowedAdminEmail();
+  if (allowedEmail && data.user.email?.toLowerCase() !== allowedEmail) {
     return null;
   }
 
