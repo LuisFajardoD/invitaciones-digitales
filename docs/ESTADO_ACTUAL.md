@@ -10,6 +10,7 @@ Actualizado: 6 de marzo de 2026
   - Landing y examples
   - Login admin y dashboard de invitaciones
   - Editor de invitacion con preview de dispositivo
+  - Guardado como plantilla + creacion desde plantilla en CRM
   - Viewer publico de invitacion
   - RSVP cliente y panel RSVP cliente privado por token
 
@@ -30,6 +31,8 @@ Actualizado: 6 de marzo de 2026
   - cookie `inv_admin_session`
   - login API en `app/api/admin/login/route.ts`
 - API publica sanitizada para no exponer campos internos sensibles.
+- Envio RSVP publico endurecido por `slug` (sin aceptar `invitationId` desde cliente).
+- Endpoint legado `POST /api/rsvp` marcado como deprecado (`410`).
 
 ## Estado visual
 
@@ -52,6 +55,7 @@ Actualizado: 6 de marzo de 2026
   - `/admin/invitations`
   - `/admin/invitations/new`
   - `/admin/invitations/[id]`
+  - `/admin/site`
 - Viewer:
   - `/i/[slug]`
   - `/i/[slug]/rsvp?token=...`

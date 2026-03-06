@@ -46,6 +46,10 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `src/crm/viewer-sections.tsx`
   - `src/crm/viewer.css`
 
+- RSVP publico por slug
+  - `app/api/public/invitations/[slug]/rsvp/route.ts`
+  - `lib/repository.ts` (`createPublicRsvpResponse`)
+
 ### Admin
 
 - Auth/redirect
@@ -58,6 +62,13 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `app/admin/invitations/page.tsx`
   - `components/admin/invitations-dashboard.tsx`
   - `components/admin/invitations-dashboard.module.css`
+
+- Plantillas de invitacion
+  - `app/api/admin/invitation-templates/route.ts`
+  - `app/api/admin/invitations/from-template/route.ts`
+  - `app/admin/invitations/new/page.tsx`
+  - `components/admin/new-invitation-form.tsx`
+  - `components/admin/invitation-editor-form.tsx`
 
 - Editor
   - `app/admin/invitations/[id]/page.tsx`
@@ -128,8 +139,12 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
 
 - Cambiar acceso/seguridad API publica:
   - `app/api/public/invitations/[slug]/route.ts`
+  - `app/api/public/invitations/[slug]/rsvp/route.ts`
   - `app/api/public/invitations/[slug]/client-rsvp/route.ts`
   - `lib/public-invitation.ts`
+
+- Endpoint legado RSVP (deprecado):
+  - `app/api/rsvp/route.ts` (responde `410`)
 
 - Cambiar sesion admin:
   - `app/api/admin/login/route.ts`
