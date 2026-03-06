@@ -9,10 +9,11 @@
     "dev": "next dev",
     "dev:clean": "node scripts/dev-clean.mjs",
     "build": "next build",
-    "start": "next start -p $PORT",
+    "start": "node scripts/start.mjs",
     "serve": "next start -p 3000",
     "preview": "next build && next start -p 3000",
-    "test:smoke": "node scripts/smoke-e2e.mjs"
+    "test:smoke": "node scripts/smoke-e2e.mjs",
+    "qa:security": "node scripts/qa-security-checks.mjs"
   },
   "engines": {
     "node": ">=20"

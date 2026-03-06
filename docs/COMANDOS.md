@@ -29,10 +29,23 @@ npm.cmd run preview
 npm.cmd run start
 ```
 
+Opcional: definir puerto:
+
+```powershell
+set PORT=3092
+npm.cmd run start
+```
+
 ## Smoke test rapido
 
 ```powershell
 npm.cmd run test:smoke
+```
+
+## QA seguridad RSVP (mock local)
+
+```powershell
+npm.cmd run qa:security
 ```
 
 ## Si PowerShell bloquea npm
