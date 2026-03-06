@@ -1,9 +1,18 @@
 import type { ClientRsvpView, InvitationRecord } from "@/types/invitations";
 
-export type PublicInvitation = Omit<InvitationRecord, "client_view_token">;
+export type PublicInvitation = Omit<
+  InvitationRecord,
+  "id" | "client_view_token" | "created_at" | "updated_at"
+>;
 
 export function toPublicInvitation(invitation: InvitationRecord): PublicInvitation {
-  const { client_view_token: _clientViewToken, ...safeInvitation } = invitation;
+  const {
+    id: _id,
+    client_view_token: _clientViewToken,
+    created_at: _createdAt,
+    updated_at: _updatedAt,
+    ...safeInvitation
+  } = invitation;
   return safeInvitation;
 }
 
