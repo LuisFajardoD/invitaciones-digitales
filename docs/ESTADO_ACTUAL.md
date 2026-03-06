@@ -59,6 +59,7 @@ Actualizado: 6 de marzo de 2026
 - Viewer:
   - `/i/[slug]`
   - `/i/[slug]/rsvp?token=...`
+  - `/api/public/invitations/[slug]/og-image`
 
 ## Riesgos conocidos
 

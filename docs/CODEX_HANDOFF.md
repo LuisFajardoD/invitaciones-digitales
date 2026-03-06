@@ -48,6 +48,7 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
 
 - RSVP publico por slug
   - `app/api/public/invitations/[slug]/rsvp/route.ts`
+  - `app/api/public/invitations/[slug]/og-image/route.ts` (preview OG 1200x630 para shares)
   - `lib/repository.ts` (`createPublicRsvpResponse`)
 
 ### Admin
@@ -141,6 +142,7 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `app/api/public/invitations/[slug]/route.ts`
   - `app/api/public/invitations/[slug]/rsvp/route.ts`
   - `app/api/public/invitations/[slug]/client-rsvp/route.ts`
+  - `app/api/public/invitations/[slug]/og-image/route.ts`
   - `lib/public-invitation.ts`
 
 - Endpoint legado RSVP (deprecado):

@@ -18,6 +18,10 @@ Actualizado: 6 de marzo de 2026
   - guardar invitacion como plantilla
   - crear invitacion desde plantilla en `/admin/invitations/new`
 - Se reforzo preview movil del editor para evitar seleccion accidental al arrastrar.
+- Se reforzo metadata share de `/i/[slug]` para WhatsApp:
+  - canonical absoluto
+  - `twitter:card=summary_large_image`
+  - imagen OG estable 1200x630 desde `/api/public/invitations/[slug]/og-image`
 
 - Se fortalecio enrutamiento admin para evitar loops y estados no deterministas.
 - Se mejoro persistencia de sesion admin por cookie.

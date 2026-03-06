@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { ViewerReactApp } from "@/app/i/viewer-react-app";
 import { getPublicInvitationBySlug } from "@/lib/repository";
 
@@ -9,8 +10,21 @@ type InvitationPageProps = {
   params: Promise<{ slug: string }>;
 };
 
+async function resolveRequestOrigin() {
+  const headerStore = await headers();
+  const proto = headerStore.get("x-forwarded-proto") || "https";
+  const host = headerStore.get("x-forwarded-host") || headerStore.get("host") || "";
+
+  if (host) {
+    return `${proto}://${host}`;
+  }
+
+  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+}
+
 export async function generateMetadata({ params }: InvitationPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const origin = await resolveRequestOrigin();
   let invitation = null;
 
   try {
@@ -29,12 +43,29 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
   return {
     title: invitation.share.og_title,
     description: invitation.share.og_description,
+    alternates: {
+      canonical: `${origin}/i/${invitation.slug}`,
+    },
     openGraph: {
       title: invitation.share.og_title,
       description: invitation.share.og_description,
-      url: `/i/${invitation.slug}`,
-      images: [invitation.share.og_image_url],
+      url: `${origin}/i/${invitation.slug}`,
+      images: [
+        {
+          url: `${origin}/api/public/invitations/${encodeURIComponent(invitation.slug)}/og-image?v=${encodeURIComponent(invitation.updated_at)}`,
+          width: 1200,
+          height: 630,
+          alt: invitation.share.og_title,
+          type: "image/png",
+        },
+      ],
       type: invitation.share.og_type as "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: invitation.share.og_title,
+      description: invitation.share.og_description,
+      images: [`${origin}/api/public/invitations/${encodeURIComponent(invitation.slug)}/og-image?v=${encodeURIComponent(invitation.updated_at)}`],
     },
   };
 }
