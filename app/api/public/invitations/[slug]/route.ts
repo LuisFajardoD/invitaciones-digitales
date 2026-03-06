@@ -8,11 +8,15 @@ type Params = {
 
 export async function GET(_request: Request, { params }: Params) {
   const { slug } = await params;
-  const invitation = await getPublicInvitationBySlug(slug);
+  try {
+    const invitation = await getPublicInvitationBySlug(slug);
 
-  if (!invitation) {
-    return NextResponse.json({ error: "Invitacion no encontrada." }, { status: 404 });
+    if (!invitation) {
+      return NextResponse.json({ error: "Invitacion no encontrada." }, { status: 404 });
+    }
+
+    return NextResponse.json({ invitation: toPublicInvitation(invitation) });
+  } catch {
+    return NextResponse.json({ error: "No se pudo cargar la invitacion." }, { status: 503 });
   }
-
-  return NextResponse.json({ invitation: toPublicInvitation(invitation) });
 }

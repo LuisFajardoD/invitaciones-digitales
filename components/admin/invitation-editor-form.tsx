@@ -1705,117 +1705,138 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           ) : null}
           {selectedCategory === "atencion" ? (
           <>
-          <label className="field">
-            <span>Mensaje de RSVP cerrado</span>
-            <input
-              value={draft.sections.rsvp.closed_message}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  sections: { ...draft.sections, rsvp: { ...draft.sections.rsvp, closed_message: event.target.value } },
-                })
-              }
-            />
-          </label>
-          <label className="checkbox-tile">
-            <input
-              type="checkbox"
-              checked={draft.sections.rsvp.fields.guests_count}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  sections: {
-                    ...draft.sections,
-                    rsvp: {
-                      ...draft.sections.rsvp,
-                      fields: { ...draft.sections.rsvp.fields, guests_count: event.target.checked },
-                    },
-                  },
-                })
-              }
-            />
-            <span>Permitir # asistentes</span>
-          </label>
-          <label className="checkbox-tile">
-            <input
-              type="checkbox"
-              checked={draft.sections.rsvp.fields.message}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  sections: {
-                    ...draft.sections,
-                    rsvp: {
-                      ...draft.sections.rsvp,
-                      fields: { ...draft.sections.rsvp.fields, message: event.target.checked },
-                    },
-                  },
-                })
-              }
-            />
-            <span>Permitir mensaje</span>
-          </label>
-          <label className="field">
-            <span>Nombre del canal directo</span>
-            <input
-              value={draft.sections.contact.name}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  sections: { ...draft.sections, contact: { ...draft.sections.contact, name: event.target.value } },
-                })
-              }
-            />
-          </label>
-          <label className="field">
-            <span>WhatsApp</span>
-            <input
-              value={draft.sections.contact.whatsapp_number}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  sections: {
-                    ...draft.sections,
-                    contact: {
-                      ...draft.sections.contact,
-                      whatsapp_number: event.target.value,
-                      whatsapp_url: event.target.value.trim()
-                        ? createWhatsAppUrl(event.target.value, `Hola, quiero detalles de ${draft.sections.hero.title}.`)
-                        : draft.sections.contact.whatsapp_url,
-                    },
-                  },
-                })
-              }
-            />
-          </label>
-          <label className="field">
-            <span>URL de WhatsApp</span>
-            <input
-              value={draft.sections.contact.whatsapp_url}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  sections: {
-                    ...draft.sections,
-                    contact: { ...draft.sections.contact, whatsapp_url: event.target.value },
-                  },
-                })
-              }
-              placeholder="https://wa.me/..."
-            />
-          </label>
-          <label className="field">
-            <span>Texto visible del canal directo</span>
-            <input
-              value={draft.sections.contact.label}
-              onChange={(event) =>
-                updateDraft({
-                  ...draft,
-                  sections: { ...draft.sections, contact: { ...draft.sections.contact, label: event.target.value } },
-                })
-              }
-            />
-          </label>
+          <div className={`field-wide ${styles["inv-editor-attention-layout"]}`}>
+            <section className={`admin-subpanel ${styles["inv-editor-attention-card"]}`}>
+              <div className={styles["inv-editor-attention-head"]}>
+                <strong>Formulario RSVP</strong>
+                <p className="helper-text">Controla los campos visibles y el mensaje cuando el RSVP ya este cerrado.</p>
+              </div>
+              <div className={styles["inv-editor-attention-toggles"]}>
+                <label className="checkbox-tile">
+                  <input
+                    type="checkbox"
+                    checked={draft.sections.rsvp.fields.guests_count}
+                    onChange={(event) =>
+                      updateDraft({
+                        ...draft,
+                        sections: {
+                          ...draft.sections,
+                          rsvp: {
+                            ...draft.sections.rsvp,
+                            fields: { ...draft.sections.rsvp.fields, guests_count: event.target.checked },
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <span>Permitir # asistentes</span>
+                </label>
+                <label className="checkbox-tile">
+                  <input
+                    type="checkbox"
+                    checked={draft.sections.rsvp.fields.message}
+                    onChange={(event) =>
+                      updateDraft({
+                        ...draft,
+                        sections: {
+                          ...draft.sections,
+                          rsvp: {
+                            ...draft.sections.rsvp,
+                            fields: { ...draft.sections.rsvp.fields, message: event.target.checked },
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <span>Permitir mensaje</span>
+                </label>
+              </div>
+              <div className={`form-grid ${styles["inv-editor-attention-form-grid"]}`}>
+                <label className="field-wide">
+                  <span>Mensaje de RSVP cerrado</span>
+                  <input
+                    value={draft.sections.rsvp.closed_message}
+                    onChange={(event) =>
+                      updateDraft({
+                        ...draft,
+                        sections: { ...draft.sections, rsvp: { ...draft.sections.rsvp, closed_message: event.target.value } },
+                      })
+                    }
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className={`admin-subpanel ${styles["inv-editor-attention-card"]}`}>
+              <div className={styles["inv-editor-attention-head"]}>
+                <strong>Canal directo (WhatsApp)</strong>
+                <p className="helper-text">Define el contacto principal y el enlace de salida que ve el cliente.</p>
+              </div>
+              <div className={`form-grid ${styles["inv-editor-attention-form-grid"]}`}>
+                <label className="field">
+                  <span>Nombre del canal directo</span>
+                  <input
+                    value={draft.sections.contact.name}
+                    onChange={(event) =>
+                      updateDraft({
+                        ...draft,
+                        sections: { ...draft.sections, contact: { ...draft.sections.contact, name: event.target.value } },
+                      })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Texto visible del canal directo</span>
+                  <input
+                    value={draft.sections.contact.label}
+                    onChange={(event) =>
+                      updateDraft({
+                        ...draft,
+                        sections: { ...draft.sections, contact: { ...draft.sections.contact, label: event.target.value } },
+                      })
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>WhatsApp</span>
+                  <input
+                    value={draft.sections.contact.whatsapp_number}
+                    onChange={(event) =>
+                      updateDraft({
+                        ...draft,
+                        sections: {
+                          ...draft.sections,
+                          contact: {
+                            ...draft.sections.contact,
+                            whatsapp_number: event.target.value,
+                            whatsapp_url: event.target.value.trim()
+                              ? createWhatsAppUrl(event.target.value, `Hola, quiero detalles de ${draft.sections.hero.title}.`)
+                              : draft.sections.contact.whatsapp_url,
+                          },
+                        },
+                      })
+                    }
+                  />
+                </label>
+                <label className="field-wide">
+                  <span>URL de WhatsApp</span>
+                  <input
+                    value={draft.sections.contact.whatsapp_url}
+                    onChange={(event) =>
+                      updateDraft({
+                        ...draft,
+                        sections: {
+                          ...draft.sections,
+                          contact: { ...draft.sections.contact, whatsapp_url: event.target.value },
+                        },
+                      })
+                    }
+                    placeholder="https://wa.me/..."
+                  />
+                </label>
+              </div>
+            </section>
+          </div>
           </>
           ) : null}
             </div>

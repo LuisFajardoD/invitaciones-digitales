@@ -1,6 +1,10 @@
-import { type FormEvent, type ReactNode, useMemo, useState } from "react";
+import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import type { BackgroundMediaConfig, GenericSection, InvitationRecord, QuickActionItem } from "./viewer-types";
 import { normalizeKenBurns, resolveHeroBackground, resolveMediaUrl, splitTitle, trimList } from "./viewer-utils";
+
+const HERO_TYPEWRITER_STEP_MS = 82;
+const HERO_TYPEWRITER_LINE_GAP_STEPS = 3;
+let hasPlayedAstronautTypewriter = false;
 
 function getKenBurnsClassName(config?: BackgroundMediaConfig) {
   const kenburns = normalizeKenBurns(config?.kenburns);
@@ -103,6 +107,47 @@ export function HeroSectionViewer({
   const telemetryLabel = repairLegacyText(invitation.sections.hero.badge?.trim() || "PROTOCOLO DE DESPEGUE");
   const telemetryDetail = repairLegacyText(invitation.sections.hero.accent?.trim() || "ID: LA-07");
   const subtitle = repairLegacyText(invitation.sections.hero.subtitle);
+  const animatedTitleLines = useMemo(() => {
+    let cursor = 0;
+
+    return titleLines.map((line) => {
+      const chars = Array.from(line);
+      const startDelayIndex = cursor;
+      cursor += chars.length + HERO_TYPEWRITER_LINE_GAP_STEPS;
+      return { line, chars, startDelayIndex };
+    });
+  }, [titleLines]);
+  const totalTypewriterMs = useMemo(() => {
+    const lastLine = animatedTitleLines[animatedTitleLines.length - 1];
+    if (!lastLine) {
+      return 0;
+    }
+
+    return (lastLine.startDelayIndex + Math.max(lastLine.chars.length, 1) + 1) * HERO_TYPEWRITER_STEP_MS;
+  }, [animatedTitleLines]);
+  const [isTypewriterComplete, setIsTypewriterComplete] = useState(
+    () => !usesAstronautTheme || hasPlayedAstronautTypewriter,
+  );
+
+  useEffect(() => {
+    if (!usesAstronautTheme) {
+      setIsTypewriterComplete(true);
+      return;
+    }
+
+    if (hasPlayedAstronautTypewriter) {
+      setIsTypewriterComplete(true);
+      return;
+    }
+
+    setIsTypewriterComplete(false);
+    const timer = window.setTimeout(() => {
+      hasPlayedAstronautTypewriter = true;
+      setIsTypewriterComplete(true);
+    }, totalTypewriterMs + 120);
+
+    return () => window.clearTimeout(timer);
+  }, [totalTypewriterMs, usesAstronautTheme, invitation.sections.hero.title]);
 
   return (
     <section className={`hero-cinematic${usesAstronautTheme ? " hero-cinematic--astronautas" : ""}`}>
@@ -122,6 +167,7 @@ export function HeroSectionViewer({
       </div>
       <div className="hero-cinematic__comet hero-cinematic__comet--one" aria-hidden="true" />
       <div className="hero-cinematic__comet hero-cinematic__comet--two" aria-hidden="true" />
+      {usesAstronautTheme ? <div className="hero-cinematic__comet hero-cinematic__comet--three" aria-hidden="true" /> : null}
       <div className="hero-cinematic__content">
         <div className="hero-cinematic__copy">
           <div className="hero-cinematic__telemetry-wrap">
@@ -132,10 +178,58 @@ export function HeroSectionViewer({
             <div className="hero-cinematic__telemetry-line" aria-hidden="true" />
           </div>
           <div className="hero-typewriter" aria-label={repairLegacyText(invitation.sections.hero.title)}>
-            {titleLines.map((line, index) => (
-              <div key={line} className="hero-typewriter__row">
+            {animatedTitleLines.map((lineData, index) => (
+              <div key={`${lineData.line}-${index}`} className="hero-typewriter__row">
                 <span className={`hero-typewriter__line ${index === 0 ? "hero-typewriter__line--lead" : "hero-typewriter__line--main"}`}>
-                  {line}
+                  {usesAstronautTheme ? (
+                    <>
+                      {isTypewriterComplete ? (
+                        <span className="hero-typewriter__line-text hero-typewriter__line-text--complete" aria-hidden="true">
+                          {lineData.line}
+                          {index === animatedTitleLines.length - 1 ? (
+                            <span className="hero-typewriter__caret hero-typewriter__caret--steady" aria-hidden="true" />
+                          ) : null}
+                        </span>
+                      ) : (
+                        <>
+                          <span
+                            className="hero-typewriter__line-text"
+                            aria-hidden="true"
+                            style={
+                              {
+                                "--line-delay": `${lineData.startDelayIndex * HERO_TYPEWRITER_STEP_MS}ms`,
+                                "--line-duration": `${Math.max(lineData.chars.length, 1) * HERO_TYPEWRITER_STEP_MS}ms`,
+                                "--line-active-duration": `${(Math.max(lineData.chars.length, 1) + 1) * HERO_TYPEWRITER_STEP_MS}ms`,
+                                "--line-steps": String(Math.max(lineData.chars.length, 1)),
+                              } as CSSProperties
+                            }
+                          >
+                            {lineData.chars.map((char, charIndex) => {
+                              const delayMs = (lineData.startDelayIndex + charIndex) * HERO_TYPEWRITER_STEP_MS;
+                              return (
+                                <span
+                                  key={`${lineData.line}-${charIndex}-${char}`}
+                                  className="hero-typewriter__glyph"
+                                  style={{ "--char-delay": `${delayMs}ms` } as CSSProperties}
+                                >
+                                  {char === " " ? "\u00A0" : char}
+                                </span>
+                              );
+                            })}
+                            <span
+                              className={`hero-typewriter__caret ${
+                                index === animatedTitleLines.length - 1 ? "hero-typewriter__caret--persist" : ""
+                              }`}
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <span className="hero-typewriter__sr-only">{lineData.line}</span>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    lineData.line
+                  )}
                 </span>
               </div>
             ))}
@@ -172,6 +266,19 @@ function repairLegacyText(input: string) {
 function buildAstronautTitleLines(title: string) {
   const cleanedTitle = repairLegacyText(title).trim();
   const words = cleanedTitle.split(/\s+/).filter(Boolean);
+
+  if (
+    words.length >= 4 &&
+    /^cumple$/i.test(words[0]) &&
+    /^\d+$/.test(words[1]) &&
+    /^de$/i.test(words[2])
+  ) {
+    const tail = words.slice(2);
+    if (tail.length >= 3) {
+      return [`${words[0]} ${words[1]}`, tail.slice(0, 2).join(" "), tail.slice(2).join(" ")];
+    }
+    return [`${words[0]} ${words[1]}`, tail.join(" ")];
+  }
 
   if (words.length === 5) {
     return [words[0], words.slice(1, 4).join(" "), words[4]];

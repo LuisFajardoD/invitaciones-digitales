@@ -1,25 +1,4 @@
 .app-admin {
-  --admin-shell-bg:
-    radial-gradient(circle at top left, rgba(71, 112, 255, 0.14), transparent 34%),
-    radial-gradient(circle at 82% 12%, rgba(87, 96, 118, 0.12), transparent 26%),
-    linear-gradient(180deg, #f8fafc 0%, #f3f6fb 100%);
-  --admin-panel-bg:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 248, 252, 0.94));
-  --admin-surface-bg: rgba(255, 255, 255, 0.78);
-  --admin-note-bg: rgba(71, 112, 255, 0.04);
-  --admin-note-border: rgba(71, 112, 255, 0.14);
-  --admin-border: var(--ui-color-border);
-  --admin-border-strong: rgba(71, 112, 255, 0.32);
-  --admin-text: var(--ui-color-dark);
-  --admin-text-soft: var(--ui-color-text-soft);
-  --admin-accent: var(--ui-color-primary);
-  --admin-button-bg: linear-gradient(135deg, #4770ff, #6a8cff);
-  --admin-button-text: #ffffff;
-  --admin-secondary-bg: rgba(255, 255, 255, 0.86);
-  --admin-phone-shadow: 0 30px 80px rgba(26, 31, 44, 0.14);
-}
-
-.app-admin.viewer-admin-theme--dark {
   color-scheme: dark;
   --admin-shell-bg:
     radial-gradient(circle at top left, rgba(71, 112, 255, 0.16), transparent 34%),
@@ -41,8 +20,30 @@
   --admin-phone-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
 }
 
+.app-admin.viewer-admin-theme--dark {
+  color-scheme: dark;
+}
+
 .app-admin.viewer-admin-theme--light {
   color-scheme: light;
+  --admin-shell-bg:
+    radial-gradient(circle at top left, rgba(71, 112, 255, 0.14), transparent 34%),
+    radial-gradient(circle at 82% 12%, rgba(87, 96, 118, 0.12), transparent 26%),
+    linear-gradient(180deg, #f8fafc 0%, #f3f6fb 100%);
+  --admin-panel-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 248, 252, 0.94));
+  --admin-surface-bg: rgba(255, 255, 255, 0.78);
+  --admin-note-bg: rgba(71, 112, 255, 0.04);
+  --admin-note-border: rgba(71, 112, 255, 0.14);
+  --admin-border: var(--ui-color-border);
+  --admin-border-strong: rgba(71, 112, 255, 0.32);
+  --admin-text: var(--ui-color-dark);
+  --admin-text-soft: var(--ui-color-text-soft);
+  --admin-accent: var(--ui-color-primary);
+  --admin-button-bg: linear-gradient(135deg, #4770ff, #6a8cff);
+  --admin-button-text: #ffffff;
+  --admin-secondary-bg: rgba(255, 255, 255, 0.86);
+  --admin-phone-shadow: 0 30px 80px rgba(26, 31, 44, 0.14);
 }
 
 .app-admin.viewer-admin-shell,

@@ -33,30 +33,39 @@ export function optimizeMediaUrl(url?: string, width = 1200) {
 }
 
 export function formatDateLabel(input: string, timezone = "America/Mexico_City") {
-  return new Intl.DateTimeFormat("es-MX", {
-    timeZone: timezone,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(input));
+  return formatDateWithFallback(
+    input,
+    {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    },
+    timezone,
+  );
 }
 
 export function formatTimeLabel(input: string, timezone = "America/Mexico_City") {
-  return new Intl.DateTimeFormat("es-MX", {
-    timeZone: timezone,
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(new Date(input));
+  return formatDateWithFallback(
+    input,
+    {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    },
+    timezone,
+  );
 }
 
 export function formatDateTimeLabel(input: string, timezone = "America/Mexico_City") {
-  return new Intl.DateTimeFormat("es-MX", {
-    timeZone: timezone,
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(input));
+  return formatDateWithFallback(
+    input,
+    {
+      dateStyle: "medium",
+      timeStyle: "short",
+    },
+    timezone,
+  );
 }
 
 export function isPast(input: string) {
@@ -160,4 +169,24 @@ export function slugify(input: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function formatDateWithFallback(
+  input: string,
+  options: Intl.DateTimeFormatOptions,
+  timezone = "America/Mexico_City",
+) {
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    return "Fecha pendiente";
+  }
+
+  try {
+    return new Intl.DateTimeFormat("es-MX", {
+      ...options,
+      timeZone: timezone,
+    }).format(date);
+  } catch {
+    return new Intl.DateTimeFormat("es-MX", options).format(date);
+  }
 }

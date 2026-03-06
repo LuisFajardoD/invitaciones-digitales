@@ -11,13 +11,20 @@
   --mission-tile-radius: 26px;
   --mission-input-radius: 20px;
   background:
-    radial-gradient(circle at 12% 8%, rgba(117, 95, 255, 0.08), transparent 24%),
-    radial-gradient(circle at 88% 14%, rgba(255, 170, 95, 0.06), transparent 22%),
-    linear-gradient(180deg, #040404 0%, #07090d 44%, #0b1020 100%);
+    radial-gradient(1200px 600px at 90% -10%, rgba(255, 255, 255, 0.08), transparent 58%),
+    radial-gradient(900px 500px at -20% 10%, rgba(178, 219, 255, 0.08), transparent 56%),
+    linear-gradient(180deg, #111318 0%, #0c0f15 100%);
   color: #f3f8ff;
   line-height: 1.5;
   min-height: 100vh;
   margin: 0;
+}
+
+.viewer-theme-sync--light .app-viewer {
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(17, 19, 24, 0.08), transparent 58%),
+    radial-gradient(900px 500px at -20% 10%, rgba(92, 117, 162, 0.1), transparent 56%),
+    linear-gradient(180deg, #f6f8fc 0%, #eff2f8 100%);
 }
 
 :where(.app-viewer *, .app-viewer *::before, .app-viewer *::after) {
@@ -53,6 +60,14 @@
     calc(8px + env(safe-area-inset-left, 0px));
 }
 
+.viewer-shell.viewer-shell--public {
+  width: 100%;
+  max-width: none;
+  min-height: 100svh;
+  margin: 0;
+  padding: 0;
+}
+
 .viewer-shell--embedded {
   width: 100%;
   max-width: none;
@@ -62,6 +77,18 @@
 
 .viewer-public-frame {
   width: 100%;
+  min-height: 100svh;
+}
+
+.viewer-shell.viewer-shell--public > .theme-viewer,
+.viewer-shell.viewer-shell--public .viewer-public-frame {
+  width: 100%;
+  min-height: 100svh;
+}
+
+.viewer-shell.viewer-shell--public .viewer-stage {
+  min-height: 100svh;
+  border-radius: 0;
 }
 
 .viewer-shell--embedded .viewer-stage {
@@ -362,7 +389,7 @@
   top: 17%;
   left: 8%;
   width: clamp(92px, 14vw, 160px);
-  animation: viewer-hero-comet-one 6.2s ease-in-out infinite;
+  animation: viewer-hero-comet-one 4.8s linear infinite;
 }
 
 .hero-cinematic__comet--two {
@@ -370,7 +397,15 @@
   left: 54%;
   width: clamp(72px, 11vw, 128px);
   opacity: 0.7;
-  animation: viewer-hero-comet-two 8.8s ease-in-out infinite;
+  animation: viewer-hero-comet-two 6.4s linear infinite;
+}
+
+.hero-cinematic__comet--three {
+  top: 74%;
+  left: -18%;
+  width: clamp(98px, 15vw, 176px);
+  opacity: 0.62;
+  animation: viewer-hero-comet-three 7.2s linear infinite;
 }
 
 .hero-cinematic__content {
@@ -448,7 +483,20 @@
   display: block;
 }
 
+.hero-typewriter__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .hero-typewriter__line {
+  position: relative;
   display: inline-flex;
   align-items: center;
   min-height: 1.06em;
@@ -471,6 +519,62 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   opacity: 0.94;
+}
+
+.hero-cinematic--astronautas .hero-typewriter__line-text {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hero-cinematic--astronautas .hero-typewriter__line-text--complete {
+  position: static;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.hero-cinematic--astronautas .hero-typewriter__glyph {
+  display: inline-block;
+  opacity: 0;
+  animation: hero-typewriter-glyph-on 1ms step-end var(--char-delay) forwards;
+}
+
+.hero-cinematic--astronautas .hero-typewriter__caret {
+  position: absolute;
+  left: 0;
+  top: 0.06em;
+  width: 0.08em;
+  height: 0.9em;
+  border-radius: 2px;
+  background: #8df5ff;
+  box-shadow:
+    0 0 10px rgba(118, 247, 255, 0.44),
+    0 0 16px rgba(118, 247, 255, 0.24);
+  opacity: 0;
+  transform: translateX(0);
+  animation:
+    hero-typewriter-caret-travel var(--line-duration) steps(var(--line-steps), end) var(--line-delay) forwards,
+    hero-typewriter-caret-active var(--line-active-duration) linear var(--line-delay) forwards;
+}
+
+.hero-cinematic--astronautas .hero-typewriter__caret--persist {
+  animation:
+    hero-typewriter-caret-travel var(--line-duration) steps(var(--line-steps), end) var(--line-delay) forwards,
+    hero-typewriter-caret-show var(--line-duration) step-end var(--line-delay) forwards,
+    hero-typewriter-caret-blink 0.72s steps(1, end) calc(var(--line-delay) + var(--line-duration)) infinite,
+    hero-typewriter-caret-glitch 2.2s steps(1, end) calc(var(--line-delay) + var(--line-duration)) infinite;
+}
+
+.hero-cinematic--astronautas .hero-typewriter__caret--steady {
+  position: static;
+  top: auto;
+  left: auto;
+  margin-left: 0.12em;
+  opacity: 1;
+  transform: none;
+  animation:
+    hero-typewriter-caret-blink 0.72s steps(1, end) infinite,
+    hero-typewriter-caret-glitch-static 2.2s steps(1, end) infinite;
 }
 
 .hero-cinematic__subtitle {
@@ -601,14 +705,89 @@
   width: clamp(146px, calc(var(--live-preview-width, 430px) * 0.46), 196px);
 }
 
-.viewer-shell--embedded .hero-cinematic__comet--one {
-  top: 14%;
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__content,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__content {
+  justify-content: flex-start;
+  padding-top: clamp(230px, calc(var(--live-preview-width, 430px) * 0.66), 302px);
+  padding-right: clamp(12px, calc(var(--live-preview-width, 430px) * 0.04), 20px);
+  padding-bottom: clamp(214px, calc(var(--live-preview-width, 430px) * 0.62), 282px);
+  padding-left: clamp(12px, calc(var(--live-preview-width, 430px) * 0.04), 20px);
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__copy,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__copy {
+  width: min(100%, calc(100% - clamp(40px, calc(var(--live-preview-width, 430px) * 0.11), 72px)));
+  max-width: min(100%, calc(100% - clamp(40px, calc(var(--live-preview-width, 430px) * 0.11), 72px)));
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__telemetry,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__telemetry {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  font-size: clamp(0.6rem, calc(var(--live-preview-width, 430px) * 0.028), 0.9rem);
+  letter-spacing: clamp(0.08em, calc(var(--live-preview-width, 430px) * 0.0032), 0.16em);
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__telemetry-detail,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__telemetry-detail {
+  font-size: clamp(0.5rem, calc(var(--live-preview-width, 430px) * 0.017), 0.72rem);
+  letter-spacing: clamp(0.1em, calc(var(--live-preview-width, 430px) * 0.0025), 0.16em);
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-typewriter__line--lead,
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-typewriter__line--main,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-typewriter__line--lead,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-typewriter__line--main {
+  font-size: clamp(2.34rem, calc(var(--live-preview-width, 430px) * 0.112), 3.7rem);
+  line-height: 0.88;
+  letter-spacing: 0.035em;
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-typewriter__line--main,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-typewriter__line--main {
+  display: block;
+  white-space: nowrap;
+  max-width: none;
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__subtitle,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__subtitle {
+  max-width: min(100%, 22ch);
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__orb--moon,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__orb--moon {
+  top: clamp(8px, calc(var(--live-preview-width, 430px) * 0.028), 20px);
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__orb--earth,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__orb--earth {
+  top: clamp(68px, calc(var(--live-preview-width, 430px) * 0.2), 94px);
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__astronaut-art,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__astronaut-art {
+  right: clamp(4px, calc(var(--live-preview-width, 430px) * 0.018), 10px);
+  bottom: clamp(8px, calc(var(--live-preview-width, 430px) * 0.075), 30px);
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__comet--one,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__comet--one {
+  top: 10%;
   left: -6%;
 }
 
-.viewer-shell--embedded .hero-cinematic__comet--two {
-  top: 28%;
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__comet--two,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__comet--two {
+  top: 20%;
   left: 44%;
+}
+
+.viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__comet--three,
+.viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__comet--three {
+  top: 76%;
+  left: -22%;
 }
 
 .viewer-hero {
@@ -921,7 +1100,7 @@
   top: 17%;
   left: 8%;
   width: clamp(92px, 14vw, 160px);
-  animation: viewer-hero-comet-one 6.2s ease-in-out infinite;
+  animation: viewer-hero-comet-one 4.8s linear infinite;
 }
 
 .viewer-hero__comet--two {
@@ -929,7 +1108,7 @@
   left: 54%;
   width: clamp(72px, 11vw, 128px);
   opacity: 0.72;
-  animation: viewer-hero-comet-two 8.8s ease-in-out infinite;
+  animation: viewer-hero-comet-two 6.4s linear infinite;
 }
 
 .viewer-shell--embedded .invitation-section {
@@ -2096,43 +2275,135 @@
 
 @keyframes viewer-hero-comet-one {
   0% {
-    transform: translate3d(-4vw, 0, 0) rotate(17deg) scale(0.74);
+    transform: translate3d(-8vw, -5px, 0) rotate(17deg) scale(0.74);
     opacity: 0;
   }
 
-  14% {
+  12% {
     opacity: 0.82;
   }
 
-  62% {
-    transform: translate3d(18vw, 16px, 0) rotate(17deg) scale(1);
-    opacity: 0.86;
-  }
-
   100% {
-    transform: translate3d(26vw, 24px, 0) rotate(17deg) scale(1.24);
+    transform: translate3d(30vw, 52px, 0) rotate(17deg) scale(1.24);
     opacity: 0;
   }
 }
 
 @keyframes viewer-hero-comet-two {
   0% {
-    transform: translate3d(-3vw, 0, 0) rotate(17deg) scale(0.72);
+    transform: translate3d(-7vw, -4px, 0) rotate(17deg) scale(0.72);
     opacity: 0;
   }
 
-  18% {
+  14% {
     opacity: 0.7;
   }
 
-  64% {
-    transform: translate3d(14vw, 14px, 0) rotate(17deg) scale(0.94);
-    opacity: 0.68;
+  100% {
+    transform: translate3d(24vw, 42px, 0) rotate(17deg) scale(1.16);
+    opacity: 0;
+  }
+}
+
+@keyframes viewer-hero-comet-three {
+  0% {
+    transform: translate3d(-10vw, -4px, 0) rotate(17deg) scale(0.76);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.62;
   }
 
   100% {
-    transform: translate3d(21vw, 22px, 0) rotate(17deg) scale(1.16);
+    transform: translate3d(76vw, 52px, 0) rotate(17deg) scale(1.2);
     opacity: 0;
+  }
+}
+
+@keyframes hero-typewriter-glyph-on {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-typewriter-caret-travel {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(var(--line-steps) * 1ch));
+  }
+}
+
+@keyframes hero-typewriter-caret-active {
+  0%,
+  88% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hero-typewriter-caret-show {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-typewriter-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hero-typewriter-caret-glitch {
+  0%,
+  90%,
+  100% {
+    box-shadow:
+      0 0 10px rgba(118, 247, 255, 0.44),
+      0 0 16px rgba(118, 247, 255, 0.24);
+  }
+
+  91% {
+    transform: translateX(calc(var(--line-steps) * 1ch + 1px));
+  }
+
+  92% {
+    transform: translateX(calc(var(--line-steps) * 1ch - 1px));
+  }
+}
+
+@keyframes hero-typewriter-caret-glitch-static {
+  0%,
+  90%,
+  100% {
+    transform: none;
+    box-shadow:
+      0 0 10px rgba(118, 247, 255, 0.44),
+      0 0 16px rgba(118, 247, 255, 0.24);
+  }
+
+  91% {
+    transform: translateX(1px);
+  }
+
+  92% {
+    transform: translateX(-1px);
   }
 }
 
@@ -2196,6 +2467,15 @@
   .hero-cinematic__comet,
   .viewer-hero__comet {
     opacity: 0;
+  }
+
+  .hero-cinematic--astronautas .hero-typewriter__glyph {
+    opacity: 1;
+    animation: none;
+  }
+
+  .hero-cinematic--astronautas .hero-typewriter__caret {
+    animation: none;
   }
 }
 
@@ -2370,6 +2650,32 @@
     right: 4px;
     bottom: 18px;
     width: 152px;
+  }
+
+  .viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__content,
+  .viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__content {
+    padding-top: clamp(194px, calc(var(--live-preview-width, 430px) * 0.68), 242px);
+    padding-right: 12px;
+    padding-bottom: 210px;
+    padding-left: 12px;
+  }
+
+  .viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__orb--moon,
+  .viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__orb--moon {
+    top: 8px;
+    right: -44px;
+  }
+
+  .viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__orb--earth,
+  .viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__orb--earth {
+    top: 58px;
+    left: 8px;
+  }
+
+  .viewer-shell:not(.viewer-shell--embedded) .hero-cinematic--astronautas .hero-cinematic__comet--three,
+  .viewer-shell--embedded .hero-cinematic--astronautas .hero-cinematic__comet--three {
+    top: 74%;
+    left: -26%;
   }
 }
 

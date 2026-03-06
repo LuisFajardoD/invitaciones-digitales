@@ -11,7 +11,13 @@ type InvitationPageProps = {
 
 export async function generateMetadata({ params }: InvitationPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const invitation = await getPublicInvitationBySlug(slug);
+  let invitation = null;
+
+  try {
+    invitation = await getPublicInvitationBySlug(slug);
+  } catch {
+    invitation = null;
+  }
 
   if (!invitation) {
     return {
@@ -35,7 +41,13 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
 
 export default async function InvitationPage({ params }: InvitationPageProps) {
   const { slug } = await params;
-  const invitation = await getPublicInvitationBySlug(slug);
+  let invitation = null;
+
+  try {
+    invitation = await getPublicInvitationBySlug(slug);
+  } catch {
+    invitation = null;
+  }
 
   if (!invitation) {
     return (
@@ -82,12 +94,6 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
   }
 
   return (
-    <div className="app-viewer public-viewer">
-      <div className="theme-viewer">
-        <div className="public-viewer__frame">
-          <ViewerReactApp />
-        </div>
-      </div>
-    </div>
+    <ViewerReactApp />
   );
 }

@@ -34,11 +34,15 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Token requerido." }, { status: 401 });
   }
 
-  const result = await getClientRsvpView(slug, token);
+  try {
+    const result = await getClientRsvpView(slug, token);
 
-  if (!result) {
-    return NextResponse.json({ error: "Token invalido o acceso no autorizado." }, { status: 403 });
+    if (!result) {
+      return NextResponse.json({ error: "Token invalido o acceso no autorizado." }, { status: 403 });
+    }
+
+    return NextResponse.json({ result: toPublicClientRsvpView(result) });
+  } catch {
+    return NextResponse.json({ error: "No se pudo cargar la vista RSVP." }, { status: 503 });
   }
-
-  return NextResponse.json({ result: toPublicClientRsvpView(result) });
 }
