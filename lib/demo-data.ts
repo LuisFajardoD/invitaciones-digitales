@@ -318,6 +318,16 @@ export const demoSiteSettings: SiteSettingsRecord = {
         whatsapp_prefill_text: "Hola, quiero cotizar una invitacion digital premium.",
       },
     },
+    invitation_templates: [
+      {
+        id: "template-astronautas-base",
+        name: "Astronautas base",
+        description: "Base editable del demo de Luis Arturo.",
+        source_invitation_id: "11111111-1111-4111-8111-111111111111",
+        created_at: now,
+        updated_at: now,
+      },
+    ],
   },
   created_at: now,
   updated_at: now,

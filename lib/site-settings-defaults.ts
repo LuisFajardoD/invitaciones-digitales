@@ -6,54 +6,94 @@ const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   blocks: {
     hero: {
       enabled: true,
-      badge: "",
-      title: "",
-      subtitle: "",
-      primary_cta_text: "",
-      primary_cta_href: "",
-      secondary_cta_text: "",
-      secondary_cta_href: "",
+      badge: "Invitaciones premium v1",
+      title: "Invitaciones digitales que se sienten como una app.",
+      subtitle:
+        "Landing editable, CRM con RSVP y experiencias premium listas para compartir por WhatsApp.",
+      primary_cta_text: "Cotizar por WhatsApp",
+      primary_cta_href: "https://wa.me/5527225459?text=Hola%2C%20quiero%20cotizar%20una%20invitacion%20digital%20premium.",
+      secondary_cta_text: "Ver ejemplos",
+      secondary_cta_href: "#examples",
     },
     examples: {
       enabled: true,
-      title: "",
-      items: [],
+      title: "Ejemplos destacados",
+      items: [
+        {
+          title: "Cumple 7 de Luis Arturo",
+          description: "Tema astronautas con animacion premium, mapa y RSVP.",
+          slug: "cumple-7-luis-arturo-astronautas",
+          cover_url:
+            "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
+        },
+      ],
     },
     promo: {
-      enabled: false,
-      title: "",
-      text: "",
-      valid_from: "",
-      valid_to: "",
+      enabled: true,
+      title: "Promo de lanzamiento",
+      text: "Incluye configuracion inicial del CRM y landing editable en cada paquete premium.",
+      valid_from: "2026-02-01T00:00:00.000Z",
+      valid_to: "2026-12-31T23:59:59.000Z",
     },
     packages: {
       enabled: true,
-      title: "",
-      items: [],
+      title: "Paquetes",
+      items: [
+        {
+          name: "Esencial",
+          price: "$1,490 MXN",
+          description: "Invitacion pensada para movil con RSVP y secciones clave.",
+          features: ["1 tema", "Mapa embebido", "RSVP basico"],
+        },
+        {
+          name: "Premium Astronautas",
+          price: "$2,990 MXN",
+          description: "Experiencia premium con animaciones wow y panel admin.",
+          features: ["Layout v1 premium", "Open Graph listo para WhatsApp", "Export CSV"],
+        },
+      ],
     },
     extras: {
       enabled: true,
-      title: "",
-      items: [],
+      title: "Extras",
+      items: [
+        "Personalizacion de copy y colores",
+        "Carga inicial de galeria",
+        "Ajuste de assets para OG",
+      ],
     },
     how_it_works: {
       enabled: true,
-      title: "",
-      items: [],
+      title: "Como funciona",
+      items: [
+        "Definimos tema, fecha y lugar.",
+        "Configuramos secciones activas en el CRM.",
+        "Publicas y compartes un link listo para WhatsApp.",
+      ],
     },
     faq: {
       enabled: true,
-      title: "",
-      items: [],
+      title: "Preguntas frecuentes",
+      items: [
+        {
+          question: "Puedo editar la landing sin redeploy?",
+          answer: "Si. Todo se guarda en site_settings y se refleja en /.",
+        },
+        {
+          question: "La vista cliente requiere cuenta?",
+          answer: "No. Se comparte un link privado con token de solo lectura.",
+        },
+      ],
     },
     contact: {
       enabled: true,
-      title: "",
-      text: "",
-      whatsapp_number: "",
-      whatsapp_prefill_text: "",
+      title: "Cotiza tu invitacion",
+      text: "Cuentanos fecha, tema y tipo de evento para preparar una propuesta.",
+      whatsapp_number: "5527225459",
+      whatsapp_prefill_text: "Hola, quiero cotizar una invitacion digital premium.",
     },
   },
+  invitation_templates: [],
 };
 
 function cloneSettings(value: SiteSettingsData): SiteSettingsData {
@@ -126,5 +166,22 @@ export function normalizeSiteSettingsData(input?: SiteSettingsData | null): Site
         ...source.blocks?.contact,
       },
     },
+    invitation_templates: Array.isArray(source.invitation_templates)
+      ? source.invitation_templates
+          .filter((template): template is NonNullable<SiteSettingsData["invitation_templates"]>[number] =>
+            Boolean(
+              template &&
+                typeof template.id === "string" &&
+                typeof template.name === "string" &&
+                typeof template.source_invitation_id === "string",
+            ),
+          )
+          .map((template) => ({
+            ...template,
+            description: template.description || "",
+            created_at: template.created_at || "",
+            updated_at: template.updated_at || "",
+          }))
+      : defaults.invitation_templates,
   };
 }

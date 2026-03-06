@@ -109,6 +109,35 @@ function getClientRsvpStatusMeta(status: ClientRsvpResponseStatus) {
   }
 }
 
+function getClientRsvpStatusSortWeight(status: ClientRsvpResponseStatus) {
+  switch (status) {
+    case "confirmed":
+      return 0;
+    case "cancelled":
+      return 1;
+    case "declined":
+      return 2;
+    default:
+      return 3;
+  }
+}
+
+function sortClientRsvpResponses(
+  responses: ClientRsvpView["summary"]["responses"],
+  statuses: Map<string, ClientRsvpResponseStatus>,
+) {
+  return [...responses].sort((left, right) => {
+    const leftStatus = statuses.get(left.id) || "declined";
+    const rightStatus = statuses.get(right.id) || "declined";
+    const byStatus = getClientRsvpStatusSortWeight(leftStatus) - getClientRsvpStatusSortWeight(rightStatus);
+    if (byStatus !== 0) {
+      return byStatus;
+    }
+
+    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+  });
+}
+
 function toLocalDatetimeValue(input: string) {
   const date = new Date(input);
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -738,7 +767,8 @@ export function App() {
       cursorY += 94;
 
       const responseStatuses = resolveClientRsvpStatuses(clientRsvpView.summary.responses);
-      const tableRows = clientRsvpView.summary.responses.map((response) => {
+      const sortedResponses = sortClientRsvpResponses(clientRsvpView.summary.responses, responseStatuses);
+      const tableRows = sortedResponses.map((response) => {
         const responseStatus = responseStatuses.get(response.id) || "declined";
         const statusMeta = getClientRsvpStatusMeta(responseStatus);
         const attendees = response.attending
@@ -3044,6 +3074,7 @@ export function App() {
 
   if (route.mode === "client-rsvp" && clientRsvpView) {
     const responseStatuses = resolveClientRsvpStatuses(clientRsvpView.summary.responses);
+    const sortedResponses = sortClientRsvpResponses(clientRsvpView.summary.responses, responseStatuses);
 
     return (
       <PublicShell showLogout={false} showSiteLink>
@@ -3101,9 +3132,9 @@ export function App() {
           <section className="admin-panel">
             <div className="inline-actions" style={{ justifyContent: "space-between", alignItems: "center" }}>
               <h2>Respuestas</h2>
-              <span className="status-pill draft">{clientRsvpView.summary.responses.length}</span>
+              <span className="status-pill draft">{sortedResponses.length}</span>
             </div>
-            {clientRsvpView.summary.responses.length ? (
+            {sortedResponses.length ? (
               <div className="client-rsvp-table-wrap">
                 <table className="client-rsvp-table">
                   <thead>
@@ -3115,7 +3146,7 @@ export function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {clientRsvpView.summary.responses.map((response) => {
+                    {sortedResponses.map((response) => {
                       const responseStatus = responseStatuses.get(response.id) || "declined";
                       const statusMeta = getClientRsvpStatusMeta(responseStatus);
                       const attendees = response.attending

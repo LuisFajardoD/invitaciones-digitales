@@ -243,6 +243,13 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [templateName, setTemplateName] = useState(
+    () => `${normalizeInvitationRecord(invitation).sections.hero.title} (Plantilla)`,
+  );
+  const [templateDescription, setTemplateDescription] = useState("Base reutilizable para nuevas invitaciones.");
+  const [templateStatus, setTemplateStatus] = useState("");
+  const [templateError, setTemplateError] = useState("");
+  const [templateLoading, setTemplateLoading] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("live");
   const [devicePresetKey, setDevicePresetKey] = useState<DevicePresetKey>("iphone_15_pro_max");
   const [previewVersion, setPreviewVersion] = useState(0);
@@ -368,6 +375,16 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
         .app-viewer {
           scrollbar-width: none !important;
           -ms-overflow-style: none !important;
+        }
+        .app-viewer,
+        .app-viewer * {
+          user-select: none !important;
+          -webkit-user-select: none !important;
+          -webkit-user-drag: none !important;
+        }
+        img,
+        video {
+          pointer-events: none !important;
         }
         html::-webkit-scrollbar,
         body::-webkit-scrollbar,
@@ -832,6 +849,37 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
       setError(submitError instanceof Error ? submitError.message : "No se pudo guardar.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSaveTemplate() {
+    setTemplateLoading(true);
+    setTemplateStatus("");
+    setTemplateError("");
+
+    try {
+      const response = await fetch("/api/admin/invitation-templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invitation_id: draft.id,
+          name: templateName,
+          description: templateDescription,
+        }),
+      });
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo guardar la plantilla.");
+      }
+
+      setTemplateStatus("Plantilla guardada.");
+      router.refresh();
+    } catch (saveTemplateError) {
+      setTemplateError(
+        saveTemplateError instanceof Error ? saveTemplateError.message : "No se pudo guardar la plantilla.",
+      );
+    } finally {
+      setTemplateLoading(false);
     }
   }
 
@@ -1999,6 +2047,34 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
       <section className={`admin-panel ${styles["inv-editor-save-card"]}`}>
         <p className="eyebrow">Publicacion</p>
         <h2>Guardar y probar</h2>
+        <div className={styles["inv-editor-template-fields"]}>
+          <label className="field">
+            <span>Nombre de plantilla</span>
+            <input
+              value={templateName}
+              onChange={(event) => setTemplateName(event.target.value)}
+              placeholder="Plantilla base"
+            />
+          </label>
+          <label className="field">
+            <span>Descripcion (opcional)</span>
+            <input
+              value={templateDescription}
+              onChange={(event) => setTemplateDescription(event.target.value)}
+              placeholder="Uso sugerido de esta plantilla"
+            />
+          </label>
+          <button
+            type="button"
+            className="button-secondary"
+            onClick={() => void handleSaveTemplate()}
+            disabled={templateLoading}
+          >
+            {templateLoading ? "Guardando plantilla..." : "Guardar como plantilla"}
+          </button>
+          {templateStatus ? <p className="success-text" style={{ margin: 0 }}>{templateStatus}</p> : null}
+          {templateError ? <p className="error-text" style={{ margin: 0 }}>{templateError}</p> : null}
+        </div>
         <div className={`inline-actions editor-actions ${styles["inv-editor-save-actions"]}`}>
           <button type="button" className="button-primary" onClick={handleSave} disabled={loading}>
             {loading ? "Guardando..." : "Guardar cambios"}

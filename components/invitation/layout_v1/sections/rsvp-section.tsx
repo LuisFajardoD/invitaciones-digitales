@@ -54,13 +54,12 @@ export function RsvpSection({ invitation, data, previewMode = false }: RsvpSecti
     setSubmitting(true);
 
     try {
-      const response = await fetch("/api/rsvp", {
+      const response = await fetch(`/api/public/invitations/${encodeURIComponent(invitation.slug)}/rsvp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          invitationId: invitation.id,
           name,
           attending: attending === "yes",
           guestsCount: allowGuestsCount ? Number(guestsCount || "1") : null,

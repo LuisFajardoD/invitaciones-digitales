@@ -9,6 +9,7 @@ import { buildRsvpSummary, createWhatsAppUrl, slugify } from "@/lib/utils";
 import type {
   ClientRsvpView,
   InvitationRecord,
+  InvitationTemplateRecord,
   RsvpResponse,
   RsvpSummary,
   SiteSettingsData,
@@ -28,6 +29,17 @@ type CreateInvitationInput = {
   hero_accent?: string;
 };
 
+type CreateInvitationFromTemplateInput = {
+  template_id: string;
+  slug: string;
+  theme_id?: string;
+  event_start_at: string;
+  venue_name: string;
+  address_text: string;
+  lat: number;
+  lng: number;
+};
+
 type MockStore = {
   invitations: InvitationRecord[];
   rsvpResponses: RsvpResponse[];
@@ -37,6 +49,43 @@ type MockStore = {
 
 const MOCK_STORE_DIR = path.join(process.cwd(), ".mock-data");
 const MOCK_STORE_PATH = path.join(MOCK_STORE_DIR, "store.json");
+
+function buildEventWindow(eventAtIso: string) {
+  const eventDate = new Date(eventAtIso);
+  const rsvpUntil = new Date(eventDate);
+  rsvpUntil.setHours(23, 59, 59, 999);
+  const activeUntil = new Date(eventDate);
+  activeUntil.setDate(activeUntil.getDate() + 1);
+  activeUntil.setHours(23, 59, 59, 999);
+
+  return {
+    eventDate,
+    rsvpUntil: rsvpUntil.toISOString(),
+    activeUntil: activeUntil.toISOString(),
+  };
+}
+
+function normalizeInvitationTemplates(rawTemplates: SiteSettingsData["invitation_templates"]) {
+  if (!Array.isArray(rawTemplates)) {
+    return [] as InvitationTemplateRecord[];
+  }
+
+  return rawTemplates
+    .filter((template): template is InvitationTemplateRecord =>
+      Boolean(
+        template &&
+          typeof template.id === "string" &&
+          typeof template.name === "string" &&
+          typeof template.source_invitation_id === "string",
+      ),
+    )
+    .map((template) => ({
+      ...template,
+      description: template.description || "",
+      created_at: template.created_at || new Date().toISOString(),
+      updated_at: template.updated_at || new Date().toISOString(),
+    }));
+}
 
 function cloneValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -186,6 +235,70 @@ export async function saveSiteSettings(data: SiteSettingsData) {
   return record;
 }
 
+export async function listInvitationTemplates() {
+  const siteSettings = await getSiteSettings();
+  const templates = normalizeInvitationTemplates(siteSettings.data.invitation_templates);
+
+  return templates.sort(
+    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+  );
+}
+
+export async function saveInvitationAsTemplate(input: {
+  invitationId: string;
+  name: string;
+  description?: string;
+}) {
+  const invitation = await getInvitationById(input.invitationId);
+  if (!invitation) {
+    throw new Error("Invitacion no encontrada.");
+  }
+
+  const templateName = input.name.trim();
+  if (!templateName) {
+    throw new Error("El nombre de la plantilla es obligatorio.");
+  }
+
+  const siteSettings = await getSiteSettings();
+  const currentTemplates = normalizeInvitationTemplates(siteSettings.data.invitation_templates);
+  const now = new Date().toISOString();
+  const description = input.description?.trim() || "";
+  const existingTemplate = currentTemplates.find(
+    (template) => template.source_invitation_id === invitation.id,
+  );
+  const templateId = existingTemplate?.id || randomUUID();
+
+  const nextTemplates = existingTemplate
+    ? currentTemplates.map((template) =>
+        template.id === existingTemplate.id
+          ? {
+              ...template,
+              name: templateName,
+              description,
+              updated_at: now,
+            }
+          : template,
+      )
+    : [
+        {
+          id: templateId,
+          name: templateName,
+          description,
+          source_invitation_id: invitation.id,
+          created_at: now,
+          updated_at: now,
+        },
+        ...currentTemplates,
+      ];
+
+  await saveSiteSettings({
+    ...siteSettings.data,
+    invitation_templates: nextTemplates,
+  });
+
+  return nextTemplates.find((template) => template.id === templateId) || null;
+}
+
 export async function listThemes() {
   if (isUsingMockData()) {
     const store = await readMockStore();
@@ -205,14 +318,9 @@ export async function listThemes() {
 export async function createInvitation(input: CreateInvitationInput) {
   const slug = slugify(input.slug);
   const now = new Date();
-  const eventDate = new Date(input.event_start_at);
+  const { eventDate, rsvpUntil, activeUntil } = buildEventWindow(input.event_start_at);
   const defaultHeroBadge = input.hero_badge?.trim() || "Protocolo de despegue";
   const defaultHeroAccent = input.hero_accent?.trim() || "ID: LA - 07";
-  const rsvpUntil = new Date(eventDate);
-  rsvpUntil.setHours(23, 59, 59, 999);
-  const activeUntil = new Date(eventDate);
-  activeUntil.setDate(activeUntil.getDate() + 1);
-  activeUntil.setHours(23, 59, 59, 999);
 
   const invitation: InvitationRecord = normalizeInvitationRecord({
     ...demoInvitation,
@@ -221,8 +329,8 @@ export async function createInvitation(input: CreateInvitationInput) {
     status: "draft",
     theme_id: input.theme_id || "astronautas",
     event_start_at: eventDate.toISOString(),
-    rsvp_until: rsvpUntil.toISOString(),
-    active_until: activeUntil.toISOString(),
+    rsvp_until: rsvpUntil,
+    active_until: activeUntil,
     created_at: now.toISOString(),
     updated_at: now.toISOString(),
     sections: {
@@ -280,6 +388,82 @@ export async function createInvitation(input: CreateInvitationInput) {
     throw new Error(error.message);
   }
   return invitation;
+}
+
+export async function createInvitationFromTemplate(input: CreateInvitationFromTemplateInput) {
+  const templateId = input.template_id.trim();
+  if (!templateId) {
+    throw new Error("Plantilla invalida.");
+  }
+
+  const siteSettings = await getSiteSettings();
+  const templates = normalizeInvitationTemplates(siteSettings.data.invitation_templates);
+  const template = templates.find((item) => item.id === templateId);
+  if (!template) {
+    throw new Error("Plantilla no encontrada.");
+  }
+
+  const sourceInvitation = await getInvitationById(template.source_invitation_id);
+  if (!sourceInvitation) {
+    throw new Error("La invitacion de origen de la plantilla ya no existe.");
+  }
+
+  const now = new Date().toISOString();
+  const slug = slugify(input.slug);
+  const { eventDate, rsvpUntil, activeUntil } = buildEventWindow(input.event_start_at);
+
+  const createdInvitation: InvitationRecord = normalizeInvitationRecord({
+    ...sourceInvitation,
+    id: randomUUID(),
+    slug,
+    status: "draft",
+    theme_id: input.theme_id?.trim() || sourceInvitation.theme_id,
+    event_start_at: eventDate.toISOString(),
+    rsvp_until: rsvpUntil,
+    active_until: activeUntil,
+    client_view_token: randomUUID(),
+    created_at: now,
+    updated_at: now,
+    sections: {
+      ...sourceInvitation.sections,
+      event_info: {
+        ...sourceInvitation.sections.event_info,
+        venue_name: input.venue_name,
+        address_text: input.address_text,
+      },
+      map: {
+        ...sourceInvitation.sections.map,
+        address_text: input.address_text,
+        embed: {
+          ...(sourceInvitation.sections.map.embed || { zoom: 16 }),
+          lat: input.lat,
+          lng: input.lng,
+        },
+        maps_url: `https://www.google.com/maps/search/?api=1&query=${input.lat},${input.lng}`,
+      },
+      countdown: {
+        ...sourceInvitation.sections.countdown,
+        target_at: eventDate.toISOString(),
+      },
+    },
+  });
+
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    store.invitations.unshift(createdInvitation);
+    await writeMockStore(store);
+    return createdInvitation;
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { error } = await supabase!
+    .from("invitations")
+    .insert(toDatabaseInvitationRecord(createdInvitation));
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return createdInvitation;
 }
 
 export async function updateInvitation(invitation: InvitationRecord) {
@@ -414,6 +598,27 @@ export async function createRsvpResponse(input: {
   }
 
   return record;
+}
+
+export async function createPublicRsvpResponse(input: {
+  slug: string;
+  name: string;
+  attending: boolean;
+  guestsCount?: number | null;
+  message?: string | null;
+}) {
+  const invitation = await getPublicInvitationBySlug(input.slug);
+  if (!invitation) {
+    throw new Error("Invitacion no encontrada.");
+  }
+
+  return createRsvpResponse({
+    invitationId: invitation.id,
+    name: input.name,
+    attending: input.attending,
+    guestsCount: input.guestsCount ?? null,
+    message: input.message ?? null,
+  });
 }
 
 export async function getClientRsvpView(slug: string, token: string): Promise<ClientRsvpView | null> {

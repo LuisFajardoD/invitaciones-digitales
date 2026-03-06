@@ -3162,6 +3162,11 @@
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
   .app-viewer.viewer-shell--client-rsvp {
     background: #fff !important;
     color: #111 !important;
@@ -3173,6 +3178,10 @@
 
   .viewer-client-rsvp {
     gap: 12px;
+  }
+
+  .viewer-client-rsvp__layout {
+    grid-template-columns: 1fr !important;
   }
 
   .viewer-client-rsvp__hero,

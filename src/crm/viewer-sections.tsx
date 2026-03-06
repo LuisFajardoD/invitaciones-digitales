@@ -703,13 +703,12 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
     setSubmitting(true);
 
     try {
-      const response = await fetch("/api/rsvp", {
+      const response = await fetch(`/api/public/invitations/${encodeURIComponent(invitation.slug)}/rsvp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          invitationId: invitation.id,
           name,
           attending: attendingValue,
           guestsCount: normalizedGuestsCount,

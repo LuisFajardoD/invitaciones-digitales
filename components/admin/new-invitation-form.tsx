@@ -2,16 +2,18 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ThemeRecord } from "@/types/invitations";
+import type { InvitationTemplateRecord, ThemeRecord } from "@/types/invitations";
 
 type NewInvitationFormProps = {
   themes: ThemeRecord[];
+  templates: InvitationTemplateRecord[];
 };
 
-export function NewInvitationForm({ themes }: NewInvitationFormProps) {
+export function NewInvitationForm({ themes, templates }: NewInvitationFormProps) {
   const router = useRouter();
   const [slug, setSlug] = useState("nueva-invitacion");
   const [themeId, setThemeId] = useState(themes[0]?.id || "astronautas");
+  const [templateId, setTemplateId] = useState("");
   const [eventAt, setEventAt] = useState("2026-04-18T11:00");
   const [venueName, setVenueName] = useState("Jardin del Valle");
   const [addressText, setAddressText] = useState(
@@ -28,12 +30,14 @@ export function NewInvitationForm({ themes }: NewInvitationFormProps) {
     setError("");
 
     try {
-      const response = await fetch("/api/admin/invitations", {
+      const endpoint = templateId ? "/api/admin/invitations/from-template" : "/api/admin/invitations";
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          template_id: templateId || undefined,
           slug,
           theme_id: themeId,
           event_start_at: eventAt,
@@ -61,6 +65,22 @@ export function NewInvitationForm({ themes }: NewInvitationFormProps) {
       <p className="eyebrow">Nueva invitacion</p>
       <h2>Crear borrador</h2>
       <form onSubmit={handleSubmit} className="form-grid" style={{ marginTop: 18 }}>
+        <label className="field-wide">
+          <span>Base de partida</span>
+          <select value={templateId} onChange={(event) => setTemplateId(event.target.value)}>
+            <option value="">Sin plantilla (desde demo base)</option>
+            {templates.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        {templateId ? (
+          <p className="helper-text field-wide">
+            La invitacion se creara desde plantilla y conservara estructura/secciones del origen.
+          </p>
+        ) : null}
         <label className="field">
           <span>Slug publico</span>
           <input value={slug} onChange={(event) => setSlug(event.target.value)} required />
@@ -106,7 +126,7 @@ export function NewInvitationForm({ themes }: NewInvitationFormProps) {
         </label>
         <div className="field-wide">
           <button type="submit" className="button-primary" disabled={loading}>
-            {loading ? "Creando..." : "Guardar y abrir editor"}
+            {loading ? "Creando..." : templateId ? "Crear desde plantilla y abrir editor" : "Guardar y abrir editor"}
           </button>
         </div>
         {error ? <p className="error-text field-wide">{error}</p> : null}

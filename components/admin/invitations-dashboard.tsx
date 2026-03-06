@@ -111,6 +111,12 @@ export function InvitationsDashboard({ invitations }: InvitationsDashboardProps)
           </label>
 
           <div className={styles["admin-topbar-actions"]}>
+            <Link
+              href="/admin/site"
+              className={`${styles["admin-button"]} ${styles["admin-button-secondary"]}`}
+            >
+              Editar landing
+            </Link>
             <Link href="/admin/invitations/new" className={`${styles["admin-button"]} ${styles["admin-button-primary"]}`}>
               Nueva invitación
             </Link>

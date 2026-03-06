@@ -213,6 +213,15 @@ export interface ThemeRecord {
   updated_at: string;
 }
 
+export interface InvitationTemplateRecord {
+  id: string;
+  name: string;
+  description?: string;
+  source_invitation_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SiteHeroBlock {
   enabled: boolean;
   badge: string;
@@ -293,6 +302,7 @@ export type SiteBlockKey = keyof SiteBlocks;
 export interface SiteSettingsData {
   blocks_order: SiteBlockKey[];
   blocks: SiteBlocks;
+  invitation_templates?: InvitationTemplateRecord[];
 }
 
 export interface SiteSettingsRecord {
