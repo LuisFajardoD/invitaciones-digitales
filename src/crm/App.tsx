@@ -64,6 +64,51 @@ function formatResponseDate(input: string) {
   }).format(new Date(input));
 }
 
+type ClientRsvpResponseStatus = "confirmed" | "cancelled" | "declined";
+
+function normalizeGuestKey(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function resolveClientRsvpStatuses(responses: ClientRsvpView["summary"]["responses"]) {
+  const chronological = [...responses].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+  const hadPreviousConfirmation = new Set<string>();
+  const statusById = new Map<string, ClientRsvpResponseStatus>();
+
+  for (const response of chronological) {
+    const guestKey = normalizeGuestKey(response.name);
+    if (response.attending) {
+      hadPreviousConfirmation.add(guestKey);
+      statusById.set(response.id, "confirmed");
+      continue;
+    }
+
+    statusById.set(response.id, hadPreviousConfirmation.has(guestKey) ? "cancelled" : "declined");
+  }
+
+  return statusById;
+}
+
+function getClientRsvpStatusMeta(status: ClientRsvpResponseStatus) {
+  switch (status) {
+    case "confirmed":
+      return { label: "Confirmado", className: "confirmed" };
+    case "cancelled":
+      return { label: "Cancelo", className: "cancelled" };
+    case "declined":
+      return { label: "No asiste", className: "declined" };
+    default:
+      return { label: "Sin estado", className: "draft" };
+  }
+}
+
 function toLocalDatetimeValue(input: string) {
   const date = new Date(input);
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -514,6 +559,7 @@ export function App() {
   const [previewScreenshotLoading, setPreviewScreenshotLoading] = useState(false);
   const [previewScreenshotError, setPreviewScreenshotError] = useState("");
   const [previewScreenshotCached, setPreviewScreenshotCached] = useState(false);
+  const [clientRsvpActionStatus, setClientRsvpActionStatus] = useState("");
   const livePreviewScrollRef = useRef<HTMLDivElement | null>(null);
   const sectionOrderSensors = useSensors(
     useSensor(PointerSensor, {
@@ -585,6 +631,169 @@ export function App() {
     }
 
     stopLivePreviewDrag();
+  }
+
+  async function handleClientRsvpCopyLink() {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const shareUrl = window.location.href;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setClientRsvpActionStatus("Enlace copiado.");
+    } catch {
+      setClientRsvpActionStatus("No se pudo copiar automaticamente.");
+    }
+
+    window.setTimeout(() => {
+      setClientRsvpActionStatus((current) => (current === "Enlace copiado." ? "" : current));
+    }, 2200);
+  }
+
+  async function handleClientRsvpSendLink() {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const shareUrl = window.location.href;
+    const invitationTitle = clientRsvpView?.invitation.sections.hero.title || "Invitacion";
+    const shareText = `Te comparto el enlace privado RSVP de ${invitationTitle}: ${shareUrl}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `RSVP - ${invitationTitle}`,
+          text: shareText,
+          url: shareUrl,
+        });
+        setClientRsvpActionStatus("Enlace enviado.");
+        return;
+      } catch {
+        // Continue to fallback below.
+      }
+    }
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  }
+
+  async function handleClientRsvpExportPdf() {
+    if (!clientRsvpView) {
+      return;
+    }
+
+    try {
+      const [{ jsPDF }, jsPdfAutoTableModule] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+      const autoTable = (jsPdfAutoTableModule as { default: (doc: unknown, options: unknown) => void }).default;
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const marginX = 40;
+      const contentWidth = pageWidth - marginX * 2;
+      let cursorY = 52;
+
+      doc.setFillColor(15, 23, 42);
+      doc.roundedRect(marginX, cursorY, contentWidth, 86, 14, 14, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(21);
+      doc.text("Panel cliente RSVP", marginX + 18, cursorY + 30);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(191, 206, 225);
+      doc.text(clientRsvpView.invitation.sections.hero.title, marginX + 18, cursorY + 50);
+      doc.text(`Generado: ${formatResponseDate(new Date().toISOString())}`, marginX + 18, cursorY + 68);
+      cursorY += 106;
+
+      const summaryItems = [
+        { label: "Asisten", value: clientRsvpView.summary.attendingCount },
+        { label: "No asisten", value: clientRsvpView.summary.notAttendingCount },
+        { label: "Total", value: clientRsvpView.summary.totalCount },
+      ];
+      const summaryWidth = (contentWidth - 20) / 3;
+
+      for (const [index, item] of summaryItems.entries()) {
+        const cardX = marginX + index * (summaryWidth + 10);
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(203, 213, 225);
+        doc.roundedRect(cardX, cursorY, summaryWidth, 74, 10, 10, "FD");
+        doc.setTextColor(71, 85, 105);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(item.label, cardX + summaryWidth / 2, cursorY + 24, { align: "center" });
+        doc.setTextColor(15, 23, 42);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(24);
+        doc.text(String(item.value), cardX + summaryWidth / 2, cursorY + 54, { align: "center" });
+      }
+      cursorY += 94;
+
+      const responseStatuses = resolveClientRsvpStatuses(clientRsvpView.summary.responses);
+      const tableRows = clientRsvpView.summary.responses.map((response) => {
+        const responseStatus = responseStatuses.get(response.id) || "declined";
+        const statusMeta = getClientRsvpStatusMeta(responseStatus);
+        const attendees = response.attending
+          ? Math.max(1, Number(response.guests_count) || 1)
+          : Math.max(0, Number(response.guests_count) || 0);
+
+        return [
+          response.name,
+          String(attendees),
+          response.message?.trim() || "Sin mensaje",
+          formatResponseDate(response.created_at),
+          statusMeta.label,
+        ];
+      });
+
+      autoTable(doc, {
+        startY: cursorY,
+        margin: { left: marginX, right: marginX, top: 36, bottom: 36 },
+        head: [["Invitado / Familia", "Asistentes", "Mensaje", "Fecha y hora", "Estado"]],
+        body: tableRows,
+        theme: "grid",
+        headStyles: {
+          fillColor: [15, 23, 42],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          halign: "left",
+          fontSize: 10,
+          cellPadding: 8,
+        },
+        styles: {
+          fontSize: 10,
+          cellPadding: 8,
+          lineColor: [203, 213, 225],
+          lineWidth: 0.6,
+          textColor: [15, 23, 42],
+          valign: "middle",
+        },
+        columnStyles: {
+          1: { halign: "center", fontStyle: "bold", fontSize: 13 },
+          4: { halign: "center" },
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252],
+        },
+      });
+
+      doc.save(`rsvp-${clientRsvpView.invitation.slug}.pdf`);
+      setClientRsvpActionStatus("PDF descargado.");
+    } catch {
+      setClientRsvpActionStatus("No se pudo generar el PDF.");
+    }
+
+    window.setTimeout(() => {
+      setClientRsvpActionStatus((current) => (current === "PDF descargado." ? "" : current));
+    }, 2200);
   }
 
   useEffect(() => {
@@ -2834,45 +3043,110 @@ export function App() {
   }
 
   if (route.mode === "client-rsvp" && clientRsvpView) {
+    const responseStatuses = resolveClientRsvpStatuses(clientRsvpView.summary.responses);
+
     return (
-      <main className="viewer-shell">
-        <section className="viewer-card viewer-card--compact">
-          <p className="viewer-eyebrow">Vista cliente RSVP</p>
-          <h1>{clientRsvpView.invitation.sections.hero.title}</h1>
-          <p className="viewer-section__subtitle">Resumen privado de respuestas registradas hasta ahora.</p>
-          <div className="viewer-metrics">
-            <div className="viewer-metric">
-              <span>Asisten</span>
-              <strong>{clientRsvpView.summary.attendingCount}</strong>
-            </div>
-            <div className="viewer-metric">
-              <span>No asisten</span>
-              <strong>{clientRsvpView.summary.notAttendingCount}</strong>
-            </div>
-            <div className="viewer-metric">
-              <span>Total</span>
-              <strong>{clientRsvpView.summary.totalCount}</strong>
-            </div>
+      <PublicShell showLogout={false} showSiteLink>
+        <section className="viewer-admin-topbar viewer-admin-topbar--compact">
+          <div>
+            <h1>Panel cliente RSVP</h1>
+            <p className="helper-text">Acceso privado para revisar respuestas registradas.</p>
           </div>
-          <div className="viewer-response-list">
+          <div className="viewer-inline-actions">
+            <button type="button" className="button-secondary" onClick={() => void handleClientRsvpCopyLink()}>
+              Copiar enlace
+            </button>
+            <button type="button" className="button-secondary" onClick={() => void handleClientRsvpSendLink()}>
+              Enviar enlace
+            </button>
+            <button type="button" className="button-primary" onClick={() => void handleClientRsvpExportPdf()}>
+              Exportar PDF
+            </button>
+          </div>
+        </section>
+
+        {clientRsvpActionStatus ? <p className="success-text">{clientRsvpActionStatus}</p> : null}
+
+        <section className="admin-panel">
+          <div className="inline-actions" style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <p className="eyebrow">Vista cliente RSVP</p>
+              <h2>{clientRsvpView.invitation.sections.hero.title}</h2>
+              <p className="muted">Resumen privado de respuestas registradas hasta ahora.</p>
+            </div>
+            <span className="status-pill published">Acceso privado</span>
+          </div>
+        </section>
+
+        <div className="viewer-admin-container client-rsvp-layout">
+          <section className="admin-panel">
+            <p className="eyebrow">Totales</p>
+            <h2>Resumen RSVP</h2>
+            <div className="client-rsvp-summary-grid">
+              <article className="client-rsvp-summary-item">
+                <span className="client-rsvp-summary-label">Asisten</span>
+                <strong>{clientRsvpView.summary.attendingCount}</strong>
+              </article>
+              <article className="client-rsvp-summary-item">
+                <span className="client-rsvp-summary-label">No asisten</span>
+                <strong>{clientRsvpView.summary.notAttendingCount}</strong>
+              </article>
+              <article className="client-rsvp-summary-item">
+                <span className="client-rsvp-summary-label">Total</span>
+                <strong>{clientRsvpView.summary.totalCount}</strong>
+              </article>
+            </div>
+          </section>
+
+          <section className="admin-panel">
+            <div className="inline-actions" style={{ justifyContent: "space-between", alignItems: "center" }}>
+              <h2>Respuestas</h2>
+              <span className="status-pill draft">{clientRsvpView.summary.responses.length}</span>
+            </div>
             {clientRsvpView.summary.responses.length ? (
-              clientRsvpView.summary.responses.map((response) => (
-                <article key={response.id} className="viewer-response-item">
-                  <strong>{response.name}</strong>
-                  <div className="viewer-response-meta">
-                    <span>{formatResponseDate(response.created_at)}</span>
-                    <span>{response.attending ? "Asiste" : "No asiste"}</span>
-                    <span>{response.guests_count ? `${response.guests_count} acompanantes` : "Sin dato"}</span>
-                  </div>
-                  {response.message ? <p>{response.message}</p> : null}
-                </article>
-              ))
+              <div className="client-rsvp-table-wrap">
+                <table className="client-rsvp-table">
+                  <thead>
+                    <tr>
+                      <th>Invitado / Familia</th>
+                      <th>Asistentes</th>
+                      <th>Mensaje</th>
+                      <th>Fecha y hora</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clientRsvpView.summary.responses.map((response) => {
+                      const responseStatus = responseStatuses.get(response.id) || "declined";
+                      const statusMeta = getClientRsvpStatusMeta(responseStatus);
+                      const attendees = response.attending
+                        ? Math.max(1, Number(response.guests_count) || 1)
+                        : Math.max(0, Number(response.guests_count) || 0);
+
+                      return (
+                        <tr key={response.id}>
+                          <td data-label="Invitado / Familia">
+                            <div className="client-rsvp-guest">
+                              <strong>{response.name}</strong>
+                              <span className={`status-pill ${statusMeta.className}`}>{statusMeta.label}</span>
+                            </div>
+                          </td>
+                          <td data-label="Asistentes" className="client-rsvp-attendees">
+                            <strong>{attendees}</strong>
+                          </td>
+                          <td data-label="Mensaje">{response.message?.trim() || "Sin mensaje"}</td>
+                          <td data-label="Fecha y hora">{formatResponseDate(response.created_at)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p className="viewer-empty-copy">Todavia no hay respuestas registradas.</p>
             )}
-          </div>
-        </section>
-      </main>
+          </section>
+        </div>
+      </PublicShell>
     );
   }
 

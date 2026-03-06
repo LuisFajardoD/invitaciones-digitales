@@ -1,4 +1,4 @@
-import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { BackgroundMediaConfig, GenericSection, InvitationRecord, QuickActionItem } from "./viewer-types";
 import { normalizeKenBurns, resolveHeroBackground, resolveMediaUrl, splitTitle, trimList } from "./viewer-utils";
 
@@ -308,10 +308,46 @@ function InvitationSectionFrameViewer({
   surface?: "default" | "bare";
   children: ReactNode;
 }) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isInViewport, setIsInViewport] = useState(false);
+
+  useEffect(() => {
+    const target = sectionRef.current;
+    if (!target) {
+      return;
+    }
+
+    if (!("IntersectionObserver" in window)) {
+      setIsInViewport(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) {
+          return;
+        }
+
+        setIsInViewport(entry.isIntersecting && entry.intersectionRatio >= 0.14);
+      },
+      {
+        rootMargin: "0px 0px -8% 0px",
+        threshold: [0.08, 0.14, 0.26, 0.4],
+      },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       id={id}
-      className={`invitation-section invitation-section--${tone}${surface === "bare" ? " invitation-section--bare" : ""}`}
+      className={`invitation-section invitation-section--${tone}${
+        surface === "bare" ? " invitation-section--bare" : ""
+      }${isInViewport ? " invitation-section--entered" : ""}`}
     >
       {surface === "bare" ? null : (
         <>
@@ -636,6 +672,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [savedMessage, setSavedMessage] = useState("Tu RSVP fue enviado y ya quedo registrado.");
   const fields = invitation.sections.rsvp.fields || {};
   const allowGuestsCount = Boolean(fields.guests_count ?? fields.allow_guests_count);
   const allowMessage = Boolean(fields.message ?? fields.allow_message);
@@ -644,8 +681,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
     [invitation.rsvp_until],
   );
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function submitRsvp({ forceCancel = false }: { forceCancel?: boolean } = {}) {
     setError("");
     setSaved(false);
 
@@ -654,10 +690,15 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
       return;
     }
 
-    if (!attending) {
+    if (!forceCancel && !attending) {
       setError("Selecciona si asistes o no.");
       return;
     }
+
+    const attendingValue = forceCancel ? false : attending === "yes";
+    const normalizedGuestsCount = allowGuestsCount
+      ? Math.max(1, Math.trunc(Number(guestsCount || "1") || 1))
+      : null;
 
     setSubmitting(true);
 
@@ -670,8 +711,8 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
         body: JSON.stringify({
           invitationId: invitation.id,
           name,
-          attending: attending === "yes",
-          guestsCount: allowGuestsCount ? Number(guestsCount || "1") : null,
+          attending: attendingValue,
+          guestsCount: normalizedGuestsCount,
           message: allowMessage ? message : null,
         }),
       });
@@ -682,6 +723,11 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
       }
 
       setSaved(true);
+      setSavedMessage(
+        forceCancel
+          ? "Se registro la cancelacion de asistencia. Si cambian de plan, puedes reenviar el formulario."
+          : "Tu RSVP fue enviado y ya quedo registrado.",
+      );
       setName("");
       setAttending("");
       setGuestsCount("1");
@@ -692,6 +738,11 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await submitRsvp();
   }
 
   return (
@@ -708,11 +759,11 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
         </div>
       ) : (
         <form className="form-grid rsvp-form" onSubmit={handleSubmit}>
-          <label className="mission-field">
+          <label className="mission-field rsvp-form__field rsvp-form__field--name">
             <span className="mission-label">Nombre *</span>
             <input className="mission-input" value={name} onChange={(event) => setName(event.target.value)} />
           </label>
-          <label className="mission-field">
+          <label className="mission-field rsvp-form__field rsvp-form__field--attending">
             <span className="mission-label">Asistes? *</span>
             <select className="mission-input" value={attending} onChange={(event) => setAttending(event.target.value)}>
               <option value="">Selecciona</option>
@@ -721,8 +772,8 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
             </select>
           </label>
           {allowGuestsCount ? (
-            <label className="mission-field">
-              <span className="mission-label">Acompanantes</span>
+            <label className="mission-field rsvp-form__field rsvp-form__field--guests">
+              <span className="mission-label">Asistentes (total)</span>
               <input
                 className="mission-input"
                 type="number"
@@ -733,15 +784,26 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
             </label>
           ) : null}
           {allowMessage ? (
-            <label className="mission-field mission-field--wide">
+            <label className="mission-field mission-field--wide rsvp-form__field rsvp-form__field--message">
               <span className="mission-label">Mensaje</span>
               <textarea className="mission-input" value={message} onChange={(event) => setMessage(event.target.value)} />
             </label>
           ) : null}
-          <div className="mission-field mission-field--wide">
+          <div className="mission-field mission-field--wide rsvp-form__actions">
             <button type="submit" className="mission-button quick-button" disabled={submitting}>
-              {submitting ? "Transmitiendo..." : "Enviar RSVP"}
+              {submitting ? "Transmitiendo..." : attending === "no" ? "Registrar no asistencia" : "Enviar confirmacion"}
             </button>
+            <button
+              type="button"
+              className="mission-button mission-button--ghost quick-button"
+              disabled={submitting}
+              onClick={() => void submitRsvp({ forceCancel: true })}
+            >
+              {submitting ? "Transmitiendo..." : "Cancelar asistencia"}
+            </button>
+            <p className="mission-caption mission-caption--wide">
+              Si ya habias confirmado y ahora no podras asistir, usa "Cancelar asistencia".
+            </p>
           </div>
           {error ? <p className="viewer-error-text">{error}</p> : null}
         </form>
@@ -755,7 +817,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
             </div>
           </div>
           <strong>Mision completada</strong>
-          <p className="mission-caption">Tu RSVP fue enviado y ya quedo registrado.</p>
+          <p className="mission-caption">{savedMessage}</p>
         </div>
       ) : null}
     </InvitationSectionFrameViewer>
@@ -763,6 +825,8 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
 }
 
 export function ContactSectionViewer({ invitation }: { invitation: InvitationRecord }) {
+  const avatarImageUrl = invitation.sections.contact.avatar_image_url?.trim();
+
   return (
     <InvitationSectionFrameViewer
       eyebrow="Canal directo"
@@ -771,7 +835,11 @@ export function ContactSectionViewer({ invitation }: { invitation: InvitationRec
       tone="gold"
     >
       <div className="contact-command">
-        <div className="contact-command__badge">COMMS</div>
+        {avatarImageUrl ? (
+          <img className="contact-command__avatar" src={avatarImageUrl} alt={invitation.sections.contact.name} />
+        ) : (
+          <div className="contact-command__badge">COMMS</div>
+        )}
         <div>
           <strong>{invitation.sections.contact.whatsapp_number}</strong>
           <p className="mission-caption">Si necesitas ayuda antes del evento, escribenos aqui.</p>
@@ -794,9 +862,30 @@ export function GenericBlockViewer({
   const items = trimList(data.items);
   const text = data.text?.trim() || "Informacion adicional para la mision.";
   const visibleTitle = data.title?.trim() || title;
+  const normalizedTitle = visibleTitle
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+  const eyebrow =
+    normalizedTitle === "transmision en vivo" || normalizedTitle === "transmision"
+      ? "Enlace remoto"
+      : normalizedTitle === "transporte"
+        ? "Ruta recomendada"
+        : normalizedTitle === "hospedaje" || normalizedTitle === "alojamiento"
+          ? "Base sugerida"
+          : normalizedTitle === "itinerario" || normalizedTitle === "itinerario de vuelo" || normalizedTitle === "agenda"
+            ? "Plan de mision"
+            : normalizedTitle === "codigo de vestimenta" || normalizedTitle === "dress code"
+              ? "Codigo de abordaje"
+              : normalizedTitle === "regalos"
+                ? "Carga sugerida"
+                : normalizedTitle === "preguntas frecuentes"
+                  ? "Centro de ayuda"
+                  : "Informacion";
 
   return (
-    <InvitationSectionFrameViewer eyebrow="Modulo extra" title={visibleTitle} subtitle={text} tone="default">
+    <InvitationSectionFrameViewer eyebrow={eyebrow} title={visibleTitle} subtitle={text} tone="default">
       {items.length ? (
         <div className="notes-list notes-list--mission">
           {items.map((item, index) => (

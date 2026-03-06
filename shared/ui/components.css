@@ -1,23 +1,22 @@
 .app-admin {
   color-scheme: dark;
   --admin-shell-bg:
-    radial-gradient(circle at top left, rgba(71, 112, 255, 0.16), transparent 34%),
-    radial-gradient(circle at 82% 12%, rgba(127, 176, 255, 0.1), transparent 26%),
-    linear-gradient(180deg, #0b1020 0%, #090d18 100%);
-  --admin-panel-bg:
-    linear-gradient(180deg, rgba(20, 24, 36, 0.96), rgba(13, 16, 24, 0.94));
-  --admin-surface-bg: rgba(16, 20, 30, 0.82);
-  --admin-note-bg: rgba(71, 112, 255, 0.08);
-  --admin-note-border: rgba(127, 176, 255, 0.18);
-  --admin-border: rgba(127, 176, 255, 0.12);
-  --admin-border-strong: rgba(127, 176, 255, 0.28);
-  --admin-text: #f0f2f5;
-  --admin-text-soft: rgba(240, 242, 245, 0.7);
-  --admin-accent: #7fb0ff;
-  --admin-button-bg: linear-gradient(135deg, #4c78ff, #7ea0ff);
-  --admin-button-text: #ffffff;
-  --admin-secondary-bg: rgba(17, 21, 32, 0.92);
-  --admin-phone-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+    radial-gradient(1200px 600px at 90% -10%, rgba(255, 255, 255, 0.08), transparent 58%),
+    radial-gradient(900px 500px at -20% 10%, rgba(178, 219, 255, 0.08), transparent 56%),
+    linear-gradient(180deg, #111318 0%, #0c0f15 100%);
+  --admin-panel-bg: rgba(17, 20, 28, 0.84);
+  --admin-surface-bg: rgba(255, 255, 255, 0.035);
+  --admin-note-bg: rgba(255, 255, 255, 0.06);
+  --admin-note-border: rgba(255, 255, 255, 0.14);
+  --admin-border: rgba(255, 255, 255, 0.12);
+  --admin-border-strong: rgba(255, 255, 255, 0.26);
+  --admin-text: #f4f5f7;
+  --admin-text-soft: #a8adba;
+  --admin-accent: #d7deed;
+  --admin-button-bg: #ffffff;
+  --admin-button-text: #111318;
+  --admin-secondary-bg: rgba(255, 255, 255, 0.05);
+  --admin-phone-shadow: 0 18px 48px rgba(6, 8, 16, 0.28);
 }
 
 .app-admin.viewer-admin-theme--dark {
@@ -27,23 +26,22 @@
 .app-admin.viewer-admin-theme--light {
   color-scheme: light;
   --admin-shell-bg:
-    radial-gradient(circle at top left, rgba(71, 112, 255, 0.14), transparent 34%),
-    radial-gradient(circle at 82% 12%, rgba(87, 96, 118, 0.12), transparent 26%),
-    linear-gradient(180deg, #f8fafc 0%, #f3f6fb 100%);
-  --admin-panel-bg:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 248, 252, 0.94));
-  --admin-surface-bg: rgba(255, 255, 255, 0.78);
-  --admin-note-bg: rgba(71, 112, 255, 0.04);
-  --admin-note-border: rgba(71, 112, 255, 0.14);
-  --admin-border: var(--ui-color-border);
-  --admin-border-strong: rgba(71, 112, 255, 0.32);
-  --admin-text: var(--ui-color-dark);
-  --admin-text-soft: var(--ui-color-text-soft);
-  --admin-accent: var(--ui-color-primary);
-  --admin-button-bg: linear-gradient(135deg, #4770ff, #6a8cff);
+    radial-gradient(1200px 600px at 90% -10%, rgba(17, 19, 24, 0.08), transparent 58%),
+    radial-gradient(900px 500px at -20% 10%, rgba(92, 117, 162, 0.1), transparent 56%),
+    linear-gradient(180deg, #f6f8fc 0%, #eff2f8 100%);
+  --admin-panel-bg: rgba(255, 255, 255, 0.9);
+  --admin-surface-bg: rgba(17, 19, 24, 0.03);
+  --admin-note-bg: rgba(17, 19, 24, 0.06);
+  --admin-note-border: rgba(17, 19, 24, 0.14);
+  --admin-border: rgba(17, 19, 24, 0.14);
+  --admin-border-strong: rgba(17, 19, 24, 0.3);
+  --admin-text: #111318;
+  --admin-text-soft: #5e6678;
+  --admin-accent: #323a4c;
+  --admin-button-bg: #111318;
   --admin-button-text: #ffffff;
-  --admin-secondary-bg: rgba(255, 255, 255, 0.86);
-  --admin-phone-shadow: 0 30px 80px rgba(26, 31, 44, 0.14);
+  --admin-secondary-bg: rgba(17, 19, 24, 0.05);
+  --admin-phone-shadow: 0 20px 50px rgba(11, 18, 36, 0.1);
 }
 
 .app-admin.viewer-admin-shell,

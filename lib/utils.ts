@@ -103,16 +103,50 @@ export function safeJsonParse<T>(value: string, fallback: T): T {
 }
 
 export function buildRsvpSummary(responses: RsvpResponse[]): RsvpSummary {
-  const attendingCount = responses.filter((item) => item.attending).length;
-  const notAttendingCount = responses.filter((item) => !item.attending).length;
+  const sortedResponses = [...responses].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+
+  const latestByGuest = new Map<string, RsvpResponse>();
+  for (const response of sortedResponses) {
+    const guestKey = normalizeGuestKey(response.name);
+    if (!latestByGuest.has(guestKey)) {
+      latestByGuest.set(guestKey, response);
+    }
+  }
+
+  const latestResponses = Array.from(latestByGuest.values());
+  const attendingCount = latestResponses
+    .filter((item) => item.attending)
+    .reduce((total, item) => total + getAttendeeCount(item), 0);
+  const notAttendingCount = latestResponses
+    .filter((item) => !item.attending)
+    .reduce((total, item) => total + getAttendeeCount(item), 0);
+
   return {
     attendingCount,
     notAttendingCount,
-    totalCount: responses.length,
-    responses: responses.sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    ),
+    totalCount: attendingCount + notAttendingCount,
+    responses: sortedResponses,
   };
+}
+
+function getAttendeeCount(response: Pick<RsvpResponse, "guests_count">) {
+  const numericValue = Number(response.guests_count);
+  if (Number.isFinite(numericValue) && numericValue > 0) {
+    return Math.trunc(numericValue);
+  }
+
+  return 1;
+}
+
+function normalizeGuestKey(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function buildCalendarDataUri(invitation: InvitationRecord) {
@@ -149,12 +183,12 @@ function escapeIcs(input: string) {
 }
 
 export function serializeCsv(summary: RsvpSummary) {
-  const header = ["Fecha", "Nombre", "Asiste", "Acompanantes", "Mensaje"];
+  const header = ["Fecha", "Invitado/Familia", "Estado", "Asistentes", "Mensaje"];
   const rows = summary.responses.map((item) => [
     formatDateTimeLabel(item.created_at),
     item.name,
-    item.attending ? "Si" : "No",
-    item.guests_count?.toString() || "",
+    item.attending ? "Asiste" : "No asiste",
+    String(getAttendeeCount(item)),
     item.message || "",
   ]);
   return [header, ...rows]

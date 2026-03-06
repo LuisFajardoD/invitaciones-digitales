@@ -136,6 +136,7 @@ export type InvitationRecord = {
       label: string;
       whatsapp_number: string;
       whatsapp_url: string;
+      avatar_image_url?: string;
     };
     itinerary: GenericSection;
     dress_code: GenericSection;

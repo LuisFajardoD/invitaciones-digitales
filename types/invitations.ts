@@ -144,6 +144,7 @@ export interface ContactSectionData extends SectionBase {
   whatsapp_number: string;
   whatsapp_url: string;
   label: string;
+  avatar_image_url?: string;
 }
 
 export interface GenericTextSectionData extends SectionBase {

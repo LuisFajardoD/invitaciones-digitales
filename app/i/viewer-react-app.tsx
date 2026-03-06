@@ -7,6 +7,7 @@ import {
   SITE_THEME_STORAGE_KEY,
   type SiteThemeMode,
 } from "@/components/admin/use-site-theme";
+import "../../src/crm/admin.css";
 import "../../src/crm/viewer.css";
 
 const PublicReactApp = dynamic(() => import("@/src/crm/App").then((module) => module.App), {

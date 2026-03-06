@@ -23,6 +23,8 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@supabase/supabase-js": "^2.49.8",
     "framer-motion": "^12.5.0",
+    "jspdf": "^4.2.0",
+    "jspdf-autotable": "^5.0.7",
     "next": "^15.2.0",
     "playwright": "^1.58.2",
     "react": "^19.0.0",

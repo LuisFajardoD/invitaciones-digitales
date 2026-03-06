@@ -388,6 +388,9 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
 
     previewDragStateRef.current.active = false;
     previewDragStateRef.current.pointerId = -1;
+    if (typeof document !== "undefined") {
+      document.body.style.userSelect = "";
+    }
     setIsPreviewDragging(false);
   }
 
@@ -438,8 +441,12 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
     previewDragStateRef.current.elementStartScrollTop = scrollElement?.scrollTop ?? 0;
     previewDragStateRef.current.windowStartScrollLeft = frameWindow?.scrollX ?? 0;
     previewDragStateRef.current.windowStartScrollTop = frameWindow?.scrollY ?? 0;
+    if (typeof document !== "undefined") {
+      document.body.style.userSelect = "none";
+    }
     setIsPreviewDragging(true);
     event.currentTarget.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
   }
 
   function handlePreviewPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
@@ -1795,6 +1802,25 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                         sections: { ...draft.sections, contact: { ...draft.sections.contact, label: event.target.value } },
                       })
                     }
+                  />
+                </label>
+                <label className="field">
+                  <span>URL foto de contacto (opcional)</span>
+                  <input
+                    value={draft.sections.contact.avatar_image_url || ""}
+                    onChange={(event) =>
+                      updateDraft({
+                        ...draft,
+                        sections: {
+                          ...draft.sections,
+                          contact: {
+                            ...draft.sections.contact,
+                            avatar_image_url: event.target.value,
+                          },
+                        },
+                      })
+                    }
+                    placeholder="/assets/... o https://..."
                   />
                 </label>
                 <label className="field">
