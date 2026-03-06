@@ -50,6 +50,7 @@ import {
   getBackendAssetOrigin,
   getCountdown,
   getViewerRoute,
+  resolveHeroBackground,
   resolveMediaUrl,
   resolveShellBackground,
   trimList,
@@ -298,7 +299,7 @@ function getQuickActionTypeLabel(type: QuickActionItem["type"]) {
     case "confirm":
       return "Confirmar";
     case "location":
-      return "Ubicacion";
+      return "Ubicación";
     case "calendar":
       return "Calendario";
     case "share":
@@ -428,9 +429,10 @@ function InvitationViewerCanvas({
   const orderedSectionKeys = getOrderedSectionKeys(invitation.sections_order);
   const mapsUrl = invitation.sections.map.maps_url?.trim();
   const noteItems = trimList(invitation.sections.notes.items);
+  const galleryMaxImages = Math.max(1, Number(invitation.sections.gallery.max_images) || 6);
   const galleryImages = trimList(invitation.sections.gallery.image_urls).slice(
     0,
-    invitation.sections.gallery.max_images || 6,
+    galleryMaxImages,
   );
   const genericSections: Partial<Record<keyof typeof sectionDisplayLabels, GenericSection>> = {
     itinerary: invitation.sections.itinerary,
@@ -520,6 +522,7 @@ function InvitationViewerCanvas({
                   <GallerySectionViewer
                     key={key}
                     images={galleryImages}
+                    maxImages={galleryMaxImages}
                     assetOrigin={assetOrigin}
                     onOpen={allowLightbox ? setLightboxImage : () => undefined}
                   />
@@ -546,6 +549,119 @@ function InvitationViewerCanvas({
       {allowLightbox && lightboxImage ? <LightboxViewer image={lightboxImage} onClose={() => setLightboxImage("")} /> : null}
     </>
   );
+}
+
+function waitFor(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+function preloadImageResource(url: string) {
+  return new Promise<void>((resolve) => {
+    if (!url) {
+      resolve();
+      return;
+    }
+
+    const image = new Image();
+    const finish = () => {
+      image.onload = null;
+      image.onerror = null;
+      resolve();
+    };
+
+    image.onload = finish;
+    image.onerror = finish;
+    image.src = url;
+
+    if (image.complete) {
+      finish();
+    }
+  });
+}
+
+function preloadVideoMetadata(url: string) {
+  return new Promise<void>((resolve) => {
+    if (!url) {
+      resolve();
+      return;
+    }
+
+    const video = document.createElement("video");
+    const finish = () => {
+      video.onloadeddata = null;
+      video.onerror = null;
+      video.src = "";
+      resolve();
+    };
+
+    video.preload = "metadata";
+    video.muted = true;
+    video.onloadeddata = finish;
+    video.onerror = finish;
+    video.src = url;
+  });
+}
+
+function withTimeout(task: Promise<void>, timeoutMs: number) {
+  return Promise.race([task, waitFor(timeoutMs)]).then(() => undefined);
+}
+
+async function warmInvitationEntryMedia(invitation: InvitationRecord, assetOrigin: string) {
+  const imageUrls = new Set<string>();
+  const videoUrls = new Set<string>();
+
+  const addImage = (input: string) => {
+    const resolved = resolveMediaUrl(input.trim(), assetOrigin);
+    if (resolved) {
+      imageUrls.add(resolved);
+    }
+  };
+
+  const addVideo = (input: string) => {
+    const resolved = resolveMediaUrl(input.trim(), assetOrigin);
+    if (resolved) {
+      videoUrls.add(resolved);
+    }
+  };
+
+  const registerBackgroundMedia = (media: {
+    image_url?: string;
+    poster_url?: string;
+    video_url?: string;
+  }) => {
+    if (media.image_url) {
+      addImage(media.image_url);
+    }
+    if (media.poster_url) {
+      addImage(media.poster_url);
+    }
+    if (media.video_url) {
+      addVideo(media.video_url);
+    }
+  };
+
+  registerBackgroundMedia(resolveShellBackground(invitation));
+  registerBackgroundMedia(resolveHeroBackground(invitation));
+
+  const firstGalleryImage = invitation.sections.gallery.image_urls
+    .map((item) => item.trim())
+    .find(Boolean);
+  if (firstGalleryImage) {
+    addImage(firstGalleryImage);
+  }
+
+  const tasks = [
+    ...Array.from(imageUrls).map((url) => withTimeout(preloadImageResource(url), 2200)),
+    ...Array.from(videoUrls).map((url) => withTimeout(preloadVideoMetadata(url), 2200)),
+  ];
+
+  if (!tasks.length) {
+    return;
+  }
+
+  await Promise.race([Promise.all(tasks), waitFor(2600)]);
 }
 
 export function App() {
@@ -589,6 +705,7 @@ export function App() {
   const [previewScreenshotError, setPreviewScreenshotError] = useState("");
   const [previewScreenshotCached, setPreviewScreenshotCached] = useState(false);
   const [clientRsvpActionStatus, setClientRsvpActionStatus] = useState("");
+  const [publicInvitationReady, setPublicInvitationReady] = useState(route.mode !== "invitation");
   const livePreviewScrollRef = useRef<HTMLDivElement | null>(null);
   const sectionOrderSensors = useSensors(
     useSensor(PointerSensor, {
@@ -686,7 +803,7 @@ export function App() {
     }
 
     const shareUrl = window.location.href;
-    const invitationTitle = clientRsvpView?.invitation.sections.hero.title || "Invitacion";
+    const invitationTitle = clientRsvpView?.invitation.sections.hero.title || "Invitación";
     const shareText = `Te comparto el enlace privado RSVP de ${invitationTitle}: ${shareUrl}`;
 
     if (navigator.share) {
@@ -1038,7 +1155,7 @@ export function App() {
           }
           if (!response.ok) {
             const payload = (await response.json().catch(() => ({}))) as { error?: string };
-            throw new Error(payload.error || "No se pudo cargar la invitacion.");
+            throw new Error(payload.error || "No se pudo cargar la invitación.");
           }
           const payload = (await response.json()) as ApiSuccess;
           if (!cancelled) {
@@ -1051,7 +1168,7 @@ export function App() {
         const response = await fetch(`/api/public/invitations/${encodeURIComponent(route.slug)}`, { cache: "no-store" });
         if (!response.ok) {
           const payload = (await response.json().catch(() => ({}))) as { error?: string };
-          throw new Error(payload.error || "No se pudo cargar la invitacion.");
+          throw new Error(payload.error || "No se pudo cargar la invitación.");
         }
         const payload = (await response.json()) as ApiSuccess;
         if (!cancelled) {
@@ -1142,6 +1259,41 @@ export function App() {
     hasRedirectedAfterLoginRef.current = true;
     window.location.replace(targetPath);
   }, [adminAuthState, route.mode]);
+
+  useEffect(() => {
+    if (route.mode !== "invitation") {
+      setPublicInvitationReady(true);
+      return;
+    }
+
+    setPublicInvitationReady(false);
+  }, [route.mode, route.slug]);
+
+  useEffect(() => {
+    if (route.mode !== "invitation" || loading || !invitation || Boolean(error)) {
+      return;
+    }
+
+    const invitationToPrepare = invitation;
+    let cancelled = false;
+
+    async function preparePublicInvitation() {
+      await Promise.all([
+        waitFor(700),
+        warmInvitationEntryMedia(invitationToPrepare, assetOrigin),
+      ]);
+
+      if (!cancelled) {
+        setPublicInvitationReady(true);
+      }
+    }
+
+    void preparePublicInvitation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [assetOrigin, error, invitation, loading, route.mode]);
 
   async function handleSaveEditor() {
     if (!editorDraft) {
@@ -1677,13 +1829,13 @@ export function App() {
       });
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
-        throw new Error(payload.error || "No se pudo iniciar sesion.");
+        throw new Error(payload.error || "No se pudo iniciar sesión.");
       }
 
       const redirectTarget = getSafeAdminRedirectPath(new URLSearchParams(window.location.search).get("redirect"));
       window.location.replace(redirectTarget);
     } catch (submitError) {
-      setLoginError(submitError instanceof Error ? submitError.message : "No se pudo iniciar sesion.");
+      setLoginError(submitError instanceof Error ? submitError.message : "No se pudo iniciar sesión.");
     } finally {
       setLoginLoading(false);
     }
@@ -1731,7 +1883,7 @@ export function App() {
         <section className="auth-card viewer-card">
           <p className="viewer-eyebrow">Acceso administrativo</p>
           <h1>Login del CRM</h1>
-          <p className="viewer-section__subtitle">Inicia sesion para continuar con el panel administrativo.</p>
+          <p className="viewer-section__subtitle">Inicia sesión para continuar con el panel administrativo.</p>
           <form className="viewer-stack-list" onSubmit={handleAdminLoginSubmit}>
             <label className="viewer-field">
               <span>Email</span>
@@ -1743,7 +1895,7 @@ export function App() {
               />
             </label>
             <label className="viewer-field">
-              <span>Contrasena</span>
+              <span>Contraseña</span>
               <input
                 type="password"
                 value={loginPassword}
@@ -1756,7 +1908,7 @@ export function App() {
             </button>
             {loginError ? <p className="viewer-error-text">{loginError}</p> : null}
             <p className="viewer-response-meta">
-              <span>Redireccion al entrar:</span>
+              <span>Redirección al entrar:</span>
               <span>{redirectTarget}</span>
             </p>
           </form>
@@ -1787,7 +1939,7 @@ export function App() {
               </p>
               <p>
                 <a className="viewer-link" href={targetUrl}>
-                  Ir a crear invitacion
+                  Ir a crear invitación
                 </a>
               </p>
             </section>
@@ -1797,12 +1949,39 @@ export function App() {
     );
   }
 
+  const showPublicInvitationLoader =
+    route.mode === "invitation" && !error && (loading || (Boolean(invitation) && !publicInvitationReady));
+
+  if (showPublicInvitationLoader) {
+    return (
+      <main className="app-viewer app-viewer--launch-screen" aria-busy="true">
+        <section className="viewer-launch-panel" role="status" aria-live="polite">
+          <p className="viewer-launch-panel__eyebrow">Cargando</p>
+          <h1 className="viewer-launch-panel__title">{loading ? "Preparando invitación..." : "Motores listos..."}</h1>
+          <div className="viewer-launch-loader" aria-hidden="true">
+            <span className="viewer-launch-loader__stars" />
+            <span className="viewer-launch-loader__smoke" />
+            <span className="viewer-launch-loader__rocket">
+              <span className="viewer-launch-loader__window" />
+              <span className="viewer-launch-loader__fin viewer-launch-loader__fin--left" />
+              <span className="viewer-launch-loader__fin viewer-launch-loader__fin--right" />
+              <span className="viewer-launch-loader__flame" />
+            </span>
+          </div>
+          <p className="viewer-launch-panel__caption">
+            {loading ? "Sincronizando contenido..." : "Iniciando secuencia de despegue."}
+          </p>
+        </section>
+      </main>
+    );
+  }
+
   if (loading) {
     return (
       <main className="viewer-shell viewer-shell--centered">
-        <section className="viewer-card">
-          <p className="viewer-eyebrow">Cargando</p>
-          <h1>Preparando vista...</h1>
+        <section className="viewer-loading-panel" role="status" aria-live="polite">
+          <p className="viewer-loading-panel__eyebrow">Cargando</p>
+          <h1 className="viewer-loading-panel__title">Preparando vista...</h1>
         </section>
       </main>
     );
@@ -1964,7 +2143,7 @@ export function App() {
                 />
             <div className="pub-row">
               <label className="viewer-field pub-slug">
-                <span>Slug publico</span>
+                <span>Slug público</span>
                 <input
                   className="field-full"
                   value={editorDraft.slug}
@@ -2423,7 +2602,7 @@ export function App() {
                   </label>
                 </div>
                 <label className="viewer-field viewer-field--wide event-card__address">
-                  <span>Direccion</span>
+                  <span>Dirección</span>
                   <input
                     value={editorDraft.sections.event_info.address_text}
                     onChange={(event) =>
@@ -2658,7 +2837,7 @@ export function App() {
                     </label>
                   </div>
                   <label className="viewer-field">
-                    <span>Direccion visible</span>
+                    <span>Dirección visible</span>
                     <input
                       value={editorDraft.sections.map.address_text}
                       onChange={(event) =>
@@ -2850,7 +3029,7 @@ export function App() {
                         </label>
                       </div>
                       <label className="viewer-field">
-                        <span>Descripcion</span>
+                        <span>Descripción</span>
                         <textarea
                           value={section.text || ""}
                           onChange={(event) => updateEditorGenericSection(key, { text: event.target.value })}
@@ -3173,7 +3352,7 @@ export function App() {
                 </table>
               </div>
             ) : (
-              <p className="viewer-empty-copy">Todavia no hay respuestas registradas.</p>
+              <p className="viewer-empty-copy">Todavía no hay respuestas registradas.</p>
             )}
           </section>
         </div>

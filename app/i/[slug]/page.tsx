@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
 
   if (!invitation) {
     return {
-      title: "Invitacion no disponible",
-      description: "Este enlace no esta activo.",
+      title: "Invitación no disponible",
+      description: "Este enlace no está activo.",
     };
   }
 
@@ -56,8 +56,8 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
           <div className="public-viewer__frame">
             <section className="empty-state">
               <p className="eyebrow">Estado</p>
-              <h1>Invitacion no disponible</h1>
-              <p className="muted">Este enlace no esta activo.</p>
+              <h1>Invitación no disponible</h1>
+              <p className="muted">Este enlace no está activo.</p>
               <Link href="/" className="button-primary">
                 Ver invitaciones
               </Link>

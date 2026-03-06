@@ -17,13 +17,13 @@ export function GenericSection({ title, data }: GenericSectionProps) {
   const reducedMotion = Boolean(useReducedMotion());
   const safeTitle = (data.title || "").trim() || title;
   const safeText =
-    (data.text || "").trim() || "Informacion adicional para la mision.";
+    (data.text || "").trim() || "Información adicional para la misión.";
   const items = (data.items || []).map((item) => item.trim()).filter(Boolean);
   const link = (data.url || "").trim();
 
   return (
     <InvitationSectionFrame
-      eyebrow="Modulo extra"
+      eyebrow="Módulo extra"
       title={safeTitle}
       subtitle={safeText}
       tone="default"

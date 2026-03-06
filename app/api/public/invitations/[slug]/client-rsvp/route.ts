@@ -38,7 +38,7 @@ export async function GET(request: Request, { params }: Params) {
     const result = await getClientRsvpView(slug, token);
 
     if (!result) {
-      return NextResponse.json({ error: "Token invalido o acceso no autorizado." }, { status: 403 });
+      return NextResponse.json({ error: "Token inválido o acceso no autorizado." }, { status: 403 });
     }
 
     return NextResponse.json({ result: toPublicClientRsvpView(result) });

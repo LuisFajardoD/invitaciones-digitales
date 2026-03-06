@@ -372,7 +372,7 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
 
   return (
     <InvitationSectionFrameViewer
-      eyebrow="Bitacora de mision"
+      eyebrow="Bitácora de misión"
       title={invitation.sections.event_info.venue_name}
       subtitle="Todo listo para el punto de encuentro."
       tone="aurora"
@@ -447,9 +447,9 @@ export function QuickActionsSectionViewer({
 
   return (
     <InvitationSectionFrameViewer
-      eyebrow="Control de mision"
-      title="Acciones rapidas"
-      subtitle="Selecciona un comando y continua la secuencia."
+      eyebrow="Control de misión"
+      title="Acciones rápidas"
+      subtitle="Selecciona un comando y continúa la secuencia."
       tone="gold"
       surface="bare"
     >
@@ -546,7 +546,7 @@ export function MapSectionViewer({
     <InvitationSectionFrameViewer
       id="viewer-map-section"
       eyebrow="Ruta estelar"
-      title="Ubicacion"
+      title="Ubicación"
       subtitle={invitation.sections.map.address_text}
       tone="aurora"
     >
@@ -569,13 +569,17 @@ export function MapSectionViewer({
 
 export function GallerySectionViewer({
   images,
+  maxImages,
   assetOrigin,
   onOpen,
 }: {
   images: string[];
+  maxImages: number;
   assetOrigin: string;
   onOpen: (url: string) => void;
 }) {
+  const totalSlots = Math.max(1, Math.trunc(maxImages) || 1);
+
   return (
     <InvitationSectionFrameViewer
       eyebrow="Archivo visual"
@@ -584,23 +588,27 @@ export function GallerySectionViewer({
       tone="gold"
     >
       <div className="gallery-grid gallery-grid--mission">
-        {images.length
-          ? images.map((imageUrl, index) => {
-              const src = resolveMediaUrl(imageUrl, assetOrigin);
-              return (
-                <GalleryTileViewer
-                  key={`${imageUrl}-${index}`}
-                  imageUrl={src}
-                  index={index}
-                  onOpen={() => onOpen(src)}
-                />
-              );
-            })
-          : Array.from({ length: 4 }).map((_, index) => (
+        {Array.from({ length: totalSlots }).map((_, index) => {
+          const imageUrl = images[index] || "";
+          const src = resolveMediaUrl(imageUrl, assetOrigin);
+
+          if (!src) {
+            return (
               <div key={`placeholder-${index}`} className="gallery-tile gallery-tile--placeholder">
                 <span>Espacio {index + 1}</span>
               </div>
-            ))}
+            );
+          }
+
+          return (
+            <GalleryTileViewer
+              key={`${src}-${index}`}
+              imageUrl={src}
+              index={index}
+              onOpen={() => onOpen(src)}
+            />
+          );
+        })}
       </div>
       {!images.length ? (
         <p className="mission-caption">
@@ -623,7 +631,11 @@ function GalleryTileViewer({
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
-    return null;
+    return (
+      <div className="gallery-tile gallery-tile--placeholder">
+        <span>Imagen {index + 1} no disponible</span>
+      </div>
+    );
   }
 
   return (
@@ -649,7 +661,7 @@ export function NotesSectionViewer({ items }: { items: string[] }) {
     <InvitationSectionFrameViewer
       eyebrow="Checklist"
       title="Antes del despegue"
-      subtitle="Detalles clave para que la mision salga perfecta."
+      subtitle="Detalles clave para que la misión salga perfecta."
       tone="default"
     >
       <div className="notes-list notes-list--mission">
@@ -672,7 +684,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
-  const [savedMessage, setSavedMessage] = useState("Tu RSVP fue enviado y ya quedo registrado.");
+  const [savedMessage, setSavedMessage] = useState("Tu RSVP fue enviado y ya quedó registrado.");
   const fields = invitation.sections.rsvp.fields || {};
   const allowGuestsCount = Boolean(fields.guests_count ?? fields.allow_guests_count);
   const allowMessage = Boolean(fields.message ?? fields.allow_message);
@@ -718,14 +730,14 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
 
       const payload = (await response.json()) as { error?: string };
       if (!response.ok) {
-        throw new Error(payload.error || "No se pudo enviar tu confirmacion.");
+        throw new Error(payload.error || "No se pudo enviar tu confirmación.");
       }
 
       setSaved(true);
       setSavedMessage(
         forceCancel
-          ? "Se registro la cancelacion de asistencia. Si cambian de plan, puedes reenviar el formulario."
-          : "Tu RSVP fue enviado y ya quedo registrado.",
+          ? "Se registró la cancelación de asistencia. Si cambian de plan, puedes reenviar el formulario."
+          : "Tu RSVP fue enviado y ya quedó registrado.",
       );
       setName("");
       setAttending("");
@@ -733,7 +745,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
       setMessage("");
       window.setTimeout(() => setSaved(false), 2400);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo enviar tu confirmacion.");
+      setError(submitError instanceof Error ? submitError.message : "No se pudo enviar tu confirmación.");
     } finally {
       setSubmitting(false);
     }
@@ -747,9 +759,9 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
   return (
     <InvitationSectionFrameViewer
       id="viewer-rsvp-section"
-      eyebrow="Confirmacion"
+      eyebrow="Confirmación"
       title="Confirma tu asistencia"
-      subtitle="Envianos tu respuesta para cerrar la bitacora."
+      subtitle="Envíanos tu respuesta para cerrar la bitácora."
       tone="aurora"
     >
       {isClosed ? (
@@ -763,10 +775,10 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
             <input className="mission-input" value={name} onChange={(event) => setName(event.target.value)} />
           </label>
           <label className="mission-field rsvp-form__field rsvp-form__field--attending">
-            <span className="mission-label">Asistes? *</span>
+            <span className="mission-label">¿Asistes? *</span>
             <select className="mission-input" value={attending} onChange={(event) => setAttending(event.target.value)}>
               <option value="">Selecciona</option>
-              <option value="yes">Si</option>
+              <option value="yes">Sí</option>
               <option value="no">No</option>
             </select>
           </label>
@@ -790,7 +802,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
           ) : null}
           <div className="mission-field mission-field--wide rsvp-form__actions">
             <button type="submit" className="mission-button quick-button" disabled={submitting}>
-              {submitting ? "Transmitiendo..." : attending === "no" ? "Registrar no asistencia" : "Enviar confirmacion"}
+              {submitting ? "Transmitiendo..." : attending === "no" ? "Registrar no asistencia" : "Enviar confirmación"}
             </button>
             <button
               type="button"
@@ -801,7 +813,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
               {submitting ? "Transmitiendo..." : "Cancelar asistencia"}
             </button>
             <p className="mission-caption mission-caption--wide">
-              Si ya habias confirmado y ahora no podras asistir, usa "Cancelar asistencia".
+              Si ya habías confirmado y ahora no podrás asistir, usa "Cancelar asistencia".
             </p>
           </div>
           {error ? <p className="viewer-error-text">{error}</p> : null}
@@ -815,7 +827,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
               <MissionRocket />
             </div>
           </div>
-          <strong>Mision completada</strong>
+          <strong>Misión completada</strong>
           <p className="mission-caption">{savedMessage}</p>
         </div>
       ) : null}
@@ -841,7 +853,7 @@ export function ContactSectionViewer({ invitation }: { invitation: InvitationRec
         )}
         <div>
           <strong>{invitation.sections.contact.whatsapp_number}</strong>
-          <p className="mission-caption">Si necesitas ayuda antes del evento, escribenos aqui.</p>
+          <p className="mission-caption">Si necesitas ayuda antes del evento, escríbenos aquí.</p>
         </div>
       </div>
       <a className="mission-button" href={invitation.sections.contact.whatsapp_url} target="_blank" rel="noreferrer">
@@ -859,7 +871,7 @@ export function GenericBlockViewer({
   data: GenericSection;
 }) {
   const items = trimList(data.items);
-  const text = data.text?.trim() || "Informacion adicional para la mision.";
+  const text = data.text?.trim() || "Información adicional para la misión.";
   const visibleTitle = data.title?.trim() || title;
   const normalizedTitle = visibleTitle
     .toLowerCase()
@@ -867,21 +879,21 @@ export function GenericBlockViewer({
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
   const eyebrow =
-    normalizedTitle === "transmision en vivo" || normalizedTitle === "transmision"
+    normalizedTitle === "transmisión en vivo" || normalizedTitle === "transmisión"
       ? "Enlace remoto"
       : normalizedTitle === "transporte"
         ? "Ruta recomendada"
         : normalizedTitle === "hospedaje" || normalizedTitle === "alojamiento"
           ? "Base sugerida"
           : normalizedTitle === "itinerario" || normalizedTitle === "itinerario de vuelo" || normalizedTitle === "agenda"
-            ? "Plan de mision"
-            : normalizedTitle === "codigo de vestimenta" || normalizedTitle === "dress code"
-              ? "Codigo de abordaje"
+            ? "Plan de misión"
+            : normalizedTitle === "código de vestimenta" || normalizedTitle === "dress code"
+              ? "Código de abordaje"
               : normalizedTitle === "regalos"
                 ? "Carga sugerida"
                 : normalizedTitle === "preguntas frecuentes"
                   ? "Centro de ayuda"
-                  : "Informacion";
+                  : "Información";
 
   return (
     <InvitationSectionFrameViewer eyebrow={eyebrow} title={visibleTitle} subtitle={text} tone="default">

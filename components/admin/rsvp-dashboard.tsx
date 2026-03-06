@@ -48,7 +48,7 @@ export function RsvpDashboard({ invitation, summary, isClientView = false }: Rsv
             <div className="response-meta">
               <span>{formatDateTimeLabel(response.created_at)}</span>
               <span>{response.attending ? "Asiste" : "No asiste"}</span>
-              <span>{response.guests_count ? `${response.guests_count} acompanantes` : "Sin dato"}</span>
+              <span>{response.guests_count ? `${response.guests_count} acompañantes` : "Sin dato"}</span>
             </div>
             {response.message ? <p className="muted">{response.message}</p> : null}
           </div>

@@ -20,13 +20,13 @@ export async function GET(request: Request) {
   }
 
   if (!device) {
-    return NextResponse.json({ error: "deviceId no valido." }, { status: 400 });
+    return NextResponse.json({ error: "deviceId no válido." }, { status: 400 });
   }
 
   if (invitationId) {
     const adminToken = (await cookies()).get(ADMIN_COOKIE_NAME)?.value;
     if (!adminToken) {
-      return NextResponse.json({ error: "Sesion administrativa requerida para preview por ID." }, { status: 401 });
+      return NextResponse.json({ error: "Sesión administrativa requerida para preview por ID." }, { status: 401 });
     }
   }
 

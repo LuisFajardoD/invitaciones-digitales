@@ -11,7 +11,7 @@ const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
       subtitle:
         "Landing editable, CRM con RSVP y experiencias premium listas para compartir por WhatsApp.",
       primary_cta_text: "Cotizar por WhatsApp",
-      primary_cta_href: "https://wa.me/5527225459?text=Hola%2C%20quiero%20cotizar%20una%20invitacion%20digital%20premium.",
+      primary_cta_href: "https://wa.me/5527225459?text=Hola%2C%20quiero%20cotizar%20una%20invitaci%C3%B3n%20digital%20premium.",
       secondary_cta_text: "Ver ejemplos",
       secondary_cta_href: "#examples",
     },
@@ -21,7 +21,7 @@ const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
       items: [
         {
           title: "Cumple 7 de Luis Arturo",
-          description: "Tema astronautas con animacion premium, mapa y RSVP.",
+          description: "Tema astronautas con animación premium, mapa y RSVP.",
           slug: "cumple-7-luis-arturo-astronautas",
           cover_url:
             "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
@@ -31,7 +31,7 @@ const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
     promo: {
       enabled: true,
       title: "Promo de lanzamiento",
-      text: "Incluye configuracion inicial del CRM y landing editable en cada paquete premium.",
+      text: "Incluye configuración inicial del CRM y landing editable en cada paquete premium.",
       valid_from: "2026-02-01T00:00:00.000Z",
       valid_to: "2026-12-31T23:59:59.000Z",
     },
@@ -42,8 +42,8 @@ const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
         {
           name: "Esencial",
           price: "$1,490 MXN",
-          description: "Invitacion pensada para movil con RSVP y secciones clave.",
-          features: ["1 tema", "Mapa embebido", "RSVP basico"],
+          description: "Invitación pensada para móvil con RSVP y secciones clave.",
+          features: ["1 tema", "Mapa embebido", "RSVP básico"],
         },
         {
           name: "Premium Astronautas",
@@ -57,18 +57,18 @@ const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
       enabled: true,
       title: "Extras",
       items: [
-        "Personalizacion de copy y colores",
-        "Carga inicial de galeria",
+        "Personalización de copy y colores",
+        "Carga inicial de galería",
         "Ajuste de assets para OG",
       ],
     },
     how_it_works: {
       enabled: true,
-      title: "Como funciona",
+      title: "Cómo funciona",
       items: [
         "Definimos tema, fecha y lugar.",
         "Configuramos secciones activas en el CRM.",
-        "Publicas y compartes un link listo para WhatsApp.",
+        "Publicas y compartes un enlace listo para WhatsApp.",
       ],
     },
     faq: {
@@ -76,21 +76,21 @@ const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
       title: "Preguntas frecuentes",
       items: [
         {
-          question: "Puedo editar la landing sin redeploy?",
-          answer: "Si. Todo se guarda en site_settings y se refleja en /.",
+          question: "¿Puedo editar la landing sin redeploy?",
+          answer: "Sí. Todo se guarda en site_settings y se refleja en /.",
         },
         {
-          question: "La vista cliente requiere cuenta?",
+          question: "¿La vista cliente requiere cuenta?",
           answer: "No. Se comparte un link privado con token de solo lectura.",
         },
       ],
     },
     contact: {
       enabled: true,
-      title: "Cotiza tu invitacion",
-      text: "Cuentanos fecha, tema y tipo de evento para preparar una propuesta.",
+      title: "Cotiza tu invitación",
+      text: "Cuéntanos fecha, tema y tipo de evento para preparar una propuesta.",
       whatsapp_number: "5527225459",
-      whatsapp_prefill_text: "Hola, quiero cotizar una invitacion digital premium.",
+      whatsapp_prefill_text: "Hola, quiero cotizar una invitación digital premium.",
     },
   },
   invitation_templates: [],

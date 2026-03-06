@@ -100,7 +100,7 @@ function createRenderKey(args: {
 async function renderInternal(input: PreviewRequestInput): Promise<PreviewRenderResult> {
   const device = getPreviewDeviceProfile(input.deviceId);
   if (!device) {
-    throw new Error("Perfil de dispositivo no valido.");
+    throw new Error("Perfil de dispositivo no válido.");
   }
 
   const invitation = input.invitationId
@@ -110,7 +110,7 @@ async function renderInternal(input: PreviewRequestInput): Promise<PreviewRender
       : null;
 
   if (!invitation) {
-    throw new Error("Invitacion no encontrada o no publicada.");
+    throw new Error("Invitación no encontrada o no publicada.");
   }
 
   await mkdir(PREVIEW_DIR, { recursive: true });

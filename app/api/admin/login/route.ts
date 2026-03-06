@@ -32,14 +32,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "No hay proveedor de autenticacion configurado. Define NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+            "No hay proveedor de autenticación configurado. Define NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.",
         },
         { status: 503 },
       );
     }
 
     if (email !== DEMO_ADMIN_EMAIL || password !== DEMO_ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Credenciales invalidas." }, { status: 401 });
+      return NextResponse.json({ error: "Credenciales inválidas." }, { status: 401 });
     }
 
     cookieStore.set(ADMIN_COOKIE_NAME, "demo-session", {
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   });
 
   if (error || !data.session?.access_token) {
-    return NextResponse.json({ error: "No se pudo iniciar sesion." }, { status: 401 });
+    return NextResponse.json({ error: "No se pudo iniciar sesión." }, { status: 401 });
   }
 
   const allowedEmail = getAllowedAdminEmail();

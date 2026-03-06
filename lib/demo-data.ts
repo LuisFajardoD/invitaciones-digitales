@@ -147,20 +147,20 @@ export const demoInvitation: InvitationRecord = {
       items: [
         "11:00 am | Bienvenida y fotos de aterrizaje",
         "11:30 am | Juegos y misiones espaciales",
-        "1:00 pm | Pastel y cancion para Luis Arturo",
-        "2:00 pm | Pinata, regalos y despedida",
+        "1:00 pm | Pastel y canción para Luis Arturo",
+        "2:00 pm | Piñata, regalos y despedida",
       ],
-      text: "Asi se vivira la celebracion de principio a fin.",
+      text: "Así se vivirá la celebración de principio a fin.",
     },
     dress_code: {
       enabled: true,
-      title: "Codigo de vestimenta",
-      text: "Look comodo en tonos azul, plata o blanco. Si quieres, suma un detalle espacial.",
+      title: "Código de vestimenta",
+      text: "Look cómodo en tonos azul, plata o blanco. Si quieres, suma un detalle espacial.",
     },
     gifts: {
       enabled: true,
       title: "Mesa de regalos",
-      text: "Tu presencia es lo mas importante. Si quieres llevar un detalle, puede ser un libro, un juego creativo o una sorpresa espacial.",
+      text: "Tu presencia es lo más importante. Si quieres llevar un detalle, puede ser un libro, un juego creativo o una sorpresa espacial.",
       url: createWhatsAppUrl(
         "5527225459",
         "Hola, quiero preguntar sobre la mesa de regalos de Luis Arturo.",
@@ -170,27 +170,27 @@ export const demoInvitation: InvitationRecord = {
       enabled: true,
       title: "Preguntas frecuentes",
       items: [
-        "Hay estacionamiento limitado dentro del salon.",
-        "Si confirmas con acompanantes, incluye el total en tu RSVP.",
+        "Hay estacionamiento limitado dentro del salón.",
+        "Si confirmas con acompañantes, incluye el total en tu RSVP.",
         "Puedes llegar desde las 10:45 am para entrar con calma.",
       ],
-      text: "Lo mas importante antes del despegue.",
+      text: "Lo más importante antes del despegue.",
     },
     livestream: {
       enabled: true,
-      title: "Transmision en vivo",
-      text: "Si no puedes venir, tendremos una senal privada para ver el festejo.",
+      title: "Transmisión en vivo",
+      text: "Si no puedes venir, tendremos una señal privada para ver el festejo.",
       url: "https://www.youtube.com/watch?v=21X5lGlDOfg",
     },
     transport: {
       enabled: true,
       title: "Transporte",
-      text: "Si vienes en auto, usa la entrada principal. Si vienes en taxi o app, comparte la ubicacion del mapa para llegar directo.",
+      text: "Si vienes en auto, usa la entrada principal. Si vienes en taxi o app, comparte la ubicación del mapa para llegar directo.",
     },
     lodging: {
       enabled: true,
       title: "Hospedaje",
-      text: "Si vienes de fuera de CDMX, te recomendamos hospedarte cerca de Xochimilco o Coapa para llegar mas rapido el dia del evento.",
+      text: "Si vienes de fuera de CDMX, te recomendamos hospedarte cerca de Xochimilco o Coapa para llegar más rápido el día del evento.",
     },
   },
   share: {
@@ -231,7 +231,7 @@ export const demoSiteSettings: SiteSettingsRecord = {
         primary_cta_text: "Cotizar por WhatsApp",
         primary_cta_href: createWhatsAppUrl(
           "5527225459",
-          "Hola, quiero cotizar una invitacion digital premium.",
+          "Hola, quiero cotizar una invitación digital premium.",
         ),
         secondary_cta_text: "Ver ejemplos",
         secondary_cta_href: "#examples",
@@ -242,7 +242,7 @@ export const demoSiteSettings: SiteSettingsRecord = {
         items: [
           {
             title: "Cumple 7 de Luis Arturo",
-            description: "Tema astronautas con animacion premium, mapa y RSVP.",
+            description: "Tema astronautas con animación premium, mapa y RSVP.",
             slug: "cumple-7-luis-arturo-astronautas",
             cover_url:
               "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
@@ -252,7 +252,7 @@ export const demoSiteSettings: SiteSettingsRecord = {
       promo: {
         enabled: true,
         title: "Promo de lanzamiento",
-        text: "Incluye configuracion inicial del CRM y landing editable en cada paquete premium.",
+        text: "Incluye configuración inicial del CRM y landing editable en cada paquete premium.",
         valid_from: "2026-02-01T00:00:00.000Z",
         valid_to: "2026-12-31T23:59:59.000Z",
       },
@@ -263,8 +263,8 @@ export const demoSiteSettings: SiteSettingsRecord = {
           {
             name: "Esencial",
             price: "$1,490 MXN",
-            description: "Invitacion pensada para movil con RSVP y secciones clave.",
-            features: ["1 tema", "Mapa embebido", "RSVP basico"],
+            description: "Invitación pensada para móvil con RSVP y secciones clave.",
+            features: ["1 tema", "Mapa embebido", "RSVP básico"],
           },
           {
             name: "Premium Astronautas",
@@ -282,18 +282,18 @@ export const demoSiteSettings: SiteSettingsRecord = {
         enabled: true,
         title: "Extras",
         items: [
-          "Personalizacion de copy y colores",
-          "Carga inicial de galeria",
+          "Personalización de copy y colores",
+          "Carga inicial de galería",
           "Ajuste de assets para OG",
         ],
       },
       how_it_works: {
         enabled: true,
-        title: "Como funciona",
+        title: "Cómo funciona",
         items: [
           "Definimos tema, fecha y lugar.",
           "Configuramos secciones activas en el CRM.",
-          "Publicas y compartes un link listo para WhatsApp.",
+          "Publicas y compartes un enlace listo para WhatsApp.",
         ],
       },
       faq: {
@@ -301,21 +301,21 @@ export const demoSiteSettings: SiteSettingsRecord = {
         title: "Preguntas frecuentes",
         items: [
           {
-            question: "Puedo editar la landing sin redeploy?",
-            answer: "Si. Todo se guarda en site_settings y se refleja en /.",
+            question: "¿Puedo editar la landing sin redeploy?",
+            answer: "Sí. Todo se guarda en site_settings y se refleja en /.",
           },
           {
-            question: "La vista cliente requiere cuenta?",
+            question: "¿La vista cliente requiere cuenta?",
             answer: "No. Se comparte un link privado con token de solo lectura.",
           },
         ],
       },
       contact: {
         enabled: true,
-        title: "Cotiza tu invitacion",
-        text: "Cuentanos fecha, tema y tipo de evento para preparar una propuesta.",
+        title: "Cotiza tu invitación",
+        text: "Cuéntanos fecha, tema y tipo de evento para preparar una propuesta.",
         whatsapp_number: "5527225459",
-        whatsapp_prefill_text: "Hola, quiero cotizar una invitacion digital premium.",
+        whatsapp_prefill_text: "Hola, quiero cotizar una invitación digital premium.",
       },
     },
     invitation_templates: [

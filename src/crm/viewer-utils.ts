@@ -215,7 +215,7 @@ function toCalendarStamp(input: string) {
 export function buildGoogleCalendarUrl(invitation: InvitationRecord) {
   const start = new Date(invitation.event_start_at);
   const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-  const title = invitation.sections.hero.title || "Invitacion";
+  const title = invitation.sections.hero.title || "Invitación";
   const details = invitation.sections.hero.subtitle || "";
   const location = `${invitation.sections.event_info.venue_name} ${invitation.sections.event_info.address_text}`.trim();
   const params = new URLSearchParams({
@@ -237,7 +237,7 @@ export function getCountdown(targetAt: string) {
   const seconds = totalSeconds % 60;
 
   return [
-    { label: "Dias", value: days },
+    { label: "Días", value: days },
     { label: "Horas", value: hours },
     { label: "Min", value: minutes },
     { label: "Seg", value: seconds },

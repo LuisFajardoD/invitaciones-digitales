@@ -113,7 +113,7 @@ export function PublicShell({
             <button
               type="button"
               className={styles["site-shell-icon-button"]}
-              aria-label="Opciones de sesion"
+              aria-label="Opciones de sesión"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((current) => !current)}
@@ -136,7 +136,7 @@ export function PublicShell({
                     role="menuitem"
                     onClick={() => void handleLogout()}
                   >
-                    Cerrar sesion
+                    Cerrar sesión
                   </button>
                 ) : null}
               </div>

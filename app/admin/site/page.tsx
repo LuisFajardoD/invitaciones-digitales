@@ -12,7 +12,7 @@ export default async function AdminSitePage() {
   return (
     <AdminShell
       title="Portada editable"
-      description="Administra los bloques de / desde la configuracion del sitio."
+      description="Administra los bloques de / desde la configuración del sitio."
     >
       <SiteSettingsForm initialData={safeSiteSettingsData} />
     </AdminShell>

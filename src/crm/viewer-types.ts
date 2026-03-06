@@ -182,19 +182,19 @@ export type ClientRsvpApiSuccess = {
 };
 
 export const sectionDisplayLabels: Record<Exclude<SectionKey, "hero">, string> = {
-  event_info: "Bitacora de mision",
-  quick_actions: "Acciones rapidas",
+  event_info: "Bitácora de misión",
+  quick_actions: "Acciones rápidas",
   countdown: "Cuenta regresiva",
-  map: "Ubicacion",
+  map: "Ubicación",
   gallery: "Momentos especiales",
   notes: "Checklist",
   rsvp: "Confirma tu asistencia",
   contact: "Canal directo",
   itinerary: "Itinerario",
-  dress_code: "Codigo de vestimenta",
+  dress_code: "Código de vestimenta",
   gifts: "Regalos",
   faq: "Preguntas frecuentes",
-  livestream: "Transmision en vivo",
+  livestream: "Transmisión en vivo",
   transport: "Transporte",
   lodging: "Hospedaje",
 };

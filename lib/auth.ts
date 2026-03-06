@@ -14,7 +14,7 @@ export function getAllowedAdminEmail() {
 
 export function getAdminAuthPolicyError() {
   if (process.env.NODE_ENV === "production" && !getAllowedAdminEmail()) {
-    return "ADMIN_EMAIL es obligatorio en produccion para habilitar acceso administrativo.";
+    return "ADMIN_EMAIL es obligatorio en producción para habilitar acceso administrativo.";
   }
 
   return null;

@@ -25,12 +25,12 @@ export function LoginForm({ useMock }: { useMock: boolean }) {
       });
       const payload = (await response.json()) as { error?: string };
       if (!response.ok) {
-        throw new Error(payload.error || "No se pudo iniciar sesion.");
+        throw new Error(payload.error || "No se pudo iniciar sesión.");
       }
       router.push("/admin/invitations");
       router.refresh();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo iniciar sesion.");
+      setError(submitError instanceof Error ? submitError.message : "No se pudo iniciar sesión.");
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,7 @@ export function LoginForm({ useMock }: { useMock: boolean }) {
         <p className="eyebrow">Acceso administrativo</p>
         <h1>Acceso al CRM</h1>
         <p className="muted">
-          Inicia sesion con Supabase Auth (email/password).
+          Inicia sesión con Supabase Auth (email/password).
           {useMock ? " Modo demo sin variables: usa demo@invitaciones.local / demo12345." : ""}
         </p>
         <form onSubmit={handleSubmit}>
@@ -56,7 +56,7 @@ export function LoginForm({ useMock }: { useMock: boolean }) {
             />
           </label>
           <label className="field">
-            <span>Contrasena</span>
+            <span>Contraseña</span>
             <input
               type="password"
               value={password}

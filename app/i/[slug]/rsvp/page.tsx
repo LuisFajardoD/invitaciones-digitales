@@ -19,7 +19,7 @@ export default async function ClientRsvpPage({ params, searchParams }: ClientRsv
       <section className="empty-state">
         <p className="eyebrow">Seguridad</p>
         <h1>Acceso no autorizado</h1>
-        <p className="muted">El token no es valido para esta vista.</p>
+        <p className="muted">El token no es válido para esta vista.</p>
         <Link href="/" className="button-primary">
           Ir al inicio
         </Link>

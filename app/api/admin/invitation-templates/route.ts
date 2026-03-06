@@ -18,7 +18,7 @@ export async function GET() {
     templates: templates.map((template) => ({
       ...template,
       source_invitation_title:
-        titleById.get(template.source_invitation_id) || "Invitacion no disponible",
+        titleById.get(template.source_invitation_id) || "Invitación no disponible",
     })),
   });
 }

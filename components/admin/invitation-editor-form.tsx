@@ -131,7 +131,7 @@ const quickActionTypeOptions: Array<{
   { value: "confirm", label: "Confirmar asistencia" },
   { value: "location", label: "Ver mapa" },
   { value: "calendar", label: "Agregar al calendario" },
-  { value: "share", label: "Compartir invitacion" },
+  { value: "share", label: "Compartir invitación" },
 ];
 
 const editorCategories: Array<{ key: EditorCategoryKey; label: string }> = [
@@ -935,12 +935,12 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           {selectedCategory === "base" ? (
           <EditorSection
             eyebrow="Base"
-            title="Configuracion general"
+            title="Configuración general"
             description="Datos tecnicos del enlace, fechas y estado de publicacion."
           >
             <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
           <label className="field">
-            <span>Slug publico</span>
+            <span>Slug público</span>
             <input value={draft.slug} onChange={(event) => updateDraft({ ...draft, slug: event.target.value })} />
           </label>
           <label className="field">
@@ -1011,11 +1011,11 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           <EditorSection
             eyebrow="Flujo"
             title="Orden y estado de secciones"
-            description="Arrastra, activa u oculta bloques. La invitacion publica respeta exactamente esta lista."
+            description="Arrastra, activa u oculta bloques. La invitación pública respeta exactamente esta lista."
           >
             <div className={styles["inv-editor-flow"]}>
               <div className="helper-text">
-                Arrastra cada bloque desde el asa para cambiar el orden. La invitacion publica respeta exactamente esta lista.
+                Arrastra cada bloque desde el asa para cambiar el orden. La invitación pública respeta exactamente esta lista.
               </div>
               <DndContext
                 sensors={sensors}
@@ -1337,7 +1337,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             />
           </label>
           <label className="field-wide">
-            <span>Direccion</span>
+            <span>Dirección</span>
             <input
               value={draft.sections.event_info.address_text}
               onChange={(event) => {
@@ -1502,7 +1502,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 headers={["Tipo", "Texto del boton", "Acciones"]}
                 emptyState={
                   <p className={styles["inv-editor-grid-empty"]}>
-                    No hay acciones todavia. Agrega una para que aparezca en la invitacion.
+                    No hay acciones todavía. Agrega una para que aparezca en la invitación.
                   </p>
                 }
                 hasRows={draft.sections.quick_actions.items.length > 0}
@@ -1568,7 +1568,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             <div className="admin-subpanel simple-list-editor">
               <div className="form-grid" style={{ marginBottom: 12 }}>
                 <label className="field">
-                  <span>Maximo de imagenes visibles</span>
+                  <span>Máximo de imágenes visibles</span>
                   <input
                     type="number"
                     min="1"
@@ -1594,7 +1594,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 headers={["URL de imagen", "Acciones"]}
                 emptyState={
                   <p className={styles["inv-editor-grid-empty"]}>
-                    No hay imagenes todavia. Agrega una para que aparezca en Archivo visual.
+                    No hay imágenes todavía. Agrega una para que aparezca en Archivo visual.
                   </p>
                 }
                 hasRows={draft.sections.gallery.image_urls.length > 0}
@@ -1637,7 +1637,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 headers={["Punto", "Acciones"]}
                 emptyState={
                   <p className={styles["inv-editor-grid-empty"]}>
-                    No hay puntos todavia. Agrega uno para que aparezca en Checklist.
+                    No hay puntos todavía. Agrega uno para que aparezca en Checklist.
                   </p>
                 }
                 hasRows={draft.sections.notes.items.length > 0}
@@ -1683,7 +1683,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                   <div>
                     <strong>{editableSectionLabels[key]}</strong>
                     <p className="helper-text" style={{ margin: "6px 0 0" }}>
-                      {draft.sections[key].enabled ? "Activa" : "Oculta"} en la invitacion.
+                      {draft.sections[key].enabled ? "Activa" : "Oculta"} en la invitación.
                     </p>
                   </div>
                 </div>
@@ -1705,11 +1705,11 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                     />
                   </label>
                   <label className="field-wide">
-                    <span>Descripcion</span>
+                    <span>Descripción</span>
                     <textarea
                       value={draft.sections[key].text || ""}
                       onChange={(event) => updateExtraSection(key, { text: event.target.value })}
-                      placeholder="Escribe aqui el texto que se mostrara en esta seccion."
+                      placeholder="Escribe aquí el texto que se mostrará en esta sección."
                     />
                   </label>
                 </div>
@@ -1719,7 +1719,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                     headers={["Punto", "Acciones"]}
                     emptyState={
                       <p className={styles["inv-editor-grid-empty"]}>
-                        No hay puntos todavia. Agrega los que necesites para esta seccion.
+                        No hay puntos todavía. Agrega los que necesites para esta sección.
                       </p>
                     }
                     hasRows={(draft.sections[key].items || []).length > 0}
@@ -1921,7 +1921,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           <EditorSection
             eyebrow="Share"
             title="Metadatos y expiracion"
-            description="Configuracion OG y contenido de la pagina de expiracion."
+            description="Configuración OG y contenido de la página de expiración."
           >
             <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
               <label className="field">
@@ -1929,7 +1929,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 <input value={draft.share.og_title} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_title: event.target.value } })} />
               </label>
               <label className="field-wide">
-                <span>Descripcion OG</span>
+                <span>Descripción OG</span>
                 <input value={draft.share.og_description} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_description: event.target.value } })} />
               </label>
               <label className="field">
@@ -2036,7 +2036,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 key={activePreviewFrameUrl}
                 ref={previewFrameRef}
                 className={styles["inv-editor-device-iframe"]}
-                title="Vista real de la invitacion"
+                title="Vista real de la invitación"
                 src={activePreviewFrameUrl}
                 onLoad={(event) => applyPreviewFrameEnhancements(event.currentTarget)}
               />
@@ -2057,7 +2057,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             />
           </label>
           <label className="field">
-            <span>Descripcion (opcional)</span>
+            <span>Descripción (opcional)</span>
             <input
               value={templateDescription}
               onChange={(event) => setTemplateDescription(event.target.value)}
@@ -2080,7 +2080,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             {loading ? "Guardando..." : "Guardar cambios"}
           </button>
           <a href={`/i/${draft.slug}`} className="button-secondary" target="_blank" rel="noreferrer">
-            Abrir invitacion publica
+            Abrir invitación pública
           </a>
           <a
             href={`/i/${draft.slug}/rsvp?token=${draft.client_view_token}`}

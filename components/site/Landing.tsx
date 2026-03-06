@@ -39,14 +39,14 @@ const FALLBACK_DEMOS: DemoItem[] = [
   },
   {
     title: "Boda Minimal",
-    description: "Estilo editorial con confirmacion por WhatsApp y agenda.",
+    description: "Estilo editorial con confirmación por WhatsApp y agenda.",
     slug: "cumple-7-luis-arturo-astronautas",
     cover_url:
       "https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1200&q=80",
   },
   {
     title: "XV Nocturno",
-    description: "Visual premium con secciones dinamicas y branding.",
+    description: "Visual premium con secciones dinámicas y branding.",
     slug: "cumple-7-luis-arturo-astronautas",
     cover_url:
       "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80",
@@ -55,22 +55,22 @@ const FALLBACK_DEMOS: DemoItem[] = [
 
 const FALLBACK_PACKAGES: PackageItem[] = [
   {
-    name: "Basica",
+    name: "Básica",
     price: "$1,490 MXN",
-    description: "Ideal para eventos pequenos con salida rapida.",
-    features: ["Invitacion responsive", "Mapa y RSVP", "Entrega en 48h"],
+    description: "Ideal para eventos pequeños con salida rápida.",
+    features: ["Invitación responsive", "Mapa y RSVP", "Entrega en 48h"],
   },
   {
     name: "Pro",
     price: "$2,490 MXN",
-    description: "Mas personalizacion y narrativa visual.",
-    features: ["Animaciones suaves", "Galeria y secciones extra", "Soporte prioritario"],
+    description: "Más personalización y narrativa visual.",
+    features: ["Animaciones suaves", "Galería y secciones extra", "Soporte prioritario"],
   },
   {
     name: "Premium",
     price: "$3,490 MXN",
-    description: "Experiencia completa tipo app con look cinematografico.",
-    features: ["Direccion creativa", "Optimizada para WhatsApp", "Acompanamiento de lanzamiento"],
+    description: "Experiencia completa tipo app con look cinematográfico.",
+    features: ["Dirección creativa", "Optimizada para WhatsApp", "Acompañamiento de lanzamiento"],
   },
 ];
 
@@ -108,9 +108,9 @@ function buildPackages(settings: SiteSettingsData): PackageItem[] {
 
 function resolveWhatsAppHref(settings: SiteSettingsData): string {
   const number = settings?.blocks?.contact?.whatsapp_number || "5527225459";
-  const prefill =
-    settings?.blocks?.contact?.whatsapp_prefill_text ||
-    "Hola, quiero cotizar una invitacion digital premium.";
+    const prefill =
+      settings?.blocks?.contact?.whatsapp_prefill_text ||
+    "Hola, quiero cotizar una invitación digital premium.";
   return createWhatsAppUrl(number, prefill);
 }
 
@@ -131,7 +131,7 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
   const whatsappHref = resolveWhatsAppHref(settings);
   const heroSubtitle =
     settings?.blocks?.hero?.subtitle ||
-    "Diseno limpio, performance alto y flujo directo para convertir por WhatsApp.";
+    "Diseño limpio, performance alto y flujo directo para convertir por WhatsApp.";
   const rootThemeClass =
     themeMode === "light" ? styles["landing-root--light"] : styles["landing-root--dark"];
 
@@ -163,7 +163,7 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
           Invitaciones Digitales
         </Link>
 
-        <nav className={styles["landing-nav"]} aria-label="Navegacion publica">
+        <nav className={styles["landing-nav"]} aria-label="Navegación pública">
           <a href="#demos">Demos</a>
           <a href="#paquetes">Paquetes</a>
           <a href="#contacto">Contacto</a>
@@ -205,7 +205,7 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
           <p className={styles["landing-preview-label"]}>Demo destacada</p>
           <h2>Astronautas</h2>
           <p>{featured.title}</p>
-          <Link href={`/i/${featured.slug}`}>Abrir invitacion</Link>
+          <Link href={`/i/${featured.slug}`}>Abrir invitación</Link>
         </article>
       </section>
 
@@ -256,7 +256,7 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
                 <div className={styles["landing-demo-copy"]}>
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
-                  <Link href={`/i/${item.slug}`}>Ver invitacion</Link>
+                  <Link href={`/i/${item.slug}`}>Ver invitación</Link>
                 </div>
               </article>
             );
@@ -297,7 +297,7 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
         <div>
           <p>Contacto</p>
           <h2>{settings?.blocks?.contact?.title || "Listo para cotizar tu evento"}</h2>
-          <p>{settings?.blocks?.contact?.text || "Comparte fecha, tema y numero de invitados para preparar propuesta."}</p>
+          <p>{settings?.blocks?.contact?.text || "Comparte fecha, tema y número de invitados para preparar propuesta."}</p>
         </div>
         <a href={whatsappHref} className={styles["landing-cta-primary"]}>
           Cotizar por WhatsApp

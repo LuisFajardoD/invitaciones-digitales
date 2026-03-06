@@ -251,7 +251,7 @@ export async function saveInvitationAsTemplate(input: {
 }) {
   const invitation = await getInvitationById(input.invitationId);
   if (!invitation) {
-    throw new Error("Invitacion no encontrada.");
+    throw new Error("Invitación no encontrada.");
   }
 
   const templateName = input.name.trim();
@@ -337,7 +337,7 @@ export async function createInvitation(input: CreateInvitationInput) {
       ...demoInvitation.sections,
       hero: {
         ...demoInvitation.sections.hero,
-        title: `Invitacion ${slug}`,
+        title: `Invitación ${slug}`,
         badge: defaultHeroBadge,
         accent: defaultHeroAccent,
       },
@@ -364,13 +364,13 @@ export async function createInvitation(input: CreateInvitationInput) {
         ...demoInvitation.sections.contact,
         whatsapp_url: createWhatsAppUrl(
           demoInvitation.sections.contact.whatsapp_number,
-          `Hola, necesito detalles de la invitacion ${slug}.`,
+          `Hola, necesito detalles de la invitación ${slug}.`,
         ),
       },
     },
     share: {
       ...demoInvitation.share,
-      og_title: `Invitacion ${slug}`,
+      og_title: `Invitación ${slug}`,
       og_description: `Te esperamos en ${input.venue_name}.`,
     },
   });
@@ -393,7 +393,7 @@ export async function createInvitation(input: CreateInvitationInput) {
 export async function createInvitationFromTemplate(input: CreateInvitationFromTemplateInput) {
   const templateId = input.template_id.trim();
   if (!templateId) {
-    throw new Error("Plantilla invalida.");
+    throw new Error("Plantilla inválida.");
   }
 
   const siteSettings = await getSiteSettings();
@@ -405,7 +405,7 @@ export async function createInvitationFromTemplate(input: CreateInvitationFromTe
 
   const sourceInvitation = await getInvitationById(template.source_invitation_id);
   if (!sourceInvitation) {
-    throw new Error("La invitacion de origen de la plantilla ya no existe.");
+    throw new Error("La invitación de origen de la plantilla ya no existe.");
   }
 
   const now = new Date().toISOString();
@@ -497,7 +497,7 @@ export async function updateInvitation(invitation: InvitationRecord) {
 export async function duplicateInvitation(id: string) {
   const original = await getInvitationById(id);
   if (!original) {
-    throw new Error("Invitacion no encontrada.");
+    throw new Error("Invitación no encontrada.");
   }
 
   const duplicated: InvitationRecord = normalizeInvitationRecord({
@@ -557,7 +557,7 @@ export async function createRsvpResponse(input: {
 }) {
   const invitation = await getInvitationById(input.invitationId);
   if (!invitation) {
-    throw new Error("Invitacion no encontrada.");
+    throw new Error("Invitación no encontrada.");
   }
 
   if (!invitation.sections.rsvp.enabled) {
@@ -609,7 +609,7 @@ export async function createPublicRsvpResponse(input: {
 }) {
   const invitation = await getPublicInvitationBySlug(input.slug);
   if (!invitation) {
-    throw new Error("Invitacion no encontrada.");
+    throw new Error("Invitación no encontrada.");
   }
 
   return createRsvpResponse({

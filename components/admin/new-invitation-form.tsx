@@ -15,9 +15,9 @@ export function NewInvitationForm({ themes, templates }: NewInvitationFormProps)
   const [themeId, setThemeId] = useState(themes[0]?.id || "astronautas");
   const [templateId, setTemplateId] = useState("");
   const [eventAt, setEventAt] = useState("2026-04-18T11:00");
-  const [venueName, setVenueName] = useState("Jardin del Valle");
+  const [venueName, setVenueName] = useState("Jardín del Valle");
   const [addressText, setAddressText] = useState(
-    "Cda. Tlalimaya 25, San Andres Ahuayucan, Xochimilco, 16880, CDMX",
+    "Cda. Tlalimaya 25, San Andrés Ahuayucan, Xochimilco, 16880, CDMX",
   );
   const [lat, setLat] = useState("19.220703435663584");
   const [lng, setLng] = useState("-99.10241678480557");
@@ -49,12 +49,12 @@ export function NewInvitationForm({ themes, templates }: NewInvitationFormProps)
       });
       const payload = (await response.json()) as { error?: string; id?: string };
       if (!response.ok || !payload.id) {
-        throw new Error(payload.error || "No se pudo crear la invitacion.");
+        throw new Error(payload.error || "No se pudo crear la invitación.");
       }
       router.push(`/admin/invitations/${payload.id}`);
       router.refresh();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo crear la invitacion.");
+      setError(submitError instanceof Error ? submitError.message : "No se pudo crear la invitación.");
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ export function NewInvitationForm({ themes, templates }: NewInvitationFormProps)
 
   return (
     <section className="admin-panel">
-      <p className="eyebrow">Nueva invitacion</p>
+      <p className="eyebrow">Nueva invitación</p>
       <h2>Crear borrador</h2>
       <form onSubmit={handleSubmit} className="form-grid" style={{ marginTop: 18 }}>
         <label className="field-wide">
@@ -78,11 +78,11 @@ export function NewInvitationForm({ themes, templates }: NewInvitationFormProps)
         </label>
         {templateId ? (
           <p className="helper-text field-wide">
-            La invitacion se creara desde plantilla y conservara estructura/secciones del origen.
+            La invitación se creará desde plantilla y conservará estructura/secciones del origen.
           </p>
         ) : null}
         <label className="field">
-          <span>Slug publico</span>
+          <span>Slug público</span>
           <input value={slug} onChange={(event) => setSlug(event.target.value)} required />
         </label>
         <label className="field">
@@ -109,7 +109,7 @@ export function NewInvitationForm({ themes, templates }: NewInvitationFormProps)
           <input value={venueName} onChange={(event) => setVenueName(event.target.value)} required />
         </label>
         <label className="field-wide">
-          <span>Direccion</span>
+          <span>Dirección</span>
           <input
             value={addressText}
             onChange={(event) => setAddressText(event.target.value)}

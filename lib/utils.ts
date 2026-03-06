@@ -7,7 +7,7 @@ export function cn(...parts: Array<string | false | null | undefined>) {
 
 export function createWhatsAppUrl(number?: string, message?: string) {
   const cleanNumber = (number || DEFAULT_WHATSAPP_NUMBER).replace(/\D/g, "");
-  const text = encodeURIComponent(message || "Hola, quiero cotizar una invitacion digital premium.");
+  const text = encodeURIComponent(message || "Hola, quiero cotizar una invitación digital premium.");
   return `https://wa.me/${cleanNumber}?text=${text}`;
 }
 
@@ -150,7 +150,7 @@ function normalizeGuestKey(name: string) {
 }
 
 export function buildCalendarDataUri(invitation: InvitationRecord) {
-  const heroTitle = invitation.sections.hero.title || "Invitacion";
+  const heroTitle = invitation.sections.hero.title || "Invitación";
   const venue = invitation.sections.event_info.venue_name || "Evento";
   const address = invitation.sections.event_info.address_text || "";
   const start = toIcsDate(invitation.event_start_at);

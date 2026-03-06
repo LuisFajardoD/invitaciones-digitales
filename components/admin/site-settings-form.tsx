@@ -89,7 +89,7 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
   return (
     <div className="two-column">
       <section className="admin-panel">
-        <p className="eyebrow">Configuracion del sitio</p>
+        <p className="eyebrow">Configuración del sitio</p>
         <h2>Editar portada</h2>
         <div className="form-grid" style={{ marginTop: 18 }}>
           <label className="field-wide">
@@ -124,7 +124,7 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
             <span>Hero activo</span>
           </label>
           <label className="field-wide">
-            <span>Titulo principal</span>
+            <span>Título principal</span>
             <input
               value={draft.blocks.hero.title}
               onChange={(event) =>
@@ -139,7 +139,7 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
             />
           </label>
           <label className="field-wide">
-            <span>Subtitulo principal</span>
+            <span>Subtítulo principal</span>
             <textarea
               value={draft.blocks.hero.subtitle}
               onChange={(event) =>
@@ -162,11 +162,11 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
             <textarea value={packagesJson} onChange={(event) => setPackagesJson(event.target.value)} />
           </label>
           <label className="field-wide">
-            <span>Extras (una por linea)</span>
+            <span>Extras (una por línea)</span>
             <textarea value={extrasText} onChange={(event) => setExtrasText(event.target.value)} />
           </label>
           <label className="field-wide">
-            <span>Como funciona (una por linea)</span>
+            <span>Cómo funciona (una por línea)</span>
             <textarea value={howItWorksText} onChange={(event) => setHowItWorksText(event.target.value)} />
           </label>
           <label className="field-wide">

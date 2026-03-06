@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function POST() {
   const adminToken = (await cookies()).get(ADMIN_COOKIE_NAME)?.value;
   if (!adminToken) {
-    return NextResponse.json({ error: "Sesion administrativa requerida." }, { status: 401 });
+    return NextResponse.json({ error: "Sesión administrativa requerida." }, { status: 401 });
   }
 
   try {
@@ -17,7 +17,7 @@ export async function POST() {
   } catch (error) {
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "No se pudo limpiar el cache.",
+        error: error instanceof Error ? error.message : "No se pudo limpiar el caché.",
       },
       { status: 500 },
     );
