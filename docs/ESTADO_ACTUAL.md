@@ -1,235 +1,76 @@
-# Estado Actual - handoff tecnico
+# Estado actual del proyecto
 
-Este archivo existe para que un chat nuevo entienda rapido donde va el proyecto, que ya se cambio y que sigue pendiente.
+Actualizado: 6 de marzo de 2026
 
-## Resumen corto
+## Resumen ejecutivo
 
-- Next sigue siendo la app principal y el deploy actual.
-- Ya existe una migracion en curso a React + Vite dentro de `frontend/`.
-- El admin principal y el viewer publico ya se montan dentro de Next usando el `App` de React; el bridge local viejo ya se elimino.
-- El preview del CRM React ya puede usar capturas reales por dispositivo generadas con Playwright.
-- Sin Supabase, el proyecto trabaja en modo demo persistente local con `.mock-data/store.json`.
+- El proyecto corre completamente en Next.js.
+- No hay frontend Vite activo en este estado.
+- El flujo principal de negocio esta funcional:
+  - Landing y examples
+  - Login admin y dashboard de invitaciones
+  - Editor de invitacion con preview de dispositivo
+  - Viewer publico de invitacion
+  - RSVP cliente y panel RSVP cliente privado por token
 
-## Estado de la migracion
+## Flujo de datos
 
-### Sigue en Next
+- Si Supabase esta configurado:
+  - Se usa DB real via `lib/repository.ts`.
+- Si no hay env completa:
+  - Se usa mock persistente local en `.mock-data/store.json`.
 
-- Deploy actual
-- Middleware y login
-- APIs admin y publicas
-- Portada `/`
-- Pantallas admin legacy residuales:
+## Estado de seguridad y auth
+
+- Middleware protege `/admin/*` excepto `/admin/login`.
+- `/admin` redirige a:
+  - `/admin/login` sin cookie
+  - `/admin/invitations` con cookie
+- Session admin:
+  - cookie `inv_admin_session`
+  - login API en `app/api/admin/login/route.ts`
+- API publica sanitizada para no exponer campos internos sensibles.
+
+## Estado visual
+
+- Sitio publico:
+  - estilo premium en `components/site/*`
+- CRM admin:
+  - estilo scopeado en `.app-admin` y `src/crm/admin.css`
+- Viewer publico:
+  - estilo scopeado en `.app-viewer` y `src/crm/viewer.css`
+- Tema dark/light:
+  - sincronizado con `site-theme-mode` en localStorage
+
+## Rutas actualmente criticas
+
+- Landing:
+  - `/`
+  - `/examples`
+- Admin:
+  - `/admin/login`
+  - `/admin/invitations`
   - `/admin/invitations/new`
-  - `/admin/rsvp/[id]`
-  - `/admin/site`
+  - `/admin/invitations/[id]`
+- Viewer:
+  - `/i/[slug]`
+  - `/i/[slug]/rsvp?token=...`
 
-### Ya migrado o parcialmente migrado a React
+## Riesgos conocidos
 
-Ubicacion:
-- `frontend/`
+- `middleware.ts` y auth son puntos de alto riesgo para loops de redireccion.
+- Cambios en `viewer.css` pueden impactar todas las invitaciones publicas.
+- Cambios globales de CSS fuera de scope pueden romper coherencia entre landing, admin y viewer.
 
-Rutas React ya funcionales:
-- `/i/[slug]`
-- `/i/[slug]/rsvp?token=...`
-- `/admin`
-- `/admin/invitations`
-- `/admin/invitations/[id]`
+## Verificacion minima obligatoria
 
-Cobertura actual del editor React:
-- configuracion general
-- hero y fondos
-- astronauta
-- fondo global
-- orden y visibilidad de secciones
-- acciones rapidas
-- galeria
-- checklist
-- mapa
-- RSVP y canal directo
-- modulos extra
-- preview dentro de marco tipo telefono
-
-## Rutas montadas por React dentro de Next
-
-Hoy Next ya monta el `App` de React en produccion y en local para estas rutas:
-- `/admin`
-- `/admin/invitations`
-- `/admin/invitations/[id]`
-- `/i/[slug]`
-- `/i/[slug]/rsvp`
-
-Eso significa:
-- el dominio productivo ya no depende del bridge local para esas rutas
-- `:5173` sigue siendo util como entorno aislado de desarrollo, pero no es el camino principal del flujo integrado
-
-## Preview real con Playwright
-
-Ya no depende solo de un iframe. El sistema puede generar screenshots reales de la invitacion publica con emulacion de dispositivo.
-
-### Source de dispositivos
-
-Archivo unico de verdad:
-- `lib/preview/devices.ts`
-
-API de lectura para frontend:
-- `/api/preview/devices`
-
-Regla:
-- si agregas un device en `devices.ts`, el selector del frontend lo recibe sin tocar `App.tsx`
-
-### Endpoint principal
-
-- `/api/preview`
-
-Parametros soportados:
-- `invitationId` o `slug`
-- `deviceId`
-- `mode=viewport|fullpage`
-- `force=1`
-
-### Emulacion real
-
-Cada perfil define:
-- viewport
-- DPR
-- `isMobile`
-- `hasTouch`
-- `userAgent`
-
-Ademas:
-- espera `networkidle`
-- espera `document.fonts.ready`
-- fuerza `reducedMotion`
-- apaga animaciones, transitions y cursor blink
-- fuerza `color-scheme: dark`
-
-### Cache
-
-- Directorio: `public/generated-previews`
-- Cache key incluye:
-  - invitacion
-  - hash de contenido
-  - `deviceId`
-  - `mode`
-  - flags de render relevantes
-- TTL: 7 dias
-- Lock en memoria para evitar carreras cuando entran requests iguales al mismo tiempo
-
-### Seguridad
-
-- Por `invitationId`: requiere cookie admin
-- Por `slug`: solo genera si la invitacion esta publicada
-- `deviceId` se valida contra whitelist
-
-## Modo demo y persistencia
-
-Si no existe `.env.local`:
-- se activa modo demo
-- la persistencia cae en `.mock-data/store.json`
-
-Consecuencia:
-- los cambios sobreviven localmente
-- no se suben con Git
-- no sustituyen una base real en produccion
-
-Credenciales demo:
-- Email: `demo@invitaciones.local`
-- Password: `demo12345`
-
-Si si existe `.env.local`, la app usa Supabase real y deja de leer `.mock-data/store.json`.
-
-## Flujo local recomendado
-
-### Arranque
-
-```powershell
-npm.cmd run dev:all
-```
-
-Eso levanta:
-- Next en `http://localhost:3000`
-- React en `http://localhost:5173`
-
-### Login
-
-1. abrir `http://localhost:3000/admin`
-2. iniciar sesion con usuario demo o cuenta real de Supabase segun aplique
-
-### Trabajo diario
-
-1. entrar por `http://localhost:3000/admin/invitations`
-2. dejar que el bridge mande a React si corresponde
-3. usar el preview de screenshot para validar por dispositivo
-
-## Problemas conocidos
-
-### Next en local es fragil
-
-- `next dev` suele quedar con cache roto
-- por eso existe `predev` para limpiar `.next`
-- si algo raro persiste, reiniciar `dev:all`
-
-### El editor React aun no es el diseno final
-
-- funcionalmente ya cubre bastante
-- visualmente sigue necesitando una pasada fuerte de UI
-- el usuario quiere algo mas cercano a Bentofolio:
-  - look negro
-  - menos "tripa" vertical
-  - modulos mas compactos
-  - mejor uso del ancho en desktop
-
-### El preview puede parecer inconsistente si cambia el dispositivo
-
-Se corrigio una fuente importante del problema:
-- ahora una captura vieja no se reutiliza si el `deviceId` o `mode` ya cambiaron
-- mientras llega la nueva, se muestra placeholder estable
-
-Si vuelve a haber "saltos", revisar:
-- cambios de layout por scrollbar
-- imagenes tardias
-- cambios de tamano fuera del screenshot
-
-## Archivos clave para seguir
-
-### Backend / preview
-- `lib/preview/devices.ts`
-- `lib/preview/screenshots.ts`
-- `app/api/preview/route.ts`
-- `app/api/preview/devices/route.ts`
-- `app/api/preview/cleanup/route.ts`
-
-### Rutas Next que montan React
-- `app/admin/page.tsx`
-- `app/i/viewer-react-app.tsx`
-- `app/i/[slug]/page.tsx`
-- `app/i/[slug]/rsvp/page.tsx`
-- `middleware.ts`
-
-### Frontend React
-- `frontend/src/App.tsx`
-- `frontend/src/styles.css`
-- `frontend/src/viewer-types.ts`
-- `frontend/src/viewer-utils.ts`
-- `frontend/src/viewer-sections.tsx`
-
-## Pendientes mas utiles
-
-1. Redisenar de verdad el CRM React
-   - layout tipo dashboard desktop
-   - menos bloques largos
-   - modulos colapsables
-   - mejor relacion entre panel izquierdo y preview
-
-2. Afinar consistencia visual del preview
-   - revisar cualquier salto de layout en la pagina completa
-   - estabilizar tamaños globales del admin si vuelve a "verse agrandado"
-
-3. Seguir desacoplando Next del frontend
-- mantener Next como backend/API
-- migrar el resto del admin legacy (`new`, `rsvp`, `site`)
-
-4. Definir estrategia de produccion
-- hoy el deploy principal sigue siendo Next
-- React ya corre montado dentro de Next en las rutas principales
-- queda decidir si el admin/viewer terminaran embebidos asi o si se separaran despues
+1. `npm run css:guard`
+2. `npm run build`
+3. Validar manual:
+   - `/`
+   - `/examples`
+   - `/admin/login`
+   - `/admin/invitations`
+   - `/admin/invitations/[id]`
+   - `/i/cumple-7-luis-arturo-astronautas`
+   - `/i/cumple-7-luis-arturo-astronautas/rsvp?token=...`

@@ -1,61 +1,42 @@
-# Docs - indice y handoff
+# Documentacion del proyecto
 
-Esta carpeta ya no solo guarda documentos funcionales. Tambien sirve para handoff tecnico rapido cuando se reinicia el contexto del chat.
+Indice oficial para retomar trabajo rapido.
 
-## Leer primero
+Actualizado: 6 de marzo de 2026
 
-- [README raiz](../README.md)
-- [ESTADO_ACTUAL.md](ESTADO_ACTUAL.md)
-- [CAMBIOS_RECIENTES.md](CAMBIOS_RECIENTES.md)
-- [PENDIENTES.md](PENDIENTES.md)
-- [COMANDOS.md](COMANDOS.md)
+## Orden recomendado de lectura
 
-## Que contiene cada documento
+1. [`CODEX_HANDOFF.md`](CODEX_HANDOFF.md)
+2. [`ESTADO_ACTUAL.md`](ESTADO_ACTUAL.md)
+3. [`CAMBIOS_RECIENTES.md`](CAMBIOS_RECIENTES.md)
+4. [`COMANDOS.md`](COMANDOS.md)
+5. [`PENDIENTES.md`](PENDIENTES.md)
+
+## Documentos de referencia
+
+- `CODEX_HANDOFF.md`
+  - Onboarding tecnico para nuevos chats de Codex.
+  - Arquitectura real, rutas sensibles, mapa de archivos y checklist de no-regresion.
 
 - `ESTADO_ACTUAL.md`
-  - Estado real del proyecto hoy
-  - Migracion Next -> React
-  - Que rutas ya montan React dentro de Next
-  - Preview con Playwright
-  - Rutas y flujo local recomendado
-  - Problemas conocidos y siguientes pasos
+  - Foto del estado funcional actual del sistema.
 
 - `CAMBIOS_RECIENTES.md`
-  - Changelog corto de cambios recientes
-  - Ideal para que un chat nuevo vea rapidamente lo ultimo que se movio
-
-- `PENDIENTES.md`
-  - Lista separada de trabajo pendiente
-  - Ideal para retomar sin mezclar "lo hecho" con "lo que falta"
+  - Resumen corto de los ultimos cambios relevantes.
 
 - `COMANDOS.md`
-  - Comandos de uso diario
-  - Flujo rapido de arranque, login y rutas clave
+  - Comandos reales vigentes del repo.
 
-- `SRS.md`
-  - Requisitos del sistema
+- `PENDIENTES.md`
+  - Backlog priorizado.
 
-- `DATA_MODEL.md`
-  - Modelo de datos y estructura base
+- `SRS.md`, `DATA_MODEL.md`, `UI_FLOWS.md`, `NOTIFICATIONS.md`, `TRACEABILITY.md`
+  - Documentos funcionales y de trazabilidad historica.
 
-- `UI_FLOWS.md`
-  - Flujos principales de UI y navegacion
+## Regla de mantenimiento
 
-- `NOTIFICATIONS.md`
-  - Reglas de tiempos, vigencia y notificaciones
+Cada cambio relevante de arquitectura, rutas, auth, preview o estilos base debe reflejarse al menos en:
 
-- `TRACEABILITY.md`
-  - Checklist de validacion
-
-- `GUIA_RAPIDA_v1.md`
-  - Guia operativa historica
-
-- `SEED_INVITATION_ASTRONAUTAS.json`
-  - Seed de ejemplo de invitacion
-
-- `SEED_SITE_SETTINGS.json`
-  - Seed de configuracion del sitio
-
-## Nota importante
-
-La referencia mas util para retomar trabajo hoy es `ESTADO_ACTUAL.md`. Ese archivo resume cambios recientes que no necesariamente estaban documentados en los docs mas viejos, incluyendo la eliminacion del bridge legacy y que el admin/viewer principales ya entran por React dentro de Next.
+- `CODEX_HANDOFF.md`
+- `ESTADO_ACTUAL.md`
+- `CAMBIOS_RECIENTES.md`

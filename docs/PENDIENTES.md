@@ -1,91 +1,40 @@
-# Pendientes
+# Pendientes priorizados
 
-Lista separada de trabajo pendiente para retomar rapido en un chat nuevo.
+Actualizado: 6 de marzo de 2026
 
 ## Prioridad alta
 
-### 1. Rediseñar de verdad el CRM React
+1. Unificar totalmente panel RSVP
+- Mantener una sola experiencia visual y de datos entre:
+  - acceso por editor (vista cliente)
+  - acceso por lista admin (opcion RSVP)
+- Revisar reglas de conteo para confirmados/no asisten/cancelados.
 
-El CRM React ya es funcional, pero visualmente sigue lejos de lo que se quiere.
+2. Pulir UX de formulario RSVP publico
+- Mejorar consistencia de selects e inputs en navegadores moviles.
+- Validar que el layout coincida entre preview del editor y pagina publica.
 
-Pendiente:
-- rehacer el layout tipo dashboard de escritorio
-- reducir la sensacion de "tripa" vertical
-- usar mejor el ancho en desktop
-- convertir modulos en tarjetas colapsables o secciones mas compactas
-- acercarlo mas a la referencia tipo Bentofolio
-- revisar mejor contraste y densidad visual en temas oscuro y claro
-
-### 2. Corregir estabilidad visual de la pagina completa
-
-Hay reportes de que a veces la pagina completa "se ve agrandada" aunque el zoom del navegador este al 100%.
-
-Pendiente:
-- revisar reflows globales del layout del CRM React
-- revisar cambios por scrollbars
-- revisar si algun contenedor usa `svh`, `dvh`, `vw` o `clamp` de forma inestable
-- verificar si hay cambios de ancho al cargar preview, imagenes o fuentes
-
-### 3. Seguir afinando el preview real
-
-El preview con Playwright ya funciona, pero aun hay que pulirlo.
-
-Pendiente:
-- revisar consistencia del tamaño de la captura dentro del marco
-- validar mejor cuando el dispositivo o modo cambian rapido
-- considerar galeria de ultimas capturas por dispositivo
-- considerar artefactos de debug opcionales (HTML o logs accesibles desde UI)
+3. Endurecer flujos de seguridad RSVP
+- Revisar expiracion/validez de token cliente.
+- Confirmar que no existan endpoints publicos que filtren datos sensibles.
 
 ## Prioridad media
 
-### 4. Seguir desacoplando Next del frontend
+4. Seguir refinando editor de invitacion
+- Ajustar secciones de contenido para menos scroll.
+- Mantener coherencia de campos reales vs secciones visibles.
+- Mejorar interaccion drag-scroll del preview en desktop.
 
-La migracion esta avanzada, pero incompleta.
-
-Pendiente:
-- migrar lo que aun sigue en Next:
-  - `/admin/invitations/new`
-  - `/admin/rsvp/[id]`
-  - `/admin/site`
-- revisar que el editor React cubra el 100% del caso real
-- mantener Next principalmente como backend/API
-- terminar de retirar el CRM historico de Next cuando ya no quede ninguna ruta activa
-
-### 5. Revisar estrategia de produccion
-
-Hoy el deploy principal sigue siendo Next.
-
-Pendiente:
-- decidir si React seguira montado dentro de Next o si despues se separa
-- validar que Hostinger siga estable con el montaje actual del `App` React dentro de Next
-
-### 6. Mejorar el flujo de preview y editor
-
-Pendiente:
-- revisar si el preview debe quedar siempre fijo y con acciones mas compactas
-- mejorar el acomodo de botones bajo el simulador
-- decidir si el simulador debe poder alternar entre screenshot real y vista viva
+5. Mejorar exportacion PDF RSVP
+- Formato visual mas cuidado para reporte cliente.
+- Revisar configuracion print para evitar cortes en varias paginas.
 
 ## Prioridad baja
 
-### 7. Documentacion operativa
+6. Limpieza y deuda tecnica
+- Revisar CSS heredado que ya no aporta.
+- Mantener separacion estricta entre `.app-admin` y `.app-viewer`.
 
-Pendiente:
-- mantener `CAMBIOS_RECIENTES.md` al dia
-- mantener `ESTADO_ACTUAL.md` sincronizado cuando cambie la arquitectura
-- documentar mejor el flujo de bridge local y fallbacks
-
-### 8. Limpieza tecnica
-
-Pendiente:
-- seguir revisando CSS muerto heredado de iteraciones anteriores
-- revisar si quedan fallbacks legacy del admin que ya no aporten
-- evitar duplicar logica entre Next y React cuando ya exista source unico
-
-## Regla para retomar
-
-Cuando se reanude el trabajo:
-1. revisar `README.md`
-2. revisar `docs/ESTADO_ACTUAL.md`
-3. revisar `docs/CAMBIOS_RECIENTES.md`
-4. trabajar sobre este archivo para elegir el siguiente bloque
+7. Documentacion continua
+- Mantener `CAMBIOS_RECIENTES.md` al dia en cada bloque importante.
+- Actualizar `CODEX_HANDOFF.md` cuando cambien rutas o archivos base.
