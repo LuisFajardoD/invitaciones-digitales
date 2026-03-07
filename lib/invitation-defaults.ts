@@ -46,6 +46,22 @@ export const DEFAULT_HERO_ASTRONAUT: HeroAstronautConfig = {
   opacity: 0.24,
 };
 
+const LEGACY_ASTRONAUT_HERO_BACKGROUND_URLS = new Set([
+  "https://images.pexels.com/photos/3114462/pexels-photo-3114462.jpeg",
+]);
+
+const LEGACY_ASTRONAUT_SHELL_BACKGROUND_URLS = new Set([
+  "https://images.pexels.com/photos/998641/pexels-photo-998641.jpeg",
+]);
+
+function isLegacyAstronautHeroBackground(url: string) {
+  return LEGACY_ASTRONAUT_HERO_BACKGROUND_URLS.has(url.trim());
+}
+
+function isLegacyAstronautShellBackground(url: string) {
+  return LEGACY_ASTRONAUT_SHELL_BACKGROUND_URLS.has(url.trim());
+}
+
 function normalizeStringList(value: unknown, fallback: string[] = []) {
   if (!Array.isArray(value)) {
     return [...fallback];
@@ -215,7 +231,8 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
     ...(rawSections.notes || {}),
     items: normalizeStringList(rawSections.notes?.items, fallbackRecord.sections.notes.items),
   };
-  const normalizedSections: InvitationSections = {
+  const normalizedBackground = normalizeInvitationBackground(invitation.background || storedBackground);
+  let normalizedSections: InvitationSections = {
     hero: {
       ...hero,
       background: normalizeBackgroundMedia(hero.background, hero.background_image_url),
@@ -256,6 +273,59 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
     transport: normalizeGenericSection(rawSections.transport, fallbackRecord.sections.transport),
     lodging: normalizeGenericSection(rawSections.lodging, fallbackRecord.sections.lodging),
   };
+  let nextBackground = normalizedBackground;
+
+  // One-time migration for legacy astronaut backgrounds from old dark design.
+  // Keeps the current watercolor look as true "default" in the editor.
+  if (invitation.theme_id === "astronautas") {
+    const heroBackgroundImageUrl = normalizedSections.hero.background?.image_url || "";
+    const sectionHeroImageUrl = normalizedSections.hero.background_image_url || "";
+    const shellBackgroundImageUrl = normalizedBackground.custom?.image_url || "";
+
+    const usesLegacyHeroBackground =
+      normalizedSections.hero.background?.type === "image" &&
+      (isLegacyAstronautHeroBackground(heroBackgroundImageUrl) || isLegacyAstronautHeroBackground(sectionHeroImageUrl));
+
+    const usesLegacyShellBackground =
+      normalizedBackground.mode === "custom" &&
+      normalizedBackground.custom?.type === "image" &&
+      isLegacyAstronautShellBackground(shellBackgroundImageUrl);
+
+    if (usesLegacyHeroBackground || usesLegacyShellBackground) {
+      normalizedSections = {
+        ...normalizedSections,
+        hero: {
+          ...normalizedSections.hero,
+          background_image_url: "",
+          background: normalizeBackgroundMedia({
+            type: "default",
+            image_url: "",
+            video_url: "",
+            poster_url: "",
+            kenburns: {
+              enabled: false,
+              strength: "medium",
+            },
+          }),
+        },
+      };
+
+      nextBackground = normalizeInvitationBackground({
+        mode: "default_app",
+        kenburns: {
+          enabled: false,
+          strength: "medium",
+        },
+        custom: {
+          type: "image",
+          image_url: "",
+          video_url: "",
+          poster_url: "",
+        },
+      });
+    }
+  }
+
   const normalizedSectionOrder = Array.isArray(invitation.sections_order)
     ? invitation.sections_order.filter((value): value is InvitationRecord["sections_order"][number] => typeof value === "string")
     : DEFAULT_SECTION_ORDER;
@@ -263,7 +333,7 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
   return {
     ...fallbackRecord,
     ...invitation,
-    background: normalizeInvitationBackground(invitation.background || storedBackground),
+    background: nextBackground,
     sections_order: normalizedSectionOrder,
     sections: normalizedSections,
   };

@@ -29,6 +29,8 @@ Actualizado: 7 de marzo de 2026
   - contador con numeros grandes sin salto de linea
   - galeria estilo fotos pegadas
   - loading screen sincronizada con el tema del viewer
+  - fondo de portada/resto volvió a ser data-driven por editor (image/video/kenburns), con fallback `default` acuarela real
+  - migración automática de URLs legacy de fondo (Pexels oscuro) a modo `default` para evitar estados inconsistentes en el editor
 
 - Se fortalecio enrutamiento admin para evitar loops y estados no deterministas.
 - Se mejoro persistencia de sesion admin por cookie.

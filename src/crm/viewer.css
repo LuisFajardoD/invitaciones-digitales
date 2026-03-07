@@ -3574,10 +3574,6 @@
     linear-gradient(180deg, rgba(198, 216, 229, 0.95), rgba(183, 205, 220, 0.92));
 }
 
-.app-viewer[data-theme="watercolor-space"] .viewer-stage__media {
-  display: none;
-}
-
 .app-viewer[data-theme="watercolor-space"] .viewer-stage__content {
   padding-bottom: 18px;
 }
@@ -3586,18 +3582,9 @@
   position: relative;
   min-height: 100svh;
   margin: 0 0 18px;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(198, 216, 229, 0.56) 0px,
-      rgba(198, 216, 229, 0.56) 78px,
-      rgba(186, 206, 222, 0.56) 78px,
-      rgba(186, 206, 222, 0.56) 156px
-    ),
-    linear-gradient(180deg, rgba(198, 216, 229, 0.92), rgba(183, 205, 220, 0.9));
+  background: transparent;
 }
 
-.app-viewer[data-theme="watercolor-space"] .hero-cinematic__media,
 .app-viewer[data-theme="watercolor-space"] .hero-cinematic__drift {
   display: none;
 }
@@ -4494,15 +4481,8 @@
   background: transparent;
 }
 
-.app-viewer[data-theme="watercolor-space"] .viewer-stage__content {
-  background-color: #bdedff;
-  background-image: url("/assets/space.svg");
-  background-position: center top;
-  background-size: 420px auto;
-  background-repeat: repeat;
-}
-
-.app-viewer[data-theme="watercolor-space"] .hero-cinematic {
+.app-viewer[data-theme="watercolor-space"] .viewer-stage__fallback,
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__media--default {
   background-color: #bdedff;
   background-image: url("/assets/space.svg");
   background-position: center top;
