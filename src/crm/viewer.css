@@ -524,6 +524,7 @@
 }
 
 .hero-cinematic__orb,
+.hero-cinematic__cloud,
 .hero-cinematic__comet {
   position: absolute;
   z-index: 1;
@@ -586,6 +587,17 @@
 }
 
 .hero-cinematic__orb img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero-cinematic__cloud {
+  display: block;
+  user-select: none;
+}
+
+.hero-cinematic__cloud img {
   display: block;
   width: 100%;
   height: auto;
@@ -1640,7 +1652,7 @@
 
 .mission-log__row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 14px;
   align-items: center;
   padding: 18px 20px;
@@ -3074,6 +3086,7 @@
   }
 
   .hero-cinematic__orb,
+  .hero-cinematic__cloud,
   .hero-cinematic__astronaut-art,
   .hero-cinematic__drift,
   .hero-cinematic__comet,
@@ -3501,6 +3514,11 @@
     linear-gradient(180deg, var(--wc-bg-top) 0%, var(--wc-bg-bottom) 100%);
 }
 
+.watercolor-hero-decor,
+.watercolor-section-decor {
+  display: none;
+}
+
 .app-viewer[data-theme="watercolor-space"] .viewer-shell.viewer-shell--public {
   width: 100%;
   max-width: none;
@@ -3525,7 +3543,7 @@
 .app-viewer[data-theme="watercolor-space"] .hero-cinematic {
   position: relative;
   min-height: 100svh;
-  margin: 0 0 14px;
+  margin: 0 0 18px;
   background:
     repeating-linear-gradient(
       90deg,
@@ -3581,6 +3599,7 @@
   height: clamp(130px, 18vw, 220px);
   top: clamp(22px, 6vh, 56px);
   right: clamp(-42px, -4vw, -12px);
+  z-index: 5;
 }
 
 .app-viewer[data-theme="watercolor-space"] .hero-cinematic__orb--earth {
@@ -3588,6 +3607,41 @@
   height: clamp(68px, 9vw, 120px);
   left: clamp(10px, 3vw, 32px);
   top: 18%;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud {
+  z-index: 2;
+  opacity: 0.98;
+  filter: drop-shadow(0 9px 16px rgba(79, 111, 140, 0.15));
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud--three {
+  width: clamp(330px, 122vw, 720px);
+  top: calc(clamp(-12px, -1.2vh, 4px) - 220px);
+  left: 52%;
+  z-index: 2;
+  transform: translate3d(-50%, 0, 0);
+  animation: watercolor-cloud-drift-three 17s ease-in-out infinite;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud--two {
+  width: clamp(280px, 102vw, 600px);
+  top: calc(clamp(-56px, -5.6vh, -24px) - 105px);
+  left: 52%;
+  z-index: 3;
+  opacity: 0.95;
+  filter: brightness(0.9) saturate(0.94) drop-shadow(0 9px 16px rgba(79, 111, 140, 0.18));
+  transform: translate3d(-50%, 0, 0);
+  animation: watercolor-cloud-drift-two 13s ease-in-out infinite;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud--one {
+  width: clamp(268px, 92vw, 560px);
+  top: clamp(-42px, -4.4vh, -18px);
+  left: 50%;
+  z-index: 4;
+  transform: translate3d(-56%, 0, 0);
+  animation: watercolor-cloud-drift-one 11s ease-in-out infinite;
 }
 
 .app-viewer[data-theme="watercolor-space"] .hero-cinematic__comet {
@@ -3638,6 +3692,16 @@
   line-height: 0.95;
 }
 
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic--astronautas .hero-typewriter__glyph {
+  opacity: 1 !important;
+  animation: none !important;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic--astronautas .hero-typewriter__caret {
+  display: none !important;
+  animation: none !important;
+}
+
 .app-viewer[data-theme="watercolor-space"] .hero-cinematic--astronautas .hero-typewriter__caret {
   background: var(--wc-accent);
   box-shadow: 0 0 8px rgba(127, 168, 196, 0.32);
@@ -3652,15 +3716,95 @@
 }
 
 .app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art {
-  z-index: 3;
+  z-index: 2;
   opacity: 0.94;
   filter: drop-shadow(0 12px 18px rgba(79, 111, 140, 0.24));
+  animation: watercolor-astronaut-balloon-rise 16s linear infinite;
+  will-change: transform, opacity;
+  width: clamp(188px, 58vw, 320px);
+  right: clamp(0px, 0.5vw, 8px);
+  bottom: 10px;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art img {
+  animation: watercolor-astronaut-balloon-sway 2.8s ease-in-out infinite;
+  transform-origin: 50% 16%;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor__item {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.15rem, 2.6vw, 1.65rem);
+  opacity: 0.82;
+  filter: saturate(0.86);
+  animation: watercolor-space-float 10s ease-in-out infinite;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor__item--star {
+  top: 14%;
+  right: 24%;
+  animation-delay: -0.8s;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor__item--planet {
+  top: 36%;
+  left: 10%;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  animation-delay: -1.8s;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor__item--moon {
+  top: 8%;
+  left: 34%;
+  font-size: clamp(1rem, 2.2vw, 1.42rem);
+  animation-delay: -2.6s;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor__item--satellite {
+  bottom: 28%;
+  right: 9%;
+  font-size: clamp(1.05rem, 2.3vw, 1.38rem);
+  animation-delay: -3.1s;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor__item--cloud {
+  bottom: 12%;
+  left: 14%;
+  font-size: clamp(1.18rem, 2.7vw, 1.72rem);
+  opacity: 0.76;
+  animation-delay: -2.1s;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor__rocket {
+  position: absolute;
+  top: 28%;
+  right: 18%;
+  width: clamp(44px, 7vw, 72px);
+  opacity: 0.78;
+  transform: rotate(20deg);
+  animation: watercolor-space-float-rocket 11s ease-in-out infinite;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor__rocket svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .app-viewer[data-theme="watercolor-space"] .invitation-section {
   width: min(100%, 920px);
-  margin: 0 auto 16px;
-  padding: 0 12px;
+  margin: 0 auto 18px;
+  padding: 0 10px;
   opacity: 1;
   transform: none;
   filter: none;
@@ -3674,52 +3818,102 @@
 
 .app-viewer[data-theme="watercolor-space"] .invitation-section__inner {
   position: relative;
-  border-radius: 24px;
-  border: 1px solid var(--wc-border);
-  padding: 22px 16px 20px;
-  background:
-    radial-gradient(circle at 12% 10%, rgba(255, 255, 255, 0.44), transparent 26%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(245, 250, 255, 0.8));
-  box-shadow: var(--wc-shadow);
+  border-radius: 20px;
+  border: 1px solid rgba(167, 205, 224, 0.95);
+  padding: 16px 12px 14px;
+  background: #bdedff;
+  box-shadow: none;
+  overflow: hidden;
 }
 
 .app-viewer[data-theme="watercolor-space"] .invitation-section__inner::after {
-  content: "";
+  display: none;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section__inner::before,
+.app-viewer[data-theme="watercolor-space"] .invitation-section__inner::after {
+  content: none !important;
+  display: none !important;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-section-decor {
+  display: block;
   position: absolute;
-  inset: 7px;
-  border-radius: 18px;
-  border: 1px solid var(--wc-border);
+  inset: 0;
   pointer-events: none;
+  z-index: 1;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-section-decor__item {
+  position: absolute;
+  color: rgba(127, 168, 196, 0.56);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-section-decor__item--one {
+  top: 11px;
+  right: 16px;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-section-decor__item--two {
+  bottom: 16px;
+  left: 16px;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-section-decor__item--three {
+  top: 44%;
+  right: 10px;
+  opacity: 0.52;
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-eyebrow {
+  position: relative;
+  z-index: 2;
   color: var(--wc-accent);
   letter-spacing: 0.22em;
   font-size: 0.75rem;
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-title {
+  position: relative;
+  z-index: 2;
   margin-top: 6px;
   color: var(--wc-primary);
   font-family: var(--viewer-font-display);
-  font-size: clamp(1.95rem, 9.2vw, 3.3rem);
-  line-height: 0.96;
+  font-size: clamp(1.46rem, 6.5vw, 2.05rem);
+  line-height: 1.08;
   letter-spacing: 0;
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-subtitle {
+  position: relative;
+  z-index: 2;
   color: var(--wc-secondary);
-  font-size: clamp(1.05rem, 3.4vw, 1.35rem);
+  margin-top: 6px;
+  font-size: clamp(0.88rem, 2.8vw, 1rem);
+  line-height: 1.45;
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-caption {
+  position: relative;
+  z-index: 2;
   color: var(--wc-secondary);
-  font-size: 1.03rem;
+  font-size: 0.92rem;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section__body {
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-log--hud {
+  position: relative;
+  z-index: 2;
+  padding: 0;
+  clip-path: none;
   border: 0;
-  background: transparent;
+  background: #bdedff;
   box-shadow: none;
 }
 
@@ -3727,10 +3921,8 @@
   clip-path: none;
   border-radius: 18px;
   border: 1px solid var(--wc-border);
-  background:
-    radial-gradient(circle at 8% 10%, rgba(255, 255, 255, 0.38), transparent 26%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(247, 251, 255, 0.84));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  background: #bdedff;
+  box-shadow: none;
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-log__frame::before,
@@ -3755,6 +3947,7 @@
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-log__row {
+  padding-block: 12px;
   border-bottom-color: rgba(216, 227, 234, 0.96);
 }
 
@@ -3767,16 +3960,18 @@
 .app-viewer[data-theme="watercolor-space"] .mission-log__value {
   color: var(--wc-primary);
   font-family: var(--viewer-font-display);
-  font-size: clamp(1.7rem, 7vw, 2.8rem);
-  line-height: 1.05;
-}
-
-.app-viewer[data-theme="watercolor-space"] .mission-log__value--address {
-  font-size: clamp(1.45rem, 5.8vw, 2.2rem);
+  font-size: clamp(1.12rem, 4.9vw, 1.62rem);
   line-height: 1.18;
 }
 
+.app-viewer[data-theme="watercolor-space"] .mission-log__value--address {
+  font-size: clamp(1.04rem, 4.55vw, 1.48rem);
+  line-height: 1.24;
+}
+
 .app-viewer[data-theme="watercolor-space"] .countdown-grid-shell {
+  position: relative;
+  z-index: 2;
   margin-top: 2px;
 }
 
@@ -3785,7 +3980,7 @@
 }
 
 .app-viewer[data-theme="watercolor-space"] .countdown-cell--mission {
-  min-height: 102px;
+  min-height: 88px;
   border-radius: 16px;
   border: 1px solid var(--wc-border);
   background: rgba(255, 255, 255, 0.92);
@@ -3795,7 +3990,7 @@
 .app-viewer[data-theme="watercolor-space"] .countdown-cell--mission strong {
   color: var(--wc-primary);
   font-family: var(--viewer-font-display);
-  font-size: clamp(2.2rem, 8.5vw, 3.25rem);
+  font-size: clamp(1.58rem, 6.4vw, 2.05rem);
   line-height: 0.92;
   white-space: nowrap;
   overflow: hidden;
@@ -3807,10 +4002,12 @@
 .app-viewer[data-theme="watercolor-space"] .countdown-grid-shell .countdown-cell--mission .mission-caption {
   margin-top: 8px;
   color: var(--wc-secondary);
-  font-size: 0.9rem;
+  font-size: 0.84rem;
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-map-shell {
+  position: relative;
+  z-index: 2;
   border: 1px solid var(--wc-border);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.82);
@@ -3821,6 +4018,8 @@
 }
 
 .app-viewer[data-theme="watercolor-space"] .gallery-grid--mission {
+  position: relative;
+  z-index: 2;
   gap: 12px;
 }
 
@@ -3871,6 +4070,8 @@
 }
 
 .app-viewer[data-theme="watercolor-space"] .notes-list--mission {
+  position: relative;
+  z-index: 2;
   gap: 10px;
 }
 
@@ -3888,6 +4089,8 @@
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-label {
+  position: relative;
+  z-index: 2;
   color: var(--wc-secondary);
 }
 
@@ -3935,12 +4138,16 @@
 }
 
 .app-viewer[data-theme="watercolor-space"] .rsvp-success--mission {
+  position: relative;
+  z-index: 2;
   border: 1px solid var(--wc-border);
   background: rgba(255, 255, 255, 0.86);
   color: var(--wc-primary);
 }
 
 .app-viewer[data-theme="watercolor-space"] .contact-command {
+  position: relative;
+  z-index: 2;
   border: 1px solid var(--wc-border);
   background: rgba(255, 255, 255, 0.84);
 }
@@ -3999,9 +4206,112 @@
   filter: drop-shadow(0 0 6px rgba(242, 166, 110, 0.3));
 }
 
+@keyframes watercolor-space-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes watercolor-space-float-rocket {
+  0%,
+  100% {
+    transform: rotate(20deg) translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: rotate(24deg) translate3d(6px, -7px, 0);
+  }
+}
+
+@keyframes watercolor-astronaut-balloon-rise {
+  0% {
+    transform: translate3d(2px, 158%, 0);
+    opacity: 1;
+  }
+
+  16% {
+    transform: translate3d(-8px, 104%, 0);
+    opacity: 1;
+  }
+
+  54% {
+    transform: translate3d(6px, 16%, 0);
+    opacity: 1;
+  }
+
+  78% {
+    transform: translate3d(14px, -58%, 0);
+    opacity: 1;
+  }
+
+  86% {
+    transform: translate3d(20px, -96%, 0);
+    opacity: 0;
+  }
+
+  87% {
+    transform: translate3d(0, 164%, 0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate3d(2px, 158%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes watercolor-astronaut-balloon-sway {
+  0%,
+  100% {
+    transform: scale(1.14) rotate(-2.4deg);
+  }
+
+  50% {
+    transform: scale(1.14) rotate(2.6deg);
+  }
+}
+
+@keyframes watercolor-cloud-drift-one {
+  0%,
+  100% {
+    transform: translate3d(-56%, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(-53%, 0, 0);
+  }
+}
+
+@keyframes watercolor-cloud-drift-two {
+  0%,
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(-52%, 7px, 0);
+  }
+}
+
+@keyframes watercolor-cloud-drift-three {
+  0%,
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(-47%, 10px, 0);
+  }
+}
+
 @media (max-width: 430px) {
   .app-viewer[data-theme="watercolor-space"] .hero-cinematic__content {
-    padding-top: clamp(78px, 9.4vh, 110px);
+    padding-top: clamp(132px, 16.4vh, 176px);
     padding-right: calc(12px + env(safe-area-inset-right, 0px));
     padding-bottom: calc(208px + env(safe-area-inset-bottom, 0px));
     padding-left: calc(12px + env(safe-area-inset-left, 0px));
@@ -4024,6 +4334,24 @@
     left: 8px;
   }
 
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud--three {
+    width: clamp(330px, 132vw, 540px);
+    top: -226px;
+    left: 52%;
+  }
+
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud--two {
+    width: clamp(270px, 110vw, 440px);
+    top: -151px;
+    left: 51%;
+  }
+
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud--one {
+    width: clamp(246px, 102vw, 410px);
+    top: -34px;
+    left: 50%;
+  }
+
   .app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art {
     width: clamp(138px, 38vw, 182px);
     right: 2px;
@@ -4040,8 +4368,30 @@
 }
 
 @media (max-width: 380px) {
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__content {
+    padding-top: clamp(124px, 17.2vh, 162px);
+  }
+
   .app-viewer[data-theme="watercolor-space"] .hero-cinematic__copy {
     width: min(100%, calc(100% - 84px));
+  }
+
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud--three {
+    width: clamp(322px, 136vw, 500px);
+    top: -222px;
+    left: 53%;
+  }
+
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud--two {
+    width: clamp(258px, 116vw, 402px);
+    top: -147px;
+    left: 52%;
+  }
+
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__cloud--one {
+    width: clamp(232px, 110vw, 380px);
+    top: -30px;
+    left: 50%;
   }
 
   .app-viewer[data-theme="watercolor-space"] .hero-typewriter__line--lead,
@@ -4059,6 +4409,303 @@
 
   .app-viewer[data-theme="watercolor-space"] .countdown-cell--mission strong {
     font-size: clamp(1.88rem, 8vw, 2.3rem);
+  }
+}
+
+/* Keep page background aligned with CRM; style only invitation internals */
+.app-viewer[data-theme="watercolor-space"] {
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(255, 255, 255, 0.08), transparent 58%),
+    radial-gradient(900px 500px at -20% 10%, rgba(178, 219, 255, 0.08), transparent 56%),
+    linear-gradient(180deg, #111318 0%, #0c0f15 100%);
+}
+
+.app-viewer[data-theme="watercolor-space"] .viewer-stage {
+  background: transparent;
+}
+
+.app-viewer[data-theme="watercolor-space"] .viewer-stage__content {
+  background-color: #bdedff;
+  background-image: url("/assets/space.svg");
+  background-position: center top;
+  background-size: 420px auto;
+  background-repeat: repeat;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic {
+  background-color: #bdedff;
+  background-image: url("/assets/space.svg");
+  background-position: center top;
+  background-size: 420px auto;
+  background-repeat: repeat;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section {
+  --wc-card-bg: #bdedff;
+  --wc-card-subtle: #d8f4ff;
+  --wc-card-border: #a7cde0;
+  background-color: transparent;
+  background-image: none;
+  margin: 0 auto 28px;
+  padding: 0 12px;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section:nth-of-type(6n + 1) {
+  --wc-card-bg: #bdedff;
+  --wc-card-subtle: #d8f4ff;
+  --wc-card-border: #a7cde0;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section:nth-of-type(6n + 2) {
+  --wc-card-bg: #f9e4ee;
+  --wc-card-subtle: #fceef4;
+  --wc-card-border: #e8ccda;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section:nth-of-type(6n + 3) {
+  --wc-card-bg: #fff4cf;
+  --wc-card-subtle: #fff8df;
+  --wc-card-border: #eadfae;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section:nth-of-type(6n + 4) {
+  --wc-card-bg: #dff5e8;
+  --wc-card-subtle: #e9f9ef;
+  --wc-card-border: #c4e2d1;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section:nth-of-type(6n + 5) {
+  --wc-card-bg: #ece7ff;
+  --wc-card-subtle: #f3efff;
+  --wc-card-border: #d4cbee;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section:nth-of-type(6n + 6) {
+  --wc-card-bg: #ffe9d8;
+  --wc-card-subtle: #fff1e6;
+  --wc-card-border: #f0d2ba;
+}
+
+.app-viewer[data-theme="watercolor-space"] #viewer-rsvp-section {
+  --wc-card-bg: #e9e3ff;
+  --wc-card-subtle: #f3efff;
+  --wc-card-border: #cfc3ee;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic::before,
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic::after {
+  display: none;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic {
+  margin: 0 0 28px;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__comet {
+  z-index: 2;
+  opacity: 0.96;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(247, 215, 122, 0.7) 34%,
+    rgba(247, 215, 122, 0.98) 66%,
+    rgba(255, 248, 207, 1) 100%
+  );
+  box-shadow:
+    0 0 6px rgba(247, 215, 122, 0.8),
+    0 0 14px rgba(247, 215, 122, 0.56),
+    0 0 22px rgba(242, 166, 110, 0.38);
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__comet::before {
+  width: 12px;
+  height: 12px;
+  right: -3px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 251, 223, 1) 0%,
+    rgba(247, 215, 122, 0.95) 52%,
+    rgba(242, 166, 110, 0) 84%
+  );
+  box-shadow:
+    0 0 8px rgba(247, 215, 122, 0.76),
+    0 0 16px rgba(242, 166, 110, 0.42);
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__comet--one {
+  opacity: 1;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__comet--two {
+  opacity: 0.9;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__comet--one,
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__comet--two {
+  z-index: 6;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic--astronautas .hero-cinematic__comet--one {
+  top: calc(10% - 50px);
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic--astronautas .hero-cinematic__comet--two {
+  top: calc(20% - 50px);
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__comet--three {
+  opacity: 0.84;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-hero-decor {
+  display: none !important;
+}
+
+.app-viewer[data-theme="watercolor-space"] .watercolor-section-decor__item--two,
+.app-viewer[data-theme="watercolor-space"] .watercolor-section-decor__item--three {
+  display: none !important;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section__inner {
+  background: var(--wc-card-bg) !important;
+  border-color: var(--wc-card-border) !important;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-log__frame,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .countdown-cell--mission,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-map-shell,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .gallery-tile--mission,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .gallery-tile--placeholder,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .note-card--mission,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-input,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .contact-command,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .rsvp-success--mission,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-button--ghost,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-log__status {
+  background-color: var(--wc-card-subtle);
+  background-image: none;
+  border-color: var(--wc-card-border) !important;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section__inner,
+.app-viewer[data-theme="watercolor-space"] .invitation-section__body {
+  box-shadow: none !important;
+  filter: none !important;
+  background-image: none !important;
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--launch-screen {
+  background-color: #bdedff;
+  background-image: url("/assets/space.svg");
+  background-position: center top;
+  background-size: 420px auto;
+  background-repeat: repeat;
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--launch-screen .viewer-loading-panel {
+  border: 1px solid rgba(167, 205, 224, 0.96);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: none;
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--launch-screen .viewer-loading-panel__eyebrow {
+  color: var(--wc-accent);
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--launch-screen .viewer-loading-panel__title {
+  color: var(--wc-primary);
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--launch-screen .viewer-loading-panel__caption {
+  color: var(--wc-secondary);
+}
+
+/* Visual cleanup requested: smaller typography and flat surfaces */
+.app-viewer[data-theme="watercolor-space"] .hero-typewriter__line,
+.app-viewer[data-theme="watercolor-space"] .hero-typewriter__line--lead,
+.app-viewer[data-theme="watercolor-space"] .hero-typewriter__line--main {
+  text-shadow: none;
+}
+
+.app-viewer[data-theme="watercolor-space"] .mission-title {
+  font-size: clamp(1.58rem, 7.2vw, 2.38rem);
+  line-height: 1.04;
+}
+
+.app-viewer[data-theme="watercolor-space"] .mission-subtitle {
+  margin-top: 8px;
+  font-size: clamp(0.92rem, 2.9vw, 1.08rem);
+  line-height: 1.46;
+}
+
+.app-viewer[data-theme="watercolor-space"] .mission-log__row {
+  padding-block: 14px;
+}
+
+.app-viewer[data-theme="watercolor-space"] .mission-log__value {
+  font-size: clamp(1.28rem, 5.2vw, 1.95rem);
+  line-height: 1.16;
+}
+
+.app-viewer[data-theme="watercolor-space"] .mission-log__value--address {
+  font-size: clamp(1.12rem, 4.7vw, 1.66rem);
+  line-height: 1.24;
+}
+
+.app-viewer[data-theme="watercolor-space"] .mission-log__label {
+  font-size: 0.74rem;
+  letter-spacing: 0.13em;
+}
+
+.app-viewer[data-theme="watercolor-space"] .mission-log__meta {
+  font-size: 0.8rem;
+}
+
+.app-viewer[data-theme="watercolor-space"] .countdown-cell--mission strong {
+  font-size: clamp(1.78rem, 7.1vw, 2.42rem);
+  line-height: 1;
+}
+
+.app-viewer[data-theme="watercolor-space"] .countdown-grid-shell .countdown-cell--mission .mission-caption {
+  font-size: 0.84rem;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-log__frame,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-log__status,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-log__icon,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .countdown-cell--mission,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-map-shell,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .gallery-tile--mission,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .gallery-tile--placeholder,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .note-card--mission,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-input,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .contact-command,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .rsvp-success--mission,
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-button--ghost {
+  background: var(--wc-card-subtle) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section .mission-button--link-action {
+  background: #ffffff !important;
+  border-color: #dce7ef !important;
+  color: var(--wc-primary) !important;
+}
+
+@media (min-width: 1024px) {
+  .app-viewer.viewer-shell--public[data-theme="watercolor-space"] {
+    --live-preview-width: 430px;
+  }
+
+  .app-viewer.viewer-shell--public[data-theme="watercolor-space"] > .theme-viewer {
+    width: 430px;
+  }
+
+  .app-viewer.viewer-shell--public[data-theme="watercolor-space"] .hero-cinematic {
+    min-height: 932px;
+    height: 932px;
   }
 }
 

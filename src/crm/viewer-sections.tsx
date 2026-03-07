@@ -95,13 +95,18 @@ export function HeroSectionViewer({
   const titleLines = usesAstronautTheme
     ? buildAstronautTitleLines(invitation.sections.hero.title)
     : splitTitle(repairLegacyText(invitation.sections.hero.title));
-  const moonUrl = `${assetOrigin}/assets/luna.svg`;
-  const earthUrl = `${assetOrigin}/assets/tierra.svg`;
+  const moonUrl = `${assetOrigin}/assets/luna.webp`;
+  const earthUrl = `${assetOrigin}/assets/tierra.webp`;
+  const cloudOneUrl = `${assetOrigin}/assets/nube%201-01.webp`;
+  const cloudTwoUrl = `${assetOrigin}/assets/nube2.webp`;
+  const cloudThreeUrl = `${assetOrigin}/assets/nube3.webp`;
   const heroBackground = resolveHeroBackground(invitation);
-  const astronautUrl = resolveMediaUrl(
-    invitation.sections.hero.astronaut?.image_url || (usesAstronautTheme ? "/assets/astronaut-luis-arturo.webp" : ""),
-    assetOrigin,
-  );
+  const astronautAsset =
+    invitation.sections.hero.astronaut?.image_url || (usesAstronautTheme ? "/assets/astronauta.webp" : "");
+  const normalizedAstronautAsset = astronautAsset.includes("/assets/astronaut-luis-arturo.webp")
+    ? "/assets/astronauta.webp"
+    : astronautAsset;
+  const astronautUrl = resolveMediaUrl(normalizedAstronautAsset, assetOrigin);
   const astronautPosition = invitation.sections.hero.astronaut?.position;
   const astronautPositionClassName = getAstronautClass(astronautPosition);
   const telemetryLabel = repairLegacyText(invitation.sections.hero.badge?.trim() || "PROTOCOLO DE DESPEGUE");
@@ -159,15 +164,43 @@ export function HeroSectionViewer({
       />
       <div className="hero-cinematic__drift hero-cinematic__drift--one" aria-hidden="true" />
       <div className="hero-cinematic__drift hero-cinematic__drift--two" aria-hidden="true" />
-      <div className="hero-cinematic__orb hero-cinematic__orb--moon" aria-hidden="true">
-        <img src={moonUrl} alt="" aria-hidden="true" />
-      </div>
-      <div className="hero-cinematic__orb hero-cinematic__orb--earth" aria-hidden="true">
-        <img src={earthUrl} alt="" aria-hidden="true" />
-      </div>
+      {usesAstronautTheme ? (
+        <>
+          <div className="hero-cinematic__cloud hero-cinematic__cloud--three" aria-hidden="true">
+            <img src={cloudThreeUrl} alt="" aria-hidden="true" />
+          </div>
+          <div className="hero-cinematic__cloud hero-cinematic__cloud--two" aria-hidden="true">
+            <img src={cloudTwoUrl} alt="" aria-hidden="true" />
+          </div>
+          <div className="hero-cinematic__cloud hero-cinematic__cloud--one" aria-hidden="true">
+            <img src={cloudOneUrl} alt="" aria-hidden="true" />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="hero-cinematic__orb hero-cinematic__orb--moon" aria-hidden="true">
+            <img src={moonUrl} alt="" aria-hidden="true" />
+          </div>
+          <div className="hero-cinematic__orb hero-cinematic__orb--earth" aria-hidden="true">
+            <img src={earthUrl} alt="" aria-hidden="true" />
+          </div>
+        </>
+      )}
       <div className="hero-cinematic__comet hero-cinematic__comet--one" aria-hidden="true" />
       <div className="hero-cinematic__comet hero-cinematic__comet--two" aria-hidden="true" />
       {usesAstronautTheme ? <div className="hero-cinematic__comet hero-cinematic__comet--three" aria-hidden="true" /> : null}
+      {usesAstronautTheme ? (
+        <div className="watercolor-hero-decor" aria-hidden="true">
+          <div className="watercolor-hero-decor__rocket">
+            <MissionRocket />
+          </div>
+          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--star">⭐</span>
+          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--planet">🪐</span>
+          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--moon">🌙</span>
+          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--satellite">🛰️</span>
+          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--cloud">☁️</span>
+        </div>
+      ) : null}
       <div className="hero-cinematic__content">
         <div className="hero-cinematic__copy">
           <div className="hero-cinematic__telemetry-wrap">
@@ -356,6 +389,11 @@ function InvitationSectionFrameViewer({
         </>
       )}
       <div className={`invitation-section__inner${surface === "bare" ? " invitation-section__inner--bare" : ""}`}>
+        <div className="watercolor-section-decor" aria-hidden="true">
+          <span className="watercolor-section-decor__item watercolor-section-decor__item--one">⭐</span>
+          <span className="watercolor-section-decor__item watercolor-section-decor__item--two">🪐</span>
+          <span className="watercolor-section-decor__item watercolor-section-decor__item--three">🚀</span>
+        </div>
         <p className="mission-eyebrow">{eyebrow}</p>
         <h2 className="mission-title">{title}</h2>
         {subtitle ? <p className="mission-subtitle">{subtitle}</p> : null}
@@ -393,7 +431,6 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
                 <strong className="mission-log__value">{eventDateLabel}</strong>
                 <span className="mission-log__label">Fecha de despegue</span>
               </div>
-              <span className="mission-log__meta">LOG-01</span>
             </div>
             <div className="mission-log__row">
               <span className="mission-log__icon" aria-hidden="true">
@@ -403,7 +440,6 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
                 <strong className="mission-log__value">{arrivalTimeLabel}</strong>
                 <span className="mission-log__label">Hora de llegada</span>
               </div>
-              <span className="mission-log__meta">T-00:00</span>
             </div>
             <div className="mission-log__row mission-log__row--address">
               <span className="mission-log__icon" aria-hidden="true">
@@ -416,7 +452,6 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
                 </strong>
                 <span className="mission-log__label">Punto de encuentro</span>
               </div>
-              <span className="mission-log__meta">COORD</span>
             </div>
           </div>
         </div>
@@ -538,9 +573,9 @@ export function MapSectionViewer({
   const mapEmbedUrl = mapEmbed
     ? `https://www.google.com/maps?q=${mapEmbed.lat},${mapEmbed.lng}&z=${mapEmbed.zoom}&output=embed`
     : "";
-  const shouldUseDarkMap = typeof invitation.sections.map.dark === "boolean"
-    ? invitation.sections.map.dark
-    : invitation.theme_id === "astronautas";
+  const shouldUseDarkMap = invitation.theme_id === "astronautas"
+    ? false
+    : Boolean(invitation.sections.map.dark);
 
   return (
     <InvitationSectionFrameViewer
@@ -908,7 +943,12 @@ export function GenericBlockViewer({
         </div>
       ) : null}
       {data.url?.trim() ? (
-        <a className="mission-button mission-button--ghost" href={data.url.trim()} target="_blank" rel="noreferrer">
+        <a
+          className="mission-button mission-button--ghost mission-button--link-action"
+          href={data.url.trim()}
+          target="_blank"
+          rel="noreferrer"
+        >
           Abrir enlace
         </a>
       ) : null}

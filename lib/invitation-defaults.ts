@@ -12,7 +12,7 @@ import type {
 } from "@/types/invitations";
 
 export const INVITATION_BACKGROUND_STORAGE_KEY = "__invitation_background";
-export const DEFAULT_ASTRONAUT_ASSET = "/assets/astronaut-luis-arturo.webp";
+export const DEFAULT_ASTRONAUT_ASSET = "/assets/astronauta.webp";
 
 export const DEFAULT_HERO_BACKGROUND: BackgroundMediaConfig = {
   type: "default",
