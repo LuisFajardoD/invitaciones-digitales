@@ -27,5 +27,5 @@ export default async function ClientRsvpPage({ params, searchParams }: ClientRsv
     );
   }
 
-  return <ViewerReactApp />;
+  return <ViewerReactApp initialInvitationThemeId={result.invitation.theme_id} />;
 }

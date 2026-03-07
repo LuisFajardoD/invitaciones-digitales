@@ -124,7 +124,5 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
     );
   }
 
-  return (
-    <ViewerReactApp />
-  );
+  return <ViewerReactApp initialInvitationThemeId={invitation.theme_id} />;
 }

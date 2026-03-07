@@ -668,7 +668,11 @@ function resolveViewerThemeKey(themeId?: string) {
   return themeId === "astronautas" ? "watercolor-space" : "default";
 }
 
-export function App() {
+type AppProps = {
+  initialInvitationThemeId?: string;
+};
+
+export function App({ initialInvitationThemeId }: AppProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = useMemo(() => {
@@ -730,7 +734,9 @@ export function App() {
   const [isLivePreviewDragging, setIsLivePreviewDragging] = useState(false);
   const hasRedirectedToAdminNewRef = useRef(false);
   const hasRedirectedAfterLoginRef = useRef(false);
-  const viewerThemeKey = resolveViewerThemeKey(invitation?.theme_id);
+  const viewerThemeId =
+    invitation?.theme_id || (route.mode === "invitation" || route.mode === "client-rsvp" ? initialInvitationThemeId : undefined);
+  const viewerThemeKey = resolveViewerThemeKey(viewerThemeId);
   const previewThemeKey = resolveViewerThemeKey(editorDraft?.theme_id);
 
   function stopLivePreviewDrag() {
@@ -1963,7 +1969,7 @@ export function App() {
       <main className="app-viewer app-viewer--launch-screen" data-theme={viewerThemeKey} aria-busy="true">
         <section className="viewer-launch-panel" role="status" aria-live="polite">
           <p className="viewer-launch-panel__eyebrow">Cargando</p>
-          <h1 className="viewer-launch-panel__title">{loading ? "Preparando invitación..." : "Motores listos..."}</h1>
+          <h1 className="viewer-launch-panel__title">Preparando invitación...</h1>
           <div className="viewer-launch-loader" aria-hidden="true">
             <span className="viewer-launch-loader__stars" />
             <span className="viewer-launch-loader__smoke" />
@@ -1975,7 +1981,7 @@ export function App() {
             </span>
           </div>
           <p className="viewer-launch-panel__caption">
-            {loading ? "Sincronizando contenido..." : "Iniciando secuencia de despegue."}
+            Sincronizando contenido...
           </p>
         </section>
       </main>

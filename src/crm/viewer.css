@@ -1434,6 +1434,18 @@
   line-height: 1.52;
 }
 
+.invitation-section--generic-block .mission-subtitle {
+  max-width: 100%;
+}
+
+.invitation-section--generic-block .invitation-section__body {
+  width: 100%;
+}
+
+.invitation-section--generic-block .mission-button--link-action {
+  width: 100%;
+}
+
 .invitation-section {
   position: relative;
   width: min(900px, calc(100% - 20px));
@@ -1442,10 +1454,7 @@
   opacity: 0;
   transform: translate3d(0, 28px, 0) scale(0.986);
   filter: saturate(0.9) brightness(0.94);
-  transition:
-    opacity 0.56s ease,
-    transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.72s ease;
+  transition: none;
   will-change: opacity, transform, filter;
 }
 
@@ -1453,6 +1462,22 @@
   opacity: 1;
   transform: translate3d(0, 0, 0) scale(1);
   filter: none;
+  animation: invitation-section-in-up 0.62s cubic-bezier(0.18, 0.9, 0.3, 1) both;
+}
+
+.app-viewer .invitation-section--entered.invitation-section--enter-down {
+  animation-name: invitation-section-in-down;
+}
+
+.app-viewer .invitation-section--exiting {
+  opacity: 0;
+  filter: saturate(0.88) brightness(0.94);
+  pointer-events: none;
+  animation: invitation-section-out-up 0.44s cubic-bezier(0.32, 0, 0.2, 1) both;
+}
+
+.app-viewer .invitation-section--exiting.invitation-section--exit-down {
+  animation-name: invitation-section-out-down;
 }
 
 .invitation-section::before,
@@ -2180,6 +2205,19 @@
   grid-area: guests;
 }
 
+.rsvp-form__field--attending,
+.rsvp-form__field--guests {
+  align-content: start;
+}
+
+.rsvp-form__field--attending .mission-label,
+.rsvp-form__field--guests .mission-label {
+  min-height: 1.1em;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
 .rsvp-form__field--message {
   grid-area: message;
 }
@@ -2217,12 +2255,11 @@
 @container (max-width: 540px) {
   .rsvp-form {
     grid-template-areas:
-      "name"
-      "attending"
-      "guests"
-      "message"
-      "actions";
-    grid-template-columns: 1fr;
+      "name name"
+      "attending guests"
+      "message message"
+      "actions actions";
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -3081,6 +3118,11 @@
     transition: none;
   }
 
+  .invitation-section--entered,
+  .invitation-section--exiting {
+    animation: none;
+  }
+
   .mission-log__frame::after {
     animation: none;
   }
@@ -3719,9 +3761,9 @@
   z-index: 2;
   opacity: 0.94;
   filter: drop-shadow(0 12px 18px rgba(79, 111, 140, 0.24));
-  animation: watercolor-astronaut-balloon-rise 16s linear infinite;
+  animation: watercolor-astronaut-balloon-rise 4.2s cubic-bezier(0.18, 0.9, 0.3, 1) 1 both;
   will-change: transform, opacity;
-  width: clamp(188px, 58vw, 320px);
+  width: clamp(210px, 64vw, 360px);
   right: clamp(0px, 0.5vw, 8px);
   bottom: 10px;
 }
@@ -3805,9 +3847,6 @@
   width: min(100%, 920px);
   margin: 0 auto 18px;
   padding: 0 10px;
-  opacity: 1;
-  transform: none;
-  filter: none;
 }
 
 .app-viewer[data-theme="watercolor-space"] .invitation-section::before,
@@ -4230,37 +4269,12 @@
 
 @keyframes watercolor-astronaut-balloon-rise {
   0% {
-    transform: translate3d(2px, 158%, 0);
+    transform: translate3d(0, 172%, 0);
     opacity: 1;
-  }
-
-  16% {
-    transform: translate3d(-8px, 104%, 0);
-    opacity: 1;
-  }
-
-  54% {
-    transform: translate3d(6px, 16%, 0);
-    opacity: 1;
-  }
-
-  78% {
-    transform: translate3d(14px, -58%, 0);
-    opacity: 1;
-  }
-
-  86% {
-    transform: translate3d(20px, -96%, 0);
-    opacity: 0;
-  }
-
-  87% {
-    transform: translate3d(0, 164%, 0);
-    opacity: 0;
   }
 
   100% {
-    transform: translate3d(2px, 158%, 0);
+    transform: translate3d(10px, calc(-74% + 70px), 0);
     opacity: 1;
   }
 }
@@ -4309,6 +4323,62 @@
   }
 }
 
+@keyframes invitation-section-in-up {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 42px, 0) scale(0.976);
+    filter: saturate(0.88) brightness(0.95);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes invitation-section-in-down {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -36px, 0) scale(0.976);
+    filter: saturate(0.88) brightness(0.95);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes invitation-section-out-up {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: none;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -34px, 0) scale(0.985);
+    filter: saturate(0.86) brightness(0.94);
+  }
+}
+
+@keyframes invitation-section-out-down {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: none;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 36px, 0) scale(0.985);
+    filter: saturate(0.86) brightness(0.94);
+  }
+}
+
 @media (max-width: 430px) {
   .app-viewer[data-theme="watercolor-space"] .hero-cinematic__content {
     padding-top: clamp(132px, 16.4vh, 176px);
@@ -4353,7 +4423,7 @@
   }
 
   .app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art {
-    width: clamp(138px, 38vw, 182px);
+    width: clamp(156px, 44vw, 214px);
     right: 2px;
     bottom: 14px;
   }
@@ -4637,6 +4707,14 @@
   margin-top: 8px;
   font-size: clamp(0.92rem, 2.9vw, 1.08rem);
   line-height: 1.46;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section--generic-block .mission-subtitle {
+  max-width: 100%;
+}
+
+.app-viewer[data-theme="watercolor-space"] .invitation-section--generic-block .mission-button--link-action {
+  width: 100%;
 }
 
 .app-viewer[data-theme="watercolor-space"] .mission-log__row {

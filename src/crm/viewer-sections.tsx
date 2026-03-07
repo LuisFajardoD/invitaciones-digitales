@@ -331,6 +331,7 @@ function InvitationSectionFrameViewer({
   subtitle,
   tone = "default",
   surface = "default",
+  sectionClassName = "",
   children,
 }: {
   id?: string;
@@ -339,10 +340,14 @@ function InvitationSectionFrameViewer({
   subtitle?: string;
   tone?: "default" | "aurora" | "gold";
   surface?: "default" | "bare";
+  sectionClassName?: string;
   children: ReactNode;
 }) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isInViewport, setIsInViewport] = useState(false);
+  const [hasEnteredOnce, setHasEnteredOnce] = useState(false);
+  const [enterDirection, setEnterDirection] = useState<"up" | "down">("up");
+  const [exitDirection, setExitDirection] = useState<"up" | "down">("up");
 
   useEffect(() => {
     const target = sectionRef.current;
@@ -362,7 +367,18 @@ function InvitationSectionFrameViewer({
           return;
         }
 
-        setIsInViewport(entry.isIntersecting && entry.intersectionRatio >= 0.14);
+        const isVisible = entry.isIntersecting && entry.intersectionRatio >= 0.14;
+        if (isVisible) {
+          // top >= 0 usually means the section is entering from below (scrolling down).
+          setEnterDirection(entry.boundingClientRect.top >= 0 ? "up" : "down");
+          setIsInViewport(true);
+          setHasEnteredOnce(true);
+          return;
+        }
+
+        // top < 0 means it left through the top edge (scrolling down).
+        setExitDirection(entry.boundingClientRect.top < 0 ? "up" : "down");
+        setIsInViewport(false);
       },
       {
         rootMargin: "0px 0px -8% 0px",
@@ -380,7 +396,13 @@ function InvitationSectionFrameViewer({
       id={id}
       className={`invitation-section invitation-section--${tone}${
         surface === "bare" ? " invitation-section--bare" : ""
-      }${isInViewport ? " invitation-section--entered" : ""}`}
+      }${
+        isInViewport
+          ? ` invitation-section--entered invitation-section--enter-${enterDirection}`
+          : hasEnteredOnce
+            ? ` invitation-section--exiting invitation-section--exit-${exitDirection}`
+            : ""
+      }${sectionClassName ? ` ${sectionClassName}` : ""}`}
     >
       {surface === "bare" ? null : (
         <>
@@ -713,7 +735,7 @@ export function NotesSectionViewer({ items }: { items: string[] }) {
 
 export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord }) {
   const [name, setName] = useState("");
-  const [attending, setAttending] = useState("");
+  const [attending, setAttending] = useState("yes");
   const [guestsCount, setGuestsCount] = useState("1");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -775,7 +797,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
           : "Tu RSVP fue enviado y ya quedó registrado.",
       );
       setName("");
-      setAttending("");
+      setAttending("yes");
       setGuestsCount("1");
       setMessage("");
       window.setTimeout(() => setSaved(false), 2400);
@@ -810,9 +832,10 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
             <input className="mission-input" value={name} onChange={(event) => setName(event.target.value)} />
           </label>
           <label className="mission-field rsvp-form__field rsvp-form__field--attending">
-            <span className="mission-label">¿Asistes? *</span>
+            <span className="mission-label">
+              ¿Asistes?<span aria-hidden="true">&nbsp;*</span>
+            </span>
             <select className="mission-input" value={attending} onChange={(event) => setAttending(event.target.value)}>
-              <option value="">Selecciona</option>
               <option value="yes">Sí</option>
               <option value="no">No</option>
             </select>
@@ -931,7 +954,13 @@ export function GenericBlockViewer({
                   : "Información";
 
   return (
-    <InvitationSectionFrameViewer eyebrow={eyebrow} title={visibleTitle} subtitle={text} tone="default">
+    <InvitationSectionFrameViewer
+      eyebrow={eyebrow}
+      title={visibleTitle}
+      subtitle={text}
+      tone="default"
+      sectionClassName="invitation-section--generic-block"
+    >
       {items.length ? (
         <div className="notes-list notes-list--mission">
           {items.map((item, index) => (

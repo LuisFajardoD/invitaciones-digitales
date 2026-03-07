@@ -845,11 +845,31 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
       setStatus("Cambios guardados.");
       setPreviewVersion((current) => current + 1);
       router.refresh();
+      return true;
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "No se pudo guardar.");
+      return false;
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleOpenPublicInvitation() {
+    const saved = await handleSave();
+    if (!saved) {
+      return;
+    }
+
+    window.open(`/i/${draft.slug}`, "_blank", "noopener,noreferrer");
+  }
+
+  async function handleOpenClientRsvpView() {
+    const saved = await handleSave();
+    if (!saved) {
+      return;
+    }
+
+    window.open(`/i/${draft.slug}/rsvp?token=${draft.client_view_token}`, "_blank", "noopener,noreferrer");
   }
 
   async function handleSaveTemplate() {
@@ -2076,20 +2096,20 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           {templateError ? <p className="error-text" style={{ margin: 0 }}>{templateError}</p> : null}
         </div>
         <div className={`inline-actions editor-actions ${styles["inv-editor-save-actions"]}`}>
-          <button type="button" className="button-primary" onClick={handleSave} disabled={loading}>
+          <button type="button" className="button-primary" onClick={() => void handleSave()} disabled={loading}>
             {loading ? "Guardando..." : "Guardar cambios"}
           </button>
-          <a href={`/i/${draft.slug}`} className="button-secondary" target="_blank" rel="noreferrer">
+          <button type="button" className="button-secondary" onClick={() => void handleOpenPublicInvitation()} disabled={loading}>
             Abrir invitación pública
-          </a>
-          <a
-            href={`/i/${draft.slug}/rsvp?token=${draft.client_view_token}`}
+          </button>
+          <button
+            type="button"
             className="button-secondary"
-            target="_blank"
-            rel="noreferrer"
+            onClick={() => void handleOpenClientRsvpView()}
+            disabled={loading}
           >
             Vista cliente RSVP
-          </a>
+          </button>
         </div>
         {status ? <p className="success-text" style={{ margin: 0 }}>{status}</p> : null}
         {error ? <p className="error-text" style={{ margin: 0 }}>{error}</p> : null}
