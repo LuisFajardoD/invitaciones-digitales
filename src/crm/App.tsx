@@ -664,6 +664,10 @@ async function warmInvitationEntryMedia(invitation: InvitationRecord, assetOrigi
   await Promise.race([Promise.all(tasks), waitFor(2600)]);
 }
 
+function resolveViewerThemeKey(themeId?: string) {
+  return themeId === "astronautas" ? "watercolor-space" : "default";
+}
+
 export function App() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -726,6 +730,8 @@ export function App() {
   const [isLivePreviewDragging, setIsLivePreviewDragging] = useState(false);
   const hasRedirectedToAdminNewRef = useRef(false);
   const hasRedirectedAfterLoginRef = useRef(false);
+  const viewerThemeKey = resolveViewerThemeKey(invitation?.theme_id);
+  const previewThemeKey = resolveViewerThemeKey(editorDraft?.theme_id);
 
   function stopLivePreviewDrag() {
     if (!livePreviewDragStateRef.current.active) {
@@ -1954,7 +1960,11 @@ export function App() {
 
   if (showPublicInvitationLoader) {
     return (
-      <main className="app-viewer app-viewer--launch-screen" aria-busy="true">
+      <main
+        className="app-viewer app-viewer--launch-screen"
+        data-theme={viewerThemeKey}
+        aria-busy="true"
+      >
         <section className="viewer-launch-panel" role="status" aria-live="polite">
           <p className="viewer-launch-panel__eyebrow">Cargando</p>
           <h1 className="viewer-launch-panel__title">{loading ? "Preparando invitación..." : "Motores listos..."}</h1>
@@ -3158,7 +3168,7 @@ export function App() {
                       onLostPointerCapture={stopLivePreviewDrag}
                     >
                       <div className="viewer-phone-device__canvas-scale">
-                        <div className="app-viewer">
+                        <div className="app-viewer" data-theme={previewThemeKey}>
                           <div className="theme-viewer">
                             <div className="viewer-shell viewer-shell--embedded">
                               <InvitationViewerCanvas
@@ -3365,7 +3375,7 @@ export function App() {
   }
 
   return (
-    <main className="app-viewer viewer-shell viewer-shell--public">
+    <main className="app-viewer viewer-shell viewer-shell--public" data-theme={viewerThemeKey}>
       <div className="theme-viewer">
         <div className="viewer-public-frame">
           <InvitationViewerCanvas invitation={invitation} assetOrigin={assetOrigin} countdown={countdown} />

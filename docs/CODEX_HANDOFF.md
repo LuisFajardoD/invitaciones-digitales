@@ -2,7 +2,7 @@
 
 Guia rapida para que cualquier chat nuevo de Codex entienda el proyecto en minutos.
 
-Actualizado: 6 de marzo de 2026
+Actualizado: 7 de marzo de 2026
 
 ## 1) Que es este sistema
 
@@ -28,6 +28,9 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `src/crm/admin.css` -> scope CRM admin (`.app-admin`)
   - `src/crm/viewer.css` -> scope viewer publico (`.app-viewer`)
   - `components/site/*.module.css` -> landing/login/public shell
+  - Tema visual viewer por `data-theme` en `App.tsx`:
+    - `default` (fallback)
+    - `watercolor-space` para invitaciones `theme_id="astronautas"`
 
 ## 3) Rutas y responsables
 
