@@ -1,6 +1,6 @@
 # Cambios recientes
 
-Actualizado: 7 de marzo de 2026
+Actualizado: 6 de marzo de 2026
 
 ## Resumen
 
@@ -22,13 +22,6 @@ Actualizado: 7 de marzo de 2026
   - canonical absoluto
   - `twitter:card=summary_large_image`
   - imagen OG estable 1200x630 desde `/api/public/invitations/[slug]/og-image`
-- Se incorporo tema visual `watercolor-space` en viewer publico para `theme_id="astronautas"`:
-  - paleta pastel infantil
-  - tarjetas con doble borde suave
-  - contador con digitos mas grandes sin saltos de linea
-  - galeria tipo fotos pegadas
-  - formulario RSVP y botones homologados al nuevo sistema visual
-  - loading screen de invitacion enlazada al `data-theme` activo
 
 - Se fortalecio enrutamiento admin para evitar loops y estados no deterministas.
 - Se mejoro persistencia de sesion admin por cookie.

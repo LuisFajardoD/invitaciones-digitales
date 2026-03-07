@@ -1,6 +1,6 @@
 # Estado actual del proyecto
 
-Actualizado: 7 de marzo de 2026
+Actualizado: 6 de marzo de 2026
 
 ## Resumen ejecutivo
 
@@ -42,8 +42,6 @@ Actualizado: 7 de marzo de 2026
   - estilo scopeado en `.app-admin` y `src/crm/admin.css`
 - Viewer publico:
   - estilo scopeado en `.app-viewer` y `src/crm/viewer.css`
-  - tema `watercolor-space` para `theme_id="astronautas"` (sin romper fallback `default`)
-  - carga inicial de invitacion alineada al theme activo via `data-theme`
 - Tema dark/light:
   - sincronizado con `site-theme-mode` en localStorage
 
