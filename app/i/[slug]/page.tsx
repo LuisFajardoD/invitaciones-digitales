@@ -22,6 +22,38 @@ async function resolveRequestOrigin() {
   return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 }
 
+function appendVersionParam(url: string, version: string) {
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}v=${encodeURIComponent(version)}`;
+}
+
+function resolveOgImageUrl({
+  origin,
+  rawUrl,
+  fallbackSlug,
+  version,
+}: {
+  origin: string;
+  rawUrl: string;
+  fallbackSlug: string;
+  version: string;
+}) {
+  const trimmed = rawUrl.trim();
+  if (trimmed) {
+    if (/^https?:\/\//i.test(trimmed)) {
+      return appendVersionParam(trimmed, version);
+    }
+
+    if (trimmed.startsWith("/")) {
+      return appendVersionParam(`${origin}${trimmed}`, version);
+    }
+
+    return appendVersionParam(`${origin}/${trimmed.replace(/^\/+/, "")}`, version);
+  }
+
+  return `${origin}/api/public/invitations/${encodeURIComponent(fallbackSlug)}/og-image?v=${encodeURIComponent(version)}`;
+}
+
 export async function generateMetadata({ params }: InvitationPageProps): Promise<Metadata> {
   const { slug } = await params;
   const origin = await resolveRequestOrigin();
@@ -40,6 +72,18 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
     };
   }
 
+  const ogImageSource =
+    invitation.share.og_image_url ||
+    invitation.sections.hero.background?.image_url ||
+    invitation.sections.hero.background_image_url ||
+    "";
+  const ogImageUrl = resolveOgImageUrl({
+    origin,
+    rawUrl: ogImageSource,
+    fallbackSlug: invitation.slug,
+    version: invitation.updated_at,
+  });
+
   return {
     title: invitation.share.og_title,
     description: invitation.share.og_description,
@@ -52,11 +96,8 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
       url: `${origin}/i/${invitation.slug}`,
       images: [
         {
-          url: `${origin}/api/public/invitations/${encodeURIComponent(invitation.slug)}/og-image?v=${encodeURIComponent(invitation.updated_at)}`,
-          width: 1200,
-          height: 630,
+          url: ogImageUrl,
           alt: invitation.share.og_title,
-          type: "image/png",
         },
       ],
       type: invitation.share.og_type as "website",
@@ -65,7 +106,7 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
       card: "summary_large_image",
       title: invitation.share.og_title,
       description: invitation.share.og_description,
-      images: [`${origin}/api/public/invitations/${encodeURIComponent(invitation.slug)}/og-image?v=${encodeURIComponent(invitation.updated_at)}`],
+      images: [ogImageUrl],
     },
   };
 }
