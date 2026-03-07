@@ -1,6 +1,6 @@
 # Cambios recientes
 
-Actualizado: 6 de marzo de 2026
+Actualizado: 7 de marzo de 2026
 
 ## Resumen
 
@@ -22,6 +22,13 @@ Actualizado: 6 de marzo de 2026
   - canonical absoluto
   - `twitter:card=summary_large_image`
   - imagen OG estable 1200x630 desde `/api/public/invitations/[slug]/og-image`
+- Rediseño visual del viewer para `theme_id="astronautas"`:
+  - paleta pastel acuarela
+  - tipografias redondeadas (`Fredoka` + `Nunito`)
+  - tarjetas con doble borde suave
+  - contador con numeros grandes sin salto de linea
+  - galeria estilo fotos pegadas
+  - loading screen sincronizada con el tema del viewer
 
 - Se fortalecio enrutamiento admin para evitar loops y estados no deterministas.
 - Se mejoro persistencia de sesion admin por cookie.
