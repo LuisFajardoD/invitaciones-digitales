@@ -1,4 +1,4 @@
-import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import type { BackgroundMediaConfig, GenericSection, InvitationRecord, QuickActionItem } from "./viewer-types";
 import { normalizeKenBurns, resolveHeroBackground, resolveMediaUrl, splitTitle, trimList } from "./viewer-utils";
 
@@ -343,65 +343,11 @@ function InvitationSectionFrameViewer({
   sectionClassName?: string;
   children: ReactNode;
 }) {
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const [isInViewport, setIsInViewport] = useState(false);
-  const [hasEnteredOnce, setHasEnteredOnce] = useState(false);
-  const [enterDirection, setEnterDirection] = useState<"up" | "down">("up");
-  const [exitDirection, setExitDirection] = useState<"up" | "down">("up");
-
-  useEffect(() => {
-    const target = sectionRef.current;
-    if (!target) {
-      return;
-    }
-
-    if (!("IntersectionObserver" in window)) {
-      setIsInViewport(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry) {
-          return;
-        }
-
-        const isVisible = entry.isIntersecting && entry.intersectionRatio >= 0.14;
-        if (isVisible) {
-          // top >= 0 usually means the section is entering from below (scrolling down).
-          setEnterDirection(entry.boundingClientRect.top >= 0 ? "up" : "down");
-          setIsInViewport(true);
-          setHasEnteredOnce(true);
-          return;
-        }
-
-        // top < 0 means it left through the top edge (scrolling down).
-        setExitDirection(entry.boundingClientRect.top < 0 ? "up" : "down");
-        setIsInViewport(false);
-      },
-      {
-        rootMargin: "0px 0px -8% 0px",
-        threshold: [0.08, 0.14, 0.26, 0.4],
-      },
-    );
-
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section
-      ref={sectionRef}
       id={id}
       className={`invitation-section invitation-section--${tone}${
         surface === "bare" ? " invitation-section--bare" : ""
-      }${
-        isInViewport
-          ? ` invitation-section--entered invitation-section--enter-${enterDirection}`
-          : hasEnteredOnce
-            ? ` invitation-section--exiting invitation-section--exit-${exitDirection}`
-            : ""
       }${sectionClassName ? ` ${sectionClassName}` : ""}`}
     >
       {surface === "bare" ? null : (
