@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { existsSync } from "fs";
+import path from "path";
 import { headers } from "next/headers";
 import { ViewerReactApp } from "@/app/i/viewer-react-app";
 import { getPublicInvitationBySlug } from "@/lib/repository";
@@ -63,6 +65,20 @@ function resolveOgImageUrl({
   return `${origin}/api/public/invitations/${encodeURIComponent(fallbackSlug)}/og-image?v=${encodeURIComponent(versionToken)}`;
 }
 
+function resolveLocalOgAssetUrl(origin: string, slug: string, version: string) {
+  const normalizedSlug = slug.trim().toLowerCase();
+  if (!normalizedSlug) {
+    return "";
+  }
+
+  const assetPath = path.join(process.cwd(), "public", "assets", "og", `${normalizedSlug}.jpg`);
+  if (!existsSync(assetPath)) {
+    return "";
+  }
+
+  return appendVersionParam(`${origin}/assets/og/${encodeURIComponent(normalizedSlug)}.jpg`, buildVersionToken(version));
+}
+
 export async function generateMetadata({ params }: InvitationPageProps): Promise<Metadata> {
   const { slug } = await params;
   const origin = await resolveRequestOrigin();
@@ -81,17 +97,20 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
     };
   }
 
+  const localOgAssetUrl = resolveLocalOgAssetUrl(origin, invitation.slug, invitation.updated_at);
   const ogImageSource =
     invitation.share.og_image_url ||
     invitation.sections.hero.background?.image_url ||
     invitation.sections.hero.background_image_url ||
     "";
-  const ogImageUrl = resolveOgImageUrl({
-    origin,
-    rawUrl: ogImageSource,
-    fallbackSlug: invitation.slug,
-    version: invitation.updated_at,
-  });
+  const ogImageUrl =
+    localOgAssetUrl ||
+    resolveOgImageUrl({
+      origin,
+      rawUrl: ogImageSource,
+      fallbackSlug: invitation.slug,
+      version: invitation.updated_at,
+    });
 
   return {
     title: invitation.share.og_title,
