@@ -1,4 +1,4 @@
-import { type CSSProperties, type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import { type CSSProperties, type FormEvent, type MouseEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import type { BackgroundMediaConfig, GenericSection, InvitationRecord, QuickActionItem } from "./viewer-types";
 import { normalizeKenBurns, resolveHeroBackground, resolveMediaUrl, splitTitle, trimList } from "./viewer-utils";
 
@@ -154,6 +154,19 @@ export function HeroSectionViewer({
     return () => window.clearTimeout(timer);
   }, [totalTypewriterMs, usesAstronautTheme, invitation.sections.hero.title]);
 
+  function handleScrollHintClick(event: MouseEvent<HTMLButtonElement>) {
+    const heroSection = event.currentTarget.closest("section");
+    const scopeRoot = heroSection?.parentElement ?? document;
+    const nextSection = scopeRoot.querySelector(".invitation-section");
+
+    if (nextSection instanceof HTMLElement) {
+      nextSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    window.scrollBy({ top: Math.round(window.innerHeight * 0.86), behavior: "smooth" });
+  }
+
   return (
     <section className={`hero-cinematic${usesAstronautTheme ? " hero-cinematic--astronautas" : ""}`}>
       <BackgroundMediaViewer
@@ -270,6 +283,25 @@ export function HeroSectionViewer({
           <p className="hero-cinematic__subtitle">{subtitle}</p>
         </div>
       </div>
+      {usesAstronautTheme ? (
+        <button
+          type="button"
+          className="hero-cinematic__scroll-hint"
+          aria-label="Sigue bajando para ver más información"
+          onClick={handleScrollHintClick}
+        >
+          <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--left" aria-hidden="true">
+            🪐
+          </span>
+          <span className="hero-cinematic__scroll-hint-text">Sigue bajando</span>
+          <span className="hero-cinematic__scroll-hint-icon" aria-hidden="true">
+            ↓
+          </span>
+          <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--right" aria-hidden="true">
+            ⭐
+          </span>
+        </button>
+      ) : null}
       {invitation.sections.hero.astronaut?.enabled && astronautUrl ? (
         <div
           className={`hero-cinematic__astronaut-art${astronautPositionClassName}`}

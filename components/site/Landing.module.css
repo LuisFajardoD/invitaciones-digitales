@@ -385,6 +385,13 @@
   margin-top: 18px;
 }
 
+.landing-packages-note {
+  margin: 12px 0 0;
+  color: var(--landing-muted);
+  font-size: 0.96rem;
+  line-height: 1.55;
+}
+
 .landing-package-card {
   padding: 18px;
   border: 1px solid var(--landing-border);
@@ -450,6 +457,53 @@
   background: rgba(255, 255, 255, 0.6);
 }
 
+.landing-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.landing-list-card {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--landing-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--landing-muted);
+  line-height: 1.6;
+}
+
+.landing-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.landing-faq-card {
+  padding: 16px;
+  border: 1px solid var(--landing-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.landing-faq-card h3,
+.landing-faq-card p {
+  margin: 0;
+}
+
+.landing-faq-card h3 {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.landing-faq-card p {
+  margin-top: 8px;
+  color: var(--landing-muted);
+  line-height: 1.55;
+}
+
 .landing-contact {
   margin-top: 26px;
   display: flex;
@@ -502,6 +556,11 @@
 
 .landing-root--light .landing-package-card li::before {
   background: rgba(17, 19, 24, 0.48);
+}
+
+.landing-root--light .landing-list-card,
+.landing-root--light .landing-faq-card {
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .landing-root--light .landing-crm:hover {

@@ -2,61 +2,183 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { DEFAULT_PACKAGES_SERVICE_NOTE, RECOMMENDED_SITE_PACKAGES } from "@/lib/site-packages";
 import { SiteHome } from "@/components/site/site-home";
 import { normalizeSiteSettingsData } from "@/lib/site-settings-defaults";
-import { safeJsonParse } from "@/lib/utils";
 import type { SiteSettingsData } from "@/types/invitations";
 
 type SiteSettingsFormProps = {
   initialData: SiteSettingsData;
+  availableInvitations: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    status: string;
+    ogImageUrl: string;
+  }>;
 };
 
-export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
+type ExampleItem = SiteSettingsData["blocks"]["examples"]["items"][number];
+type PackageItem = SiteSettingsData["blocks"]["packages"]["items"][number];
+type FaqItem = SiteSettingsData["blocks"]["faq"]["items"][number];
+
+function extractInvitationSlug(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const parsedUrl = new URL(trimmed);
+      const match = parsedUrl.pathname.match(/\/i\/([^/?#]+)/i);
+      if (match?.[1]) {
+        return decodeURIComponent(match[1]);
+      }
+      return parsedUrl.pathname.replace(/^\/+|\/+$/g, "");
+    } catch {
+      return "";
+    }
+  }
+
+  const match = trimmed.match(/\/i\/([^/?#]+)/i);
+  if (match?.[1]) {
+    return decodeURIComponent(match[1]);
+  }
+
+  return trimmed.replace(/^\/+|\/+$/g, "");
+}
+
+function buildOgPreviewUrl(slug: string) {
+  const safeSlug = slug.trim();
+  if (!safeSlug) {
+    return "";
+  }
+  return `/api/public/invitations/${encodeURIComponent(safeSlug)}/og-image`;
+}
+
+function createRecommendedPackages() {
+  return RECOMMENDED_SITE_PACKAGES.map((item) => ({
+    ...item,
+    features: [...item.features],
+  }));
+}
+
+export function SiteSettingsForm({ initialData, availableInvitations }: SiteSettingsFormProps) {
   const router = useRouter();
   const safeInitialData = normalizeSiteSettingsData(initialData);
-  const [draft, setDraft] = useState<SiteSettingsData>(safeInitialData);
-  const [examplesJson, setExamplesJson] = useState(
-    JSON.stringify(safeInitialData.blocks.examples.items ?? [], null, 2),
-  );
-  const [packagesJson, setPackagesJson] = useState(
-    JSON.stringify(safeInitialData.blocks.packages.items ?? [], null, 2),
-  );
-  const [faqJson, setFaqJson] = useState(JSON.stringify(safeInitialData.blocks.faq.items ?? [], null, 2));
-  const [extrasText, setExtrasText] = useState((safeInitialData.blocks.extras.items ?? []).join("\n"));
-  const [howItWorksText, setHowItWorksText] = useState(
-    (safeInitialData.blocks.how_it_works.items ?? []).join("\n"),
-  );
+  const [draft, setDraft] = useState<SiteSettingsData>(() => ({
+    ...safeInitialData,
+    blocks: {
+      ...safeInitialData.blocks,
+      examples: {
+        ...safeInitialData.blocks.examples,
+        items: (safeInitialData.blocks.examples.items || []).map((item, index) => {
+          const source = item as ExampleItem & { demo_url?: string };
+          const slug = source.slug || extractInvitationSlug(source.demo_url || "");
+          return {
+            title: source.title || `Demo ${index + 1}`,
+            description: source.description || "Modelo listo para publicar.",
+            slug,
+            cover_url: source.cover_url || buildOgPreviewUrl(slug),
+          };
+        }),
+      },
+      packages: {
+        ...safeInitialData.blocks.packages,
+        service_note:
+          safeInitialData.blocks.packages.service_note || DEFAULT_PACKAGES_SERVICE_NOTE,
+        items: (safeInitialData.blocks.packages.items || []).map((item, index) => ({
+          name: item?.name || `Paquete ${index + 1}`,
+          price: item?.price || "",
+          description: item?.description || "",
+          features: Array.isArray(item?.features) ? item.features.filter(Boolean) : [],
+        })),
+      },
+      faq: {
+        ...safeInitialData.blocks.faq,
+        items: (safeInitialData.blocks.faq.items || []).map((item, index) => ({
+          question: item?.question || `Pregunta ${index + 1}`,
+          answer: item?.answer || "",
+        })),
+      },
+      extras: {
+        ...safeInitialData.blocks.extras,
+        items: (safeInitialData.blocks.extras.items || []).filter(Boolean),
+      },
+      how_it_works: {
+        ...safeInitialData.blocks.how_it_works,
+        items: (safeInitialData.blocks.how_it_works.items || []).filter(Boolean),
+      },
+    },
+  }));
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function previewData(): SiteSettingsData {
-    return {
-      ...draft,
+    return draft;
+  }
+
+  function updateExample(index: number, patch: Partial<ExampleItem>) {
+    const nextItems = [...draft.blocks.examples.items];
+    nextItems[index] = { ...nextItems[index], ...patch };
+    setDraft((current) => ({
+      ...current,
       blocks: {
-        ...draft.blocks,
+        ...current.blocks,
         examples: {
-          ...draft.blocks.examples,
-          items: safeJsonParse(examplesJson, draft.blocks.examples.items),
-        },
-        packages: {
-          ...draft.blocks.packages,
-          items: safeJsonParse(packagesJson, draft.blocks.packages.items),
-        },
-        faq: {
-          ...draft.blocks.faq,
-          items: safeJsonParse(faqJson, draft.blocks.faq.items),
-        },
-        extras: {
-          ...draft.blocks.extras,
-          items: extrasText.split("\n").map((item) => item.trim()).filter(Boolean),
-        },
-        how_it_works: {
-          ...draft.blocks.how_it_works,
-          items: howItWorksText.split("\n").map((item) => item.trim()).filter(Boolean),
+          ...current.blocks.examples,
+          items: nextItems,
         },
       },
-    };
+    }));
+  }
+
+  function updatePackage(index: number, patch: Partial<PackageItem>) {
+    const nextItems = [...draft.blocks.packages.items];
+    nextItems[index] = { ...nextItems[index], ...patch };
+    setDraft((current) => ({
+      ...current,
+      blocks: {
+        ...current.blocks,
+        packages: {
+          ...current.blocks.packages,
+          items: nextItems,
+        },
+      },
+    }));
+  }
+
+  function updateFaq(index: number, patch: Partial<FaqItem>) {
+    const nextItems = [...draft.blocks.faq.items];
+    nextItems[index] = { ...nextItems[index], ...patch };
+    setDraft((current) => ({
+      ...current,
+      blocks: {
+        ...current.blocks,
+        faq: {
+          ...current.blocks.faq,
+          items: nextItems,
+        },
+      },
+    }));
+  }
+
+  function applyInvitationToExample(index: number, invitationId: string) {
+    const invitation = availableInvitations.find((item) => item.id === invitationId);
+    if (!invitation) {
+      return;
+    }
+
+    updateExample(index, {
+      title: invitation.title || draft.blocks.examples.items[index].title,
+      slug: invitation.slug || draft.blocks.examples.items[index].slug,
+      cover_url:
+        draft.blocks.examples.items[index].cover_url ||
+        invitation.ogImageUrl ||
+        buildOgPreviewUrl(invitation.slug),
+    });
   }
 
   async function handleSave() {
@@ -153,26 +275,406 @@ export function SiteSettingsForm({ initialData }: SiteSettingsFormProps) {
               }
             />
           </label>
-          <label className="field-wide">
-            <span>Ejemplos (JSON)</span>
-            <textarea value={examplesJson} onChange={(event) => setExamplesJson(event.target.value)} />
+          <label className="checkbox-tile">
+            <input
+              type="checkbox"
+              checked={draft.blocks.examples.enabled}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  blocks: {
+                    ...current.blocks,
+                    examples: { ...current.blocks.examples, enabled: event.target.checked },
+                  },
+                }))
+              }
+            />
+            <span>Demos activo</span>
           </label>
-          <label className="field-wide">
-            <span>Paquetes (JSON)</span>
-            <textarea value={packagesJson} onChange={(event) => setPackagesJson(event.target.value)} />
+          <div className="field-wide">
+            <span>Demos</span>
+            <div className="simple-list-editor">
+              <div className="simple-list-editor__list">
+                {draft.blocks.examples.items.map((item, index) => (
+                  <div key={`example-${index}`} className="admin-subpanel">
+                    <div className="form-grid">
+                      <label className="field">
+                        <span>Vincular invitación</span>
+                        <select
+                          value=""
+                          onChange={(event) => {
+                            applyInvitationToExample(index, event.target.value);
+                            event.currentTarget.value = "";
+                          }}
+                        >
+                          <option value="">Selecciona una invitación publicada</option>
+                          {availableInvitations
+                            .filter((invitation) => invitation.status === "published")
+                            .map((invitation) => (
+                              <option key={invitation.id} value={invitation.id}>
+                                {invitation.title}
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                      <label className="field">
+                        <span>Slug</span>
+                        <input
+                          value={item.slug}
+                          onChange={(event) =>
+                            updateExample(index, { slug: extractInvitationSlug(event.target.value) })
+                          }
+                        />
+                      </label>
+                      <label className="field-wide">
+                        <span>Título</span>
+                        <input
+                          value={item.title}
+                          onChange={(event) => updateExample(index, { title: event.target.value })}
+                        />
+                      </label>
+                      <label className="field-wide">
+                        <span>Descripción</span>
+                        <textarea
+                          value={item.description}
+                          onChange={(event) =>
+                            updateExample(index, { description: event.target.value })
+                          }
+                        />
+                      </label>
+                      <label className="field-wide">
+                        <span>URL de portada</span>
+                        <input
+                          value={item.cover_url}
+                          onChange={(event) => updateExample(index, { cover_url: event.target.value })}
+                        />
+                      </label>
+                    </div>
+                    <div className="inline-actions" style={{ marginTop: 12 }}>
+                      <button
+                        type="button"
+                        className="button-secondary"
+                        onClick={() => updateExample(index, { cover_url: buildOgPreviewUrl(item.slug) })}
+                      >
+                        Usar imagen OG
+                      </button>
+                      <button
+                        type="button"
+                        className="button-ghost"
+                        onClick={() =>
+                          setDraft((current) => ({
+                            ...current,
+                            blocks: {
+                              ...current.blocks,
+                              examples: {
+                                ...current.blocks.examples,
+                                items: current.blocks.examples.items.filter((_, itemIndex) => itemIndex !== index),
+                              },
+                            },
+                          }))
+                        }
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="button-secondary"
+                onClick={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    blocks: {
+                      ...current.blocks,
+                      examples: {
+                        ...current.blocks.examples,
+                        items: [
+                          ...current.blocks.examples.items,
+                          {
+                            title: "Nuevo demo",
+                            description: "Descripción del demo",
+                            slug: "",
+                            cover_url: "",
+                          },
+                        ],
+                      },
+                    },
+                  }))
+                }
+              >
+                Agregar demo
+              </button>
+            </div>
+          </div>
+          <label className="checkbox-tile">
+            <input
+              type="checkbox"
+              checked={draft.blocks.packages.enabled}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  blocks: {
+                    ...current.blocks,
+                    packages: { ...current.blocks.packages, enabled: event.target.checked },
+                  },
+                }))
+              }
+            />
+            <span>Paquetes activo</span>
           </label>
+          <div className="field-wide">
+            <span>Paquetes</span>
+            <div className="simple-list-editor">
+              <div className="inline-actions" style={{ marginBottom: 12 }}>
+                <button
+                  type="button"
+                  className="button-secondary"
+                  onClick={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      blocks: {
+                        ...current.blocks,
+                        packages: {
+                          ...current.blocks.packages,
+                          title: "Tipos de invitación y precios",
+                          service_note: DEFAULT_PACKAGES_SERVICE_NOTE,
+                          items: createRecommendedPackages(),
+                        },
+                      },
+                    }))
+                  }
+                >
+                  Usar paquetes recomendados
+                </button>
+              </div>
+              <div className="simple-list-editor__list">
+                {draft.blocks.packages.items.map((item, index) => (
+                  <div key={`package-${index}`} className="admin-subpanel">
+                    <div className="form-grid">
+                      <label className="field">
+                        <span>Nombre</span>
+                        <input
+                          value={item.name}
+                          onChange={(event) => updatePackage(index, { name: event.target.value })}
+                        />
+                      </label>
+                      <label className="field">
+                        <span>Precio</span>
+                        <input
+                          value={item.price}
+                          onChange={(event) => updatePackage(index, { price: event.target.value })}
+                        />
+                      </label>
+                      <label className="field-wide">
+                        <span>Descripción</span>
+                        <textarea
+                          value={item.description}
+                          onChange={(event) => updatePackage(index, { description: event.target.value })}
+                        />
+                      </label>
+                      <label className="field-wide">
+                        <span>Features (una por línea)</span>
+                        <textarea
+                          value={Array.isArray(item.features) ? item.features.join("\n") : ""}
+                          onChange={(event) =>
+                            updatePackage(index, {
+                              features: event.target.value
+                                .split("\n")
+                                .map((feature) => feature.trim())
+                                .filter(Boolean),
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                    <div className="inline-actions" style={{ marginTop: 12 }}>
+                      <button
+                        type="button"
+                        className="button-ghost"
+                        onClick={() =>
+                          setDraft((current) => ({
+                            ...current,
+                            blocks: {
+                              ...current.blocks,
+                              packages: {
+                                ...current.blocks.packages,
+                                items: current.blocks.packages.items.filter((_, itemIndex) => itemIndex !== index),
+                              },
+                            },
+                          }))
+                        }
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="button-secondary"
+                onClick={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    blocks: {
+                      ...current.blocks,
+                      packages: {
+                        ...current.blocks.packages,
+                        items: [
+                          ...current.blocks.packages.items,
+                          {
+                            name: "Nuevo paquete",
+                            price: "",
+                            description: "",
+                            features: [],
+                          },
+                        ],
+                      },
+                    },
+                  }))
+                }
+              >
+                Agregar paquete
+              </button>
+            </div>
+          </div>
           <label className="field-wide">
-            <span>Extras (una por línea)</span>
-            <textarea value={extrasText} onChange={(event) => setExtrasText(event.target.value)} />
+            <span>Nota de servicio (aparece en landing)</span>
+            <textarea
+              value={draft.blocks.packages.service_note || ""}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  blocks: {
+                    ...current.blocks,
+                    packages: {
+                      ...current.blocks.packages,
+                      service_note: event.target.value,
+                    },
+                  },
+                }))
+              }
+            />
           </label>
-          <label className="field-wide">
-            <span>Cómo funciona (una por línea)</span>
-            <textarea value={howItWorksText} onChange={(event) => setHowItWorksText(event.target.value)} />
+          <div className="field-wide">
+            <span>Extras (uno por línea)</span>
+            <textarea
+              value={draft.blocks.extras.items.join("\n")}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  blocks: {
+                    ...current.blocks,
+                    extras: {
+                      ...current.blocks.extras,
+                      items: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean),
+                    },
+                  },
+                }))
+              }
+            />
+          </div>
+          <div className="field-wide">
+            <span>Cómo funciona (uno por línea)</span>
+            <textarea
+              value={draft.blocks.how_it_works.items.join("\n")}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  blocks: {
+                    ...current.blocks,
+                    how_it_works: {
+                      ...current.blocks.how_it_works,
+                      items: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean),
+                    },
+                  },
+                }))
+              }
+            />
+          </div>
+          <label className="checkbox-tile">
+            <input
+              type="checkbox"
+              checked={draft.blocks.faq.enabled}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  blocks: {
+                    ...current.blocks,
+                    faq: { ...current.blocks.faq, enabled: event.target.checked },
+                  },
+                }))
+              }
+            />
+            <span>FAQ activo</span>
           </label>
-          <label className="field-wide">
-            <span>Preguntas frecuentes (JSON)</span>
-            <textarea value={faqJson} onChange={(event) => setFaqJson(event.target.value)} />
-          </label>
+          <div className="field-wide">
+            <span>Preguntas frecuentes</span>
+            <div className="simple-list-editor">
+              <div className="simple-list-editor__list">
+                {draft.blocks.faq.items.map((item, index) => (
+                  <div key={`faq-${index}`} className="admin-subpanel">
+                    <div className="form-grid">
+                      <label className="field-wide">
+                        <span>Pregunta</span>
+                        <input
+                          value={item.question}
+                          onChange={(event) => updateFaq(index, { question: event.target.value })}
+                        />
+                      </label>
+                      <label className="field-wide">
+                        <span>Respuesta</span>
+                        <textarea
+                          value={item.answer}
+                          onChange={(event) => updateFaq(index, { answer: event.target.value })}
+                        />
+                      </label>
+                    </div>
+                    <div className="inline-actions" style={{ marginTop: 12 }}>
+                      <button
+                        type="button"
+                        className="button-ghost"
+                        onClick={() =>
+                          setDraft((current) => ({
+                            ...current,
+                            blocks: {
+                              ...current.blocks,
+                              faq: {
+                                ...current.blocks.faq,
+                                items: current.blocks.faq.items.filter((_, itemIndex) => itemIndex !== index),
+                              },
+                            },
+                          }))
+                        }
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="button-secondary"
+                onClick={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    blocks: {
+                      ...current.blocks,
+                      faq: {
+                        ...current.blocks.faq,
+                        items: [...current.blocks.faq.items, { question: "Nueva pregunta", answer: "" }],
+                      },
+                    },
+                  }))
+                }
+              >
+                Agregar pregunta
+              </button>
+            </div>
+          </div>
           <label className="field">
             <span>WhatsApp</span>
             <input

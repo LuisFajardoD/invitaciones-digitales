@@ -54,6 +54,28 @@ function resolveOgImageUrl({
   return `${origin}/api/public/invitations/${encodeURIComponent(fallbackSlug)}/og-image?v=${encodeURIComponent(version)}`;
 }
 
+function buildOgCardUrl({
+  origin,
+  title,
+  description,
+  imageUrl,
+  version,
+}: {
+  origin: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  version: string;
+}) {
+  const params = new URLSearchParams({
+    title,
+    description,
+    image: imageUrl,
+    v: version,
+  });
+  return `${origin}/api/public/og-card?${params.toString()}`;
+}
+
 export async function generateMetadata({ params }: InvitationPageProps): Promise<Metadata> {
   const { slug } = await params;
   const origin = await resolveRequestOrigin();
@@ -77,10 +99,17 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
     invitation.sections.hero.background?.image_url ||
     invitation.sections.hero.background_image_url ||
     "";
-  const ogImageUrl = resolveOgImageUrl({
+  const sourceImageUrl = resolveOgImageUrl({
     origin,
     rawUrl: ogImageSource,
     fallbackSlug: invitation.slug,
+    version: invitation.updated_at,
+  });
+  const ogImageUrl = buildOgCardUrl({
+    origin,
+    title: invitation.share.og_title,
+    description: invitation.share.og_description,
+    imageUrl: sourceImageUrl,
     version: invitation.updated_at,
   });
 
@@ -98,6 +127,9 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
         {
           url: ogImageUrl,
           alt: invitation.share.og_title,
+          width: 1200,
+          height: 630,
+          type: "image/png",
         },
       ],
       type: invitation.share.og_type as "website",

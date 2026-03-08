@@ -2,7 +2,7 @@
 
 Guia rapida para que cualquier chat nuevo de Codex entienda el proyecto en minutos.
 
-Actualizado: 7 de marzo de 2026
+Actualizado: 8 de marzo de 2026
 
 ## 1) Que es este sistema
 
@@ -24,6 +24,9 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `components/site/*` (landing y shell publico)
   - `components/admin/*` (dashboard/editor/admin forms)
   - `src/crm/*` (viewer y bloques visuales compartidos)
+- Catalogo comercial de landing:
+  - `lib/site-packages.ts` (paquetes recomendados)
+  - `lib/site-settings-defaults.ts` (defaults + normalizacion/migracion de bloques legacy)
 - Estilos:
   - `src/crm/admin.css` -> scope CRM admin (`.app-admin`)
   - `src/crm/viewer.css` -> scope viewer publico (`.app-viewer`)
@@ -52,7 +55,8 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
 
 - RSVP publico por slug
   - `app/api/public/invitations/[slug]/rsvp/route.ts`
-  - `app/api/public/invitations/[slug]/og-image/route.ts` (preview OG 1200x630 para shares)
+  - `app/api/public/invitations/[slug]/og-image/route.ts` (redirect legacy de imagen OG)
+  - `app/api/public/og-card/route.ts` (tarjeta OG horizontal 1200x630 para WhatsApp/shares)
   - `lib/repository.ts` (`createPublicRsvpResponse`)
 
 ### Admin
@@ -83,6 +87,7 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
 - Site settings
   - `app/admin/site/page.tsx`
   - `components/admin/site-settings-form.tsx`
+  - bloques editables: demos, paquetes, extras, secciones web y politicas (FAQ)
 
 ## 4) Fuentes de verdad del dato
 

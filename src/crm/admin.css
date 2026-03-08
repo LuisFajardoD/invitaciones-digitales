@@ -188,6 +188,13 @@
   gap: 10px;
 }
 
+.app-admin .viewer-login-submit {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 18px;
+  padding: 12px 18px;
+}
+
 .app-admin [class~="button-primary"],
 .app-admin [class~="button-secondary"],
 .app-admin [class~="button-ghost"],
@@ -543,6 +550,14 @@
   .app-admin .client-rsvp-table td {
     border-bottom: 0;
     padding: 6px 0;
+    min-width: 0;
+  }
+
+  .app-admin .client-rsvp-table td:nth-child(1),
+  .app-admin .client-rsvp-table td:nth-child(2),
+  .app-admin .client-rsvp-table td:nth-child(3),
+  .app-admin .client-rsvp-table td:nth-child(4) {
+    width: 100%;
   }
 
   .app-admin .client-rsvp-table td::before {
@@ -558,6 +573,11 @@
 
   .app-admin .client-rsvp-attendees {
     text-align: left;
+  }
+
+  .app-admin .client-rsvp-guest {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

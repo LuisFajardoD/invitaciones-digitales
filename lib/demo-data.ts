@@ -1,4 +1,5 @@
 import { DEFAULT_BLOCK_ORDER, DEFAULT_SECTION_ORDER } from "@/lib/constants";
+import { DEFAULT_PACKAGES_SERVICE_NOTE, RECOMMENDED_SITE_PACKAGES } from "@/lib/site-packages";
 import { createWhatsAppUrl } from "@/lib/utils";
 import type {
   InvitationRecord,
@@ -259,24 +260,11 @@ export const demoSiteSettings: SiteSettingsRecord = {
       packages: {
         enabled: true,
         title: "Paquetes",
-        items: [
-          {
-            name: "Esencial",
-            price: "$1,490 MXN",
-            description: "Invitación pensada para móvil con RSVP y secciones clave.",
-            features: ["1 tema", "Mapa embebido", "RSVP básico"],
-          },
-          {
-            name: "Premium Astronautas",
-            price: "$2,990 MXN",
-            description: "Experiencia premium con animaciones wow y panel admin.",
-            features: [
-              "Layout v1 premium",
-              "Open Graph listo para WhatsApp",
-              "Export CSV",
-            ],
-          },
-        ],
+        service_note: DEFAULT_PACKAGES_SERVICE_NOTE,
+        items: RECOMMENDED_SITE_PACKAGES.map((item) => ({
+          ...item,
+          features: [...item.features],
+        })),
       },
       extras: {
         enabled: true,

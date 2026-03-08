@@ -255,6 +255,7 @@ export interface SitePromoBlock {
 export interface SitePackagesBlock {
   enabled: boolean;
   title: string;
+  service_note: string;
   items: Array<{
     name: string;
     price: string;

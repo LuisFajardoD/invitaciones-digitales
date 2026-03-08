@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { demoInvitation, demoResponses, demoSiteSettings, demoTheme } from "@/lib/demo-data";
 import { normalizeInvitationRecord, toDatabaseInvitationRecord } from "@/lib/invitation-defaults";
+import { normalizeSiteSettingsData } from "@/lib/site-settings-defaults";
 import { hasConfiguredSupabase } from "@/lib/supabase/env";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
 import { buildRsvpSummary, createWhatsAppUrl, slugify } from "@/lib/utils";
@@ -184,7 +185,10 @@ export async function getPublicInvitationBySlug(slug: string) {
 export async function getSiteSettings() {
   if (isUsingMockData()) {
     const store = await readMockStore();
-    return cloneValue(store.siteSettings);
+    return {
+      ...cloneValue(store.siteSettings),
+      data: normalizeSiteSettingsData(store.siteSettings.data),
+    };
   }
 
   const supabase = createServiceSupabaseClient();
@@ -198,10 +202,17 @@ export async function getSiteSettings() {
   }
 
   if (!data) {
-    return { ...demoSiteSettings };
+    return {
+      ...demoSiteSettings,
+      data: normalizeSiteSettingsData(demoSiteSettings.data),
+    };
   }
 
-  return data as SiteSettingsRecord;
+  const record = data as SiteSettingsRecord;
+  return {
+    ...record,
+    data: normalizeSiteSettingsData(record.data),
+  };
 }
 
 export async function saveSiteSettings(data: SiteSettingsData) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { DEFAULT_PACKAGES_SERVICE_NOTE, RECOMMENDED_SITE_PACKAGES } from "@/lib/site-packages";
 import { createWhatsAppUrl } from "@/lib/utils";
 import type { SiteSettingsData } from "@/types/invitations";
 import styles from "./Landing.module.css";
@@ -16,6 +17,10 @@ type DemoItem = {
   description: string;
   slug: string;
   cover_url: string;
+};
+
+type RawDemoItem = Partial<DemoItem> & {
+  demo_url?: string;
 };
 
 type PackageItem = {
@@ -54,56 +59,97 @@ const FALLBACK_DEMOS: DemoItem[] = [
 ];
 
 const FALLBACK_PACKAGES: PackageItem[] = [
-  {
-    name: "Básica",
-    price: "$1,490 MXN",
-    description: "Ideal para eventos pequeños con salida rápida.",
-    features: ["Invitación responsive", "Mapa y RSVP", "Entrega en 48h"],
-  },
-  {
-    name: "Pro",
-    price: "$2,490 MXN",
-    description: "Más personalización y narrativa visual.",
-    features: ["Animaciones suaves", "Galería y secciones extra", "Soporte prioritario"],
-  },
-  {
-    name: "Premium",
-    price: "$3,490 MXN",
-    description: "Experiencia completa tipo app con look cinematográfico.",
-    features: ["Dirección creativa", "Optimizada para WhatsApp", "Acompañamiento de lanzamiento"],
-  },
+  ...RECOMMENDED_SITE_PACKAGES.map((item) => ({
+    name: item.name,
+    price: item.price,
+    description: item.description,
+    features: [...item.features],
+  })),
 ];
 
 function buildDemos(settings: SiteSettingsData): DemoItem[] {
   const items = settings?.blocks?.examples?.items;
   if (Array.isArray(items) && items.length) {
-    return items.slice(0, 6);
+    const normalizedItems = items
+      .slice(0, 6)
+      .map((item, index) => {
+        const source = item as RawDemoItem;
+        const slugFromUrl = source.demo_url ? extractDemoSlug(source.demo_url) : "";
+        const slug = (source.slug || slugFromUrl || "").trim();
+        const coverFromSlug = slug ? `/api/public/invitations/${encodeURIComponent(slug)}/og-image` : "";
+
+        if (!slug) {
+          return null;
+        }
+
+        return {
+          title: (source.title || `Demo ${index + 1}`).trim(),
+          description: (source.description || "Modelo listo para publicar.").trim(),
+          slug,
+          cover_url: (source.cover_url || coverFromSlug).trim(),
+        } as DemoItem;
+      })
+      .filter((item): item is DemoItem => Boolean(item));
+
+    if (normalizedItems.length) {
+      return normalizedItems;
+    }
   }
   return FALLBACK_DEMOS;
 }
 
+function extractDemoSlug(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const parsedUrl = new URL(trimmed);
+      const match = parsedUrl.pathname.match(/\/i\/([^/?#]+)/i);
+      if (match?.[1]) {
+        return decodeURIComponent(match[1]);
+      }
+      return parsedUrl.pathname.replace(/^\/+|\/+$/g, "");
+    } catch {
+      return "";
+    }
+  }
+
+  const match = trimmed.match(/\/i\/([^/?#]+)/i);
+  if (match?.[1]) {
+    return decodeURIComponent(match[1]);
+  }
+
+  return trimmed.replace(/^\/+|\/+$/g, "");
+}
+
 function buildPackages(settings: SiteSettingsData): PackageItem[] {
   const items = settings?.blocks?.packages?.items;
-  if (!Array.isArray(items) || !items.length) {
+  const normalizedItems = Array.isArray(items)
+    ? items
+        .map((item) => ({
+          name: (item?.name || "").trim(),
+          price: (item?.price || "").trim(),
+          description: (item?.description || "").trim(),
+          features: Array.isArray(item?.features)
+            ? item.features.map((feature) => feature.trim()).filter(Boolean)
+            : [],
+        }))
+        .filter((item) => Boolean(item.name || item.price || item.description || item.features.length))
+    : [];
+
+  if (!normalizedItems.length) {
     return FALLBACK_PACKAGES;
   }
 
-  return FALLBACK_PACKAGES.map((fallback, index) => {
-    const source = items[index];
-    if (!source) {
-      return fallback;
-    }
-
-    return {
-      name: fallback.name,
-      price: source.price || fallback.price,
-      description: source.description || fallback.description,
-      features:
-        Array.isArray(source.features) && source.features.length
-          ? source.features.slice(0, 4)
-          : fallback.features,
-    };
-  });
+  return normalizedItems.slice(0, 8).map((item) => ({
+    name: item.name || "Servicio",
+    price: item.price || "Precio a cotizar",
+    description: item.description || "Servicio personalizado para tu evento.",
+    features: item.features.length ? item.features : ["Diseño personalizado"],
+  }));
 }
 
 function resolveWhatsAppHref(settings: SiteSettingsData): string {
@@ -125,8 +171,26 @@ function resolveFeatured(demos: DemoItem[]): DemoItem {
 export function Landing({ settings, variant = "home" }: LandingProps) {
   const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
   const [coverStatus, setCoverStatus] = useState<Record<string, "loaded" | "error">>({});
+  const [coverSourceIndex, setCoverSourceIndex] = useState<Record<string, number>>({});
   const demos = buildDemos(settings);
   const packages = buildPackages(settings);
+  const packageServiceNote =
+    settings?.blocks?.packages?.service_note?.trim() || DEFAULT_PACKAGES_SERVICE_NOTE;
+  const extrasItems =
+    settings?.blocks?.extras?.enabled && Array.isArray(settings?.blocks?.extras?.items)
+      ? settings.blocks.extras.items.map((item) => item.trim()).filter(Boolean)
+      : [];
+  const extrasTitle = settings?.blocks?.extras?.title?.trim() || "Extras";
+  const howItems =
+    settings?.blocks?.how_it_works?.enabled && Array.isArray(settings?.blocks?.how_it_works?.items)
+      ? settings.blocks.how_it_works.items.map((item) => item.trim()).filter(Boolean)
+      : [];
+  const howTitle = settings?.blocks?.how_it_works?.title?.trim() || "Cómo funciona";
+  const faqItems =
+    settings?.blocks?.faq?.enabled && Array.isArray(settings?.blocks?.faq?.items)
+      ? settings.blocks.faq.items.filter((item) => (item?.question || item?.answer || "").trim())
+      : [];
+  const faqTitle = settings?.blocks?.faq?.title?.trim() || "Preguntas frecuentes";
   const featured = resolveFeatured(demos);
   const whatsappHref = resolveWhatsAppHref(settings);
   const heroSubtitle =
@@ -166,6 +230,8 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
         <nav className={styles["landing-nav"]} aria-label="Navegación pública">
           <a href="#demos">Demos</a>
           <a href="#paquetes">Paquetes</a>
+          <a href="#extras">Extras</a>
+          <a href="#politicas">Políticas</a>
           <a href="#contacto">Contacto</a>
         </nav>
 
@@ -212,14 +278,22 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
       <section id="demos" className={styles["landing-section"]}>
         <div className={styles["landing-section-head"]}>
           <p>Demos</p>
-          <h2>Modelos listos para publicar</h2>
+          <h2>{settings?.blocks?.examples?.title || "Modelos listos para publicar"}</h2>
         </div>
 
         <div className={styles["landing-demos-grid"]}>
           {demos.map((item) => {
             const demoKey = `${item.slug}-${item.title}`;
             const coverUrl = item.cover_url?.trim() || "";
-            const hasCover = coverUrl.length > 0;
+            const ogCoverUrl = item.slug
+              ? `/api/public/invitations/${encodeURIComponent(item.slug)}/og-image`
+              : "";
+            const coverCandidates = Array.from(
+              new Set([coverUrl, ogCoverUrl, "/assets/hero-space-backdrop.svg"].filter(Boolean)),
+            );
+            const activeIndex = coverSourceIndex[demoKey] ?? 0;
+            const activeCoverUrl = coverCandidates[activeIndex] || "";
+            const hasCover = activeCoverUrl.length > 0;
             const status = coverStatus[demoKey];
             const showPlaceholder = !hasCover || status === "error" || status !== "loaded";
 
@@ -233,7 +307,7 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
                 >
                   {hasCover ? (
                     <img
-                      src={coverUrl}
+                      src={activeCoverUrl}
                       alt=""
                       loading="lazy"
                       className={`${styles["landing-demo-image"]} ${
@@ -243,6 +317,14 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
                         setCoverStatus((prev) => ({ ...prev, [demoKey]: "loaded" }));
                       }}
                       onError={() => {
+                        if (activeIndex < coverCandidates.length - 1) {
+                          setCoverSourceIndex((prev) => ({
+                            ...prev,
+                            [demoKey]: activeIndex + 1,
+                          }));
+                          setCoverStatus((prev) => ({ ...prev, [demoKey]: "error" }));
+                          return;
+                        }
                         setCoverStatus((prev) => ({ ...prev, [demoKey]: "error" }));
                       }}
                     />
@@ -267,12 +349,13 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
       <section id="paquetes" className={styles["landing-section"]}>
         <div className={styles["landing-section-head"]}>
           <p>Paquetes</p>
-          <h2>Opciones claras para cada etapa</h2>
+          <h2>{settings?.blocks?.packages?.title || "Opciones claras para cada etapa"}</h2>
         </div>
+        <p className={styles["landing-packages-note"]}>{packageServiceNote}</p>
 
         <div className={styles["landing-packages-grid"]}>
           {packages.map((item) => {
-            const isPremium = item.name === "Premium";
+            const isPremium = /animada web/i.test(item.name);
 
             return (
               <article
@@ -292,6 +375,61 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
           })}
         </div>
       </section>
+
+      {howItems.length ? (
+        <section className={styles["landing-section"]}>
+          <div className={styles["landing-section-head"]}>
+            <p>Web</p>
+            <h2>{howTitle}</h2>
+          </div>
+
+          <div className={styles["landing-list"]}>
+            {howItems.map((item) => (
+              <article key={item} className={styles["landing-list-card"]}>
+                {item}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {extrasItems.length ? (
+        <section id="extras" className={styles["landing-section"]}>
+          <div className={styles["landing-section-head"]}>
+            <p>Servicios extra</p>
+            <h2>{extrasTitle}</h2>
+          </div>
+
+          <div className={styles["landing-list"]}>
+            {extrasItems.map((item) => (
+              <article key={item} className={styles["landing-list-card"]}>
+                {item}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {faqItems.length ? (
+        <section id="politicas" className={styles["landing-section"]}>
+          <div className={styles["landing-section-head"]}>
+            <p>Condiciones</p>
+            <h2>{faqTitle}</h2>
+          </div>
+
+          <div className={styles["landing-faq-grid"]}>
+            {faqItems.map((item, index) => (
+              <article
+                key={`${item.question}-${index}`}
+                className={styles["landing-faq-card"]}
+              >
+                <h3>{item.question}</h3>
+                <p>{item.answer}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section id="contacto" className={styles["landing-contact"]}>
         <div>

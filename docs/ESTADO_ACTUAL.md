@@ -1,6 +1,6 @@
 # Estado actual del proyecto
 
-Actualizado: 7 de marzo de 2026
+Actualizado: 8 de marzo de 2026
 
 ## Resumen ejecutivo
 
@@ -13,6 +13,7 @@ Actualizado: 7 de marzo de 2026
   - Guardado como plantilla + creacion desde plantilla en CRM
   - Viewer publico de invitacion
   - RSVP cliente y panel RSVP cliente privado por token
+  - Landing comercial editable con paquetes, extras, alcance web y politicas
 
 ## Flujo de datos
 
@@ -38,6 +39,7 @@ Actualizado: 7 de marzo de 2026
 
 - Sitio publico:
   - estilo premium en `components/site/*`
+  - secciones comerciales configurables desde `/admin/site` sin editar JSON manual
 - CRM admin:
   - estilo scopeado en `.app-admin` y `src/crm/admin.css`
 - Viewer publico:
@@ -62,12 +64,14 @@ Actualizado: 7 de marzo de 2026
   - `/i/[slug]`
   - `/i/[slug]/rsvp?token=...`
   - `/api/public/invitations/[slug]/og-image`
+  - `/api/public/og-card`
 
 ## Riesgos conocidos
 
 - `middleware.ts` y auth son puntos de alto riesgo para loops de redireccion.
 - Cambios en `viewer.css` pueden impactar todas las invitaciones publicas.
 - Cambios globales de CSS fuera de scope pueden romper coherencia entre landing, admin y viewer.
+- Si en `site_settings` persisten paquetes legacy, se normalizan al catalogo nuevo en runtime; guardar desde `/admin/site` persiste el formato nuevo.
 
 ## Verificacion minima obligatoria
 

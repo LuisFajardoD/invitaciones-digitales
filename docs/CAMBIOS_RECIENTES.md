@@ -1,6 +1,6 @@
 # Cambios recientes
 
-Actualizado: 7 de marzo de 2026
+Actualizado: 8 de marzo de 2026
 
 ## Resumen
 
@@ -21,7 +21,14 @@ Actualizado: 7 de marzo de 2026
 - Se reforzo metadata share de `/i/[slug]` para WhatsApp:
   - canonical absoluto
   - `twitter:card=summary_large_image`
-  - imagen OG estable 1200x630 desde `/api/public/invitations/[slug]/og-image`
+  - imagen OG horizontal 1200x630 desde `/api/public/og-card` (evita miniatura compacta con imágenes verticales)
+  - `og:image:width`, `og:image:height` y `og:image:type` definidos en metadata
+  - `/api/public/invitations/[slug]/og-image` mantenido como redirect legacy con guard anti-loop
+- Se renovó la landing comercial y su editor:
+  - paquetes recomendados en `lib/site-packages.ts` (Imagen Esencial, Interactiva, Video, Web Esencial, Web Premium)
+  - servicio/alcance web, extras y politicas renderizadas en `/` y `/examples`
+  - editor `/admin/site` con captura estructurada por campos (sin dependencia de JSON manual)
+  - migracion automatica de configuraciones legacy (`Esencial` + `Premium Astronautas`) al nuevo catalogo
 - Rediseño visual del viewer para `theme_id="astronautas"`:
   - paleta pastel acuarela
   - tipografias redondeadas (`Fredoka` + `Nunito`)

@@ -1888,8 +1888,6 @@ export function App({ initialInvitationThemeId }: AppProps) {
   }
 
   if (route.mode === "admin-login") {
-    const redirectTarget = getSafeAdminRedirectPath(new URLSearchParams(window.location.search).get("redirect"));
-
     return (
       <PublicShell showLogout={false} showSiteLink centered>
         <section className="auth-card viewer-card">
@@ -1915,14 +1913,11 @@ export function App({ initialInvitationThemeId }: AppProps) {
                 required
               />
             </label>
-            <button type="submit" className="viewer-link" disabled={loginLoading}>
+            <button type="submit" className="button-primary viewer-link viewer-login-submit" disabled={loginLoading}>
               {loginLoading ? "Entrando..." : "Entrar"}
             </button>
             {loginError ? <p className="viewer-error-text">{loginError}</p> : null}
-            <p className="viewer-response-meta">
-              <span>Redirección al entrar:</span>
-              <span>{redirectTarget}</span>
-            </p>
+            {null}
           </form>
         </section>
       </PublicShell>

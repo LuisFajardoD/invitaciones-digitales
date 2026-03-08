@@ -3745,15 +3745,76 @@
   font-weight: 700;
 }
 
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 7;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 132px;
+  padding: 8px 14px 7px;
+  border: 1px solid rgba(167, 205, 224, 0.96);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--wc-primary);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transform: translate3d(-50%, 0, 0);
+  box-shadow: 0 6px 14px rgba(79, 111, 140, 0.14);
+  animation: watercolor-scroll-hint-float 1.7s ease-in-out infinite;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__scroll-hint-text {
+  font-size: 0.68rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__scroll-hint-icon {
+  font-size: 1.06rem;
+  line-height: 0.9;
+  font-weight: 900;
+  animation: watercolor-scroll-hint-arrow 1.15s ease-in-out infinite;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__scroll-hint-decor {
+  position: absolute;
+  line-height: 1;
+  font-size: 0.76rem;
+  opacity: 0.88;
+  filter: saturate(0.9);
+  animation: watercolor-space-float 3.6s ease-in-out infinite;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__scroll-hint-decor--left {
+  top: -9px;
+  left: 9px;
+  animation-delay: -0.5s;
+}
+
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__scroll-hint-decor--right {
+  top: -10px;
+  right: 10px;
+  animation-delay: -1.2s;
+}
+
 .app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art {
+  --wc-astronaut-rise-end: calc(-74% + 70px);
   z-index: 2;
   opacity: 0.94;
   filter: drop-shadow(0 12px 18px rgba(79, 111, 140, 0.24));
-  animation: watercolor-astronaut-balloon-rise 4.2s cubic-bezier(0.18, 0.9, 0.3, 1) 1 both;
+  animation: watercolor-astronaut-balloon-rise 4.8s cubic-bezier(0.18, 0.9, 0.3, 1) 1 both;
   will-change: transform, opacity;
   width: clamp(210px, 64vw, 360px);
   right: clamp(0px, 0.5vw, 8px);
-  bottom: 10px;
+  bottom: 18px;
 }
 
 .app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art img {
@@ -4262,7 +4323,7 @@
   }
 
   100% {
-    transform: translate3d(10px, calc(-74% + 70px), 0);
+    transform: translate3d(10px, var(--wc-astronaut-rise-end, calc(-74% + 70px)), 0);
     opacity: 1;
   }
 }
@@ -4308,6 +4369,30 @@
 
   50% {
     transform: translate3d(-47%, 10px, 0);
+  }
+}
+
+@keyframes watercolor-scroll-hint-float {
+  0%,
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(-50%, -6px, 0);
+  }
+}
+
+@keyframes watercolor-scroll-hint-arrow {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.74;
+  }
+
+  50% {
+    transform: translateY(3px);
+    opacity: 1;
   }
 }
 
@@ -4467,6 +4552,42 @@
 
   .app-viewer[data-theme="watercolor-space"] .countdown-cell--mission strong {
     font-size: clamp(1.88rem, 8vw, 2.3rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__content {
+    padding-right: calc(12px + env(safe-area-inset-right, 0px));
+    padding-bottom: calc(214px + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(12px + env(safe-area-inset-left, 0px));
+  }
+
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__copy {
+    width: min(100%, calc(100% - 74px));
+  }
+
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art {
+    --wc-astronaut-rise-end: calc(-74% + 70px);
+    width: clamp(168px, 45vw, 228px);
+    right: 2px;
+    bottom: 28px;
+  }
+
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__scroll-hint {
+    min-width: 122px;
+    padding: 7px 12px 6px;
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 480px) and (max-height: 920px) {
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__content {
+    padding-bottom: calc(194px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art {
+    --wc-astronaut-rise-end: calc(-68% + 66px);
+    width: clamp(154px, 43vw, 212px);
   }
 }
 
