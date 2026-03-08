@@ -134,6 +134,14 @@ const quickActionTypeOptions: Array<{
   { value: "share", label: "Compartir invitación" },
 ];
 
+const WHATSAPP_QA_CHECKLIST: string[] = [
+  "Sube una imagen OG horizontal (1200x630).",
+  "Guarda cambios en la invitación y confirma título + descripción OG.",
+  "Comparte primero desde WhatsApp móvil para validar preview real.",
+  "Si no actualiza, comparte una vez con ?wa=1 (cache-buster).",
+  "Si persiste caché, prueba ?wa=2 o ?wa=3 y vuelve a pegar la URL normal.",
+];
+
 const editorCategories: Array<{ key: EditorCategoryKey; label: string }> = [
   { key: "base", label: "Base" },
   { key: "portada", label: "Portada" },
@@ -250,6 +258,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
   const [templateStatus, setTemplateStatus] = useState("");
   const [templateError, setTemplateError] = useState("");
   const [templateLoading, setTemplateLoading] = useState(false);
+  const [isWhatsAppChecklistOpen, setIsWhatsAppChecklistOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("live");
   const [devicePresetKey, setDevicePresetKey] = useState<DevicePresetKey>("iphone_15_pro_max");
   const [previewVersion, setPreviewVersion] = useState(0);
@@ -292,6 +301,21 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
 
     window.localStorage.setItem(DEVICE_PRESET_STORAGE_KEY, devicePresetKey);
   }, [devicePresetKey]);
+
+  useEffect(() => {
+    if (!isWhatsAppChecklistOpen) {
+      return;
+    }
+
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsWhatsAppChecklistOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [isWhatsAppChecklistOpen]);
 
   useEffect(() => {
     if (previewMode !== "live") {
@@ -1943,6 +1967,16 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             title="Metadatos y expiracion"
             description="Configuración OG y contenido de la página de expiración."
           >
+            <div className={styles["inv-editor-share-help"]}>
+              <p className="helper-text">Validación rápida antes de compartir por WhatsApp.</p>
+              <button
+                type="button"
+                className={`button-secondary ${styles["inv-editor-share-help-button"]}`}
+                onClick={() => setIsWhatsAppChecklistOpen(true)}
+              >
+                Checklist WhatsApp
+              </button>
+            </div>
             <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
               <label className="field">
                 <span>Titulo OG</span>
@@ -2115,6 +2149,41 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
         {error ? <p className="error-text" style={{ margin: 0 }}>{error}</p> : null}
       </section>
       </aside>
+
+      {isWhatsAppChecklistOpen ? (
+        <div
+          className={styles["inv-editor-modal-backdrop"]}
+          role="presentation"
+          onClick={() => setIsWhatsAppChecklistOpen(false)}
+        >
+          <section
+            className={styles["inv-editor-modal"]}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wa-checklist-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className={styles["inv-editor-modal-head"]}>
+              <div>
+                <p className="eyebrow">Publicacion</p>
+                <h3 id="wa-checklist-title">Checklist WhatsApp</h3>
+              </div>
+              <button
+                type="button"
+                className="button-ghost"
+                onClick={() => setIsWhatsAppChecklistOpen(false)}
+              >
+                Cerrar
+              </button>
+            </header>
+            <ol className={styles["inv-editor-modal-list"]}>
+              {WHATSAPP_QA_CHECKLIST.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ol>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
