@@ -24,6 +24,7 @@ Actualizado: 8 de marzo de 2026
   - imagen OG horizontal 1200x630 desde `/api/public/og-card` (evita miniatura compacta con imágenes verticales)
   - `og:image:width`, `og:image:height` y `og:image:type` definidos en metadata
   - `/api/public/invitations/[slug]/og-image` mantenido como redirect legacy con guard anti-loop
+  - hotfix de estabilidad: metadata ahora prioriza URL de imagen OG directa (sin pasar por `/api/public/og-card`) para evitar fallos 503 del endpoint dinámico en producción
 - Se renovó la landing comercial y su editor:
   - paquetes recomendados en `lib/site-packages.ts` (Imagen Esencial, Interactiva, Video, Web Esencial, Web Premium)
   - servicio/alcance web, extras y politicas renderizadas en `/` y `/examples`

@@ -27,6 +27,14 @@ function appendVersionParam(url: string, version: string) {
   return `${url}${separator}v=${encodeURIComponent(version)}`;
 }
 
+function buildVersionToken(version: string) {
+  const time = Number.isNaN(Date.parse(version)) ? NaN : Date.parse(version);
+  if (Number.isFinite(time) && time > 0) {
+    return String(time);
+  }
+  return version.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 24) || "1";
+}
+
 function resolveOgImageUrl({
   origin,
   rawUrl,
@@ -38,42 +46,21 @@ function resolveOgImageUrl({
   fallbackSlug: string;
   version: string;
 }) {
+  const versionToken = buildVersionToken(version);
   const trimmed = rawUrl.trim();
   if (trimmed) {
     if (/^https?:\/\//i.test(trimmed)) {
-      return appendVersionParam(trimmed, version);
+      return appendVersionParam(trimmed, versionToken);
     }
 
     if (trimmed.startsWith("/")) {
-      return appendVersionParam(`${origin}${trimmed}`, version);
+      return appendVersionParam(`${origin}${trimmed}`, versionToken);
     }
 
-    return appendVersionParam(`${origin}/${trimmed.replace(/^\/+/, "")}`, version);
+    return appendVersionParam(`${origin}/${trimmed.replace(/^\/+/, "")}`, versionToken);
   }
 
-  return `${origin}/api/public/invitations/${encodeURIComponent(fallbackSlug)}/og-image?v=${encodeURIComponent(version)}`;
-}
-
-function buildOgCardUrl({
-  origin,
-  title,
-  description,
-  imageUrl,
-  version,
-}: {
-  origin: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  version: string;
-}) {
-  const params = new URLSearchParams({
-    title,
-    description,
-    image: imageUrl,
-    v: version,
-  });
-  return `${origin}/api/public/og-card?${params.toString()}`;
+  return `${origin}/api/public/invitations/${encodeURIComponent(fallbackSlug)}/og-image?v=${encodeURIComponent(versionToken)}`;
 }
 
 export async function generateMetadata({ params }: InvitationPageProps): Promise<Metadata> {
@@ -99,17 +86,10 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
     invitation.sections.hero.background?.image_url ||
     invitation.sections.hero.background_image_url ||
     "";
-  const sourceImageUrl = resolveOgImageUrl({
+  const ogImageUrl = resolveOgImageUrl({
     origin,
     rawUrl: ogImageSource,
     fallbackSlug: invitation.slug,
-    version: invitation.updated_at,
-  });
-  const ogImageUrl = buildOgCardUrl({
-    origin,
-    title: invitation.share.og_title,
-    description: invitation.share.og_description,
-    imageUrl: sourceImageUrl,
     version: invitation.updated_at,
   });
 
@@ -127,9 +107,6 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
         {
           url: ogImageUrl,
           alt: invitation.share.og_title,
-          width: 1200,
-          height: 630,
-          type: "image/png",
         },
       ],
       type: invitation.share.og_type as "website",
