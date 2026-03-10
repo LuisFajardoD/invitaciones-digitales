@@ -76,6 +76,21 @@ function formatResponseDate(input: string) {
   }).format(new Date(input));
 }
 
+function formatResponseDateForPdf(input: string) {
+  const value = new Date(input);
+  const datePart = new Intl.DateTimeFormat("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(value);
+  const timePart = new Intl.DateTimeFormat("es-MX", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(value);
+
+  return `${datePart}\n${timePart}`;
+}
+
 type ClientRsvpResponseStatus = "confirmed" | "cancelled" | "declined";
 
 function resolveClientRsvpStatuses(responses: ClientRsvpView["summary"]["responses"]) {
@@ -929,28 +944,33 @@ export function App({ initialInvitationThemeId }: AppProps) {
       const autoTable = (jsPdfAutoTableModule as { default: (doc: unknown, options: unknown) => void }).default;
 
       const doc = new jsPDF({
-        orientation: "landscape",
+        orientation: "portrait",
         unit: "pt",
         format: "a4",
       });
 
       const pageWidth = doc.internal.pageSize.getWidth();
-      const marginX = 40;
+      const marginX = 32;
       const contentWidth = pageWidth - marginX * 2;
+      const guestColWidth = Math.round(contentWidth * 0.25);
+      const attendeesColWidth = Math.round(contentWidth * 0.11);
+      const messageColWidth = Math.round(contentWidth * 0.35);
+      const dateColWidth = Math.round(contentWidth * 0.16);
+      const statusColWidth = contentWidth - guestColWidth - attendeesColWidth - messageColWidth - dateColWidth;
       let cursorY = 52;
 
       doc.setFillColor(15, 23, 42);
-      doc.roundedRect(marginX, cursorY, contentWidth, 86, 14, 14, "F");
+      doc.roundedRect(marginX, cursorY, contentWidth, 82, 14, 14, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(21);
+      doc.setFontSize(20);
       doc.text("Panel cliente RSVP", marginX + 18, cursorY + 30);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(11);
       doc.setTextColor(191, 206, 225);
       doc.text(clientRsvpView.invitation.sections.hero.title, marginX + 18, cursorY + 50);
       doc.text(`Generado: ${formatResponseDate(new Date().toISOString())}`, marginX + 18, cursorY + 68);
-      cursorY += 106;
+      cursorY += 100;
 
       const summaryItems = [
         { label: "Asisten", value: clientRsvpView.summary.attendingCount },
@@ -963,17 +983,17 @@ export function App({ initialInvitationThemeId }: AppProps) {
         const cardX = marginX + index * (summaryWidth + 10);
         doc.setFillColor(248, 250, 252);
         doc.setDrawColor(203, 213, 225);
-        doc.roundedRect(cardX, cursorY, summaryWidth, 74, 10, 10, "FD");
+        doc.roundedRect(cardX, cursorY, summaryWidth, 70, 10, 10, "FD");
         doc.setTextColor(71, 85, 105);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
         doc.text(item.label, cardX + summaryWidth / 2, cursorY + 24, { align: "center" });
         doc.setTextColor(15, 23, 42);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(24);
-        doc.text(String(item.value), cardX + summaryWidth / 2, cursorY + 54, { align: "center" });
+        doc.setFontSize(22);
+        doc.text(String(item.value), cardX + summaryWidth / 2, cursorY + 52, { align: "center" });
       }
-      cursorY += 94;
+      cursorY += 88;
 
       const responseStatuses = resolveClientRsvpStatuses(clientRsvpView.summary.responses);
       const sortedResponses = sortClientRsvpResponses(clientRsvpView.summary.responses, responseStatuses);
@@ -988,7 +1008,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
           response.name,
           String(attendees),
           response.message?.trim() || "Sin mensaje",
-          formatResponseDate(response.created_at),
+          formatResponseDateForPdf(response.created_at),
           statusMeta.label,
         ];
       });
@@ -1003,24 +1023,53 @@ export function App({ initialInvitationThemeId }: AppProps) {
           fillColor: [15, 23, 42],
           textColor: [255, 255, 255],
           fontStyle: "bold",
-          halign: "left",
-          fontSize: 10,
-          cellPadding: 8,
+          halign: "center",
+          fontSize: 9,
+          cellPadding: { top: 7, right: 6, bottom: 7, left: 6 },
         },
         styles: {
-          fontSize: 10,
-          cellPadding: 8,
+          fontSize: 9,
+          cellPadding: { top: 7, right: 6, bottom: 7, left: 6 },
           lineColor: [203, 213, 225],
           lineWidth: 0.6,
           textColor: [15, 23, 42],
           valign: "middle",
         },
         columnStyles: {
-          1: { halign: "center", fontStyle: "bold", fontSize: 13 },
-          4: { halign: "center" },
+          0: { cellWidth: guestColWidth },
+          1: { cellWidth: attendeesColWidth, halign: "center", fontStyle: "bold", fontSize: 11 },
+          2: { cellWidth: messageColWidth, overflow: "linebreak" },
+          3: { cellWidth: dateColWidth, overflow: "linebreak" },
+          4: { cellWidth: statusColWidth, halign: "center", overflow: "linebreak" },
         },
         alternateRowStyles: {
           fillColor: [248, 250, 252],
+        },
+        didParseCell: (hookData: any) => {
+          if (hookData.section !== "body" || hookData.column.index !== 4) {
+            return;
+          }
+
+          const statusValue = String(hookData.cell.raw || "")
+            .toLowerCase()
+            .trim();
+
+          if (statusValue === "confirmado") {
+            hookData.cell.styles.textColor = [22, 163, 74];
+            hookData.cell.styles.fontStyle = "bold";
+            return;
+          }
+
+          if (statusValue === "cancelado") {
+            hookData.cell.styles.textColor = [220, 38, 38];
+            hookData.cell.styles.fontStyle = "bold";
+            return;
+          }
+
+          if (statusValue === "no asiste") {
+            hookData.cell.styles.textColor = [217, 119, 6];
+            hookData.cell.styles.fontStyle = "bold";
+          }
         },
       });
 

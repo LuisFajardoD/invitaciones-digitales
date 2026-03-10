@@ -617,17 +617,40 @@ export async function createPublicRsvpResponse(input: {
   attending: boolean;
   guestsCount?: number | null;
   message?: string | null;
+  mode?: "submit" | "cancel";
 }) {
   const invitation = await getPublicInvitationBySlug(input.slug);
   if (!invitation) {
     throw new Error("Invitación no encontrada.");
   }
 
+  const mode = input.mode === "cancel" ? "cancel" : "submit";
+  const trimmedName = input.name.trim();
+
+  if (mode === "cancel") {
+    const requestedCancelRaw = Number(input.guestsCount);
+    const requestedCancel = Number.isFinite(requestedCancelRaw) && requestedCancelRaw > 0 ? Math.trunc(requestedCancelRaw) : 0;
+
+    if (requestedCancel < 1) {
+      throw new Error("Indica cuántos asistentes deseas cancelar.");
+    }
+
+    return createRsvpResponse({
+      invitationId: invitation.id,
+      name: trimmedName,
+      attending: false,
+      guestsCount: requestedCancel,
+      message: input.message ?? null,
+    });
+  }
+
+  const normalizedGuestsCount = input.attending ? input.guestsCount ?? null : null;
+
   return createRsvpResponse({
     invitationId: invitation.id,
-    name: input.name,
+    name: trimmedName,
     attending: input.attending,
-    guestsCount: input.guestsCount ?? null,
+    guestsCount: normalizedGuestsCount,
     message: input.message ?? null,
   });
 }
