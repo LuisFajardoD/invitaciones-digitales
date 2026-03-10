@@ -3410,7 +3410,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                       <th>Asistentes</th>
                       <th>Mensaje</th>
                       <th>Fecha y hora</th>
-                      <th>Acciones</th>
+                      <th>Acción</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -3434,7 +3434,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                           </td>
                           <td data-label="Mensaje">{response.message?.trim() || "Sin mensaje"}</td>
                           <td data-label="Fecha y hora">{formatResponseDate(response.created_at)}</td>
-                          <td data-label="Acciones" className="client-rsvp-actions">
+                          <td data-label="Acción" className="client-rsvp-actions">
                             <button
                               type="button"
                               className="client-rsvp-delete-button"
