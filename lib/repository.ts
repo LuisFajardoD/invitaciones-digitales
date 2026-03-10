@@ -644,3 +644,65 @@ export async function getClientRsvpView(slug: string, token: string): Promise<Cl
     summary,
   };
 }
+
+export async function deleteClientRsvpResponse(input: {
+  slug: string;
+  token: string;
+  responseId: string;
+}): Promise<ClientRsvpView | "not_found" | null> {
+  const invitation = await getInvitationBySlug(input.slug);
+  if (!invitation || invitation.client_view_token !== input.token) {
+    return null;
+  }
+
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    const previousCount = store.rsvpResponses.length;
+    store.rsvpResponses = store.rsvpResponses.filter(
+      (response) => !(response.id === input.responseId && response.invitation_id === invitation.id),
+    );
+
+    if (store.rsvpResponses.length === previousCount) {
+      return "not_found";
+    }
+
+    await writeMockStore(store);
+    const summary = buildRsvpSummary(store.rsvpResponses.filter((response) => response.invitation_id === invitation.id));
+    return {
+      invitation,
+      summary,
+    };
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { data: targetRows, error: targetError } = await supabase!
+    .from("rsvp_responses")
+    .select("id")
+    .eq("id", input.responseId)
+    .eq("invitation_id", invitation.id)
+    .limit(1);
+
+  if (targetError) {
+    throw new Error(targetError.message);
+  }
+
+  if (!targetRows?.length) {
+    return "not_found";
+  }
+
+  const { error: deleteError } = await supabase!
+    .from("rsvp_responses")
+    .delete()
+    .eq("id", input.responseId)
+    .eq("invitation_id", invitation.id);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+
+  const summary = await getRsvpSummary(invitation.id);
+  return {
+    invitation,
+    summary,
+  };
+}

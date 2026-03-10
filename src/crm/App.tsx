@@ -713,6 +713,8 @@ export function App({ initialInvitationThemeId }: AppProps) {
   const [previewScreenshotError, setPreviewScreenshotError] = useState("");
   const [previewScreenshotCached, setPreviewScreenshotCached] = useState(false);
   const [clientRsvpActionStatus, setClientRsvpActionStatus] = useState("");
+  const [clientRsvpDeleteTarget, setClientRsvpDeleteTarget] = useState<ClientRsvpView["summary"]["responses"][number] | null>(null);
+  const [clientRsvpDeleteLoading, setClientRsvpDeleteLoading] = useState(false);
   const [publicInvitationReady, setPublicInvitationReady] = useState(route.mode !== "invitation");
   const livePreviewScrollRef = useRef<HTMLDivElement | null>(null);
   const sectionOrderSensors = useSensors(
@@ -791,6 +793,21 @@ export function App({ initialInvitationThemeId }: AppProps) {
     stopLivePreviewDrag();
   }
 
+  async function requestClientRsvpView(slug: string, token: string) {
+    const response = await fetch(
+      `/api/public/invitations/${encodeURIComponent(slug)}/client-rsvp?token=${encodeURIComponent(token)}`,
+      { cache: "no-store" },
+    );
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(payload.error || "No se pudo cargar la vista cliente.");
+    }
+
+    const payload = (await response.json()) as ClientRsvpApiSuccess;
+    return payload.result;
+  }
+
   async function handleClientRsvpCopyLink() {
     if (typeof window === "undefined") {
       return;
@@ -834,6 +851,46 @@ export function App({ initialInvitationThemeId }: AppProps) {
 
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  }
+
+  async function handleClientRsvpDeleteResponse() {
+    if (!clientRsvpDeleteTarget || route.mode !== "client-rsvp" || !route.token) {
+      return;
+    }
+
+    setClientRsvpDeleteLoading(true);
+    setClientRsvpActionStatus("");
+
+    try {
+      const response = await fetch(
+        `/api/public/invitations/${encodeURIComponent(route.slug)}/client-rsvp?token=${encodeURIComponent(route.token)}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ responseId: clientRsvpDeleteTarget.id }),
+        },
+      );
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || "No se pudo eliminar la respuesta.");
+      }
+
+      const payload = (await response.json()) as ClientRsvpApiSuccess;
+      setClientRsvpView(payload.result);
+      setInvitation(payload.result.invitation);
+      setClientRsvpDeleteTarget(null);
+      setClientRsvpActionStatus("Respuesta eliminada.");
+      window.setTimeout(() => {
+        setClientRsvpActionStatus((current) => (current === "Respuesta eliminada." ? "" : current));
+      }, 2200);
+    } catch (deleteError) {
+      setClientRsvpActionStatus(deleteError instanceof Error ? deleteError.message : "No se pudo eliminar la respuesta.");
+    } finally {
+      setClientRsvpDeleteLoading(false);
+    }
   }
 
   async function handleClientRsvpExportPdf() {
@@ -1111,6 +1168,8 @@ export function App({ initialInvitationThemeId }: AppProps) {
       setInvitation(null);
       setEditorDraft(null);
       setClientRsvpView(null);
+      setClientRsvpDeleteTarget(null);
+      setClientRsvpDeleteLoading(false);
       setAdminInvitations([]);
 
       try {
@@ -1119,18 +1178,10 @@ export function App({ initialInvitationThemeId }: AppProps) {
             throw new Error("El token es obligatorio para la vista cliente.");
           }
 
-          const response = await fetch(
-            `/api/public/invitations/${encodeURIComponent(route.slug)}/client-rsvp?token=${encodeURIComponent(route.token)}`,
-            { cache: "no-store" },
-          );
-          if (!response.ok) {
-            const payload = (await response.json().catch(() => ({}))) as { error?: string };
-            throw new Error(payload.error || "No se pudo cargar la vista cliente.");
-          }
-          const payload = (await response.json()) as ClientRsvpApiSuccess;
+          const clientView = await requestClientRsvpView(route.slug, route.token);
           if (!cancelled) {
-            setClientRsvpView(payload.result);
-            setInvitation(payload.result.invitation);
+            setClientRsvpView(clientView);
+            setInvitation(clientView.invitation);
           }
           return;
         }
@@ -3329,6 +3380,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                       <th>Asistentes</th>
                       <th>Mensaje</th>
                       <th>Fecha y hora</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -3352,17 +3404,116 @@ export function App({ initialInvitationThemeId }: AppProps) {
                           </td>
                           <td data-label="Mensaje">{response.message?.trim() || "Sin mensaje"}</td>
                           <td data-label="Fecha y hora">{formatResponseDate(response.created_at)}</td>
+                          <td data-label="Acciones" className="client-rsvp-actions">
+                            <button
+                              type="button"
+                              className="client-rsvp-delete-button"
+                              aria-label={`Eliminar respuesta de ${response.name}`}
+                              title="Eliminar respuesta"
+                              disabled={clientRsvpDeleteLoading}
+                              onClick={() => setClientRsvpDeleteTarget(response)}
+                            >
+                              ✕
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
+                <div className="client-rsvp-mobile-list">
+                  {sortedResponses.map((response) => {
+                    const responseStatus = responseStatuses.get(response.id) || "declined";
+                    const statusMeta = getClientRsvpStatusMeta(responseStatus);
+                    const attendees = response.attending
+                      ? Math.max(1, Number(response.guests_count) || 1)
+                      : Math.max(0, Number(response.guests_count) || 0);
+
+                    return (
+                      <article key={`mobile-${response.id}`} className="client-rsvp-mobile-card">
+                        <header className="client-rsvp-mobile-card__head">
+                          <div>
+                            <p className="eyebrow">Invitado / Familia</p>
+                            <strong className="client-rsvp-mobile-card__name">{response.name}</strong>
+                          </div>
+                          <span className={`status-pill ${statusMeta.className}`}>{statusMeta.label}</span>
+                        </header>
+
+                        <div className="client-rsvp-mobile-card__row">
+                          <div className="client-rsvp-mobile-card__chip">
+                            <span>Asistentes</span>
+                            <strong>{attendees}</strong>
+                          </div>
+                          <button
+                            type="button"
+                            className="client-rsvp-delete-button"
+                            aria-label={`Eliminar respuesta de ${response.name}`}
+                            title="Eliminar respuesta"
+                            disabled={clientRsvpDeleteLoading}
+                            onClick={() => setClientRsvpDeleteTarget(response)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        <div className="client-rsvp-mobile-card__block">
+                          <span>Mensaje</span>
+                          <p>{response.message?.trim() || "Sin mensaje"}</p>
+                        </div>
+
+                        <div className="client-rsvp-mobile-card__block">
+                          <span>Fecha y hora</span>
+                          <p>{formatResponseDate(response.created_at)}</p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
               <p className="viewer-empty-copy">Todavía no hay respuestas registradas.</p>
             )}
           </section>
         </div>
+        {clientRsvpDeleteTarget ? (
+          <div
+            className="client-rsvp-delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="client-rsvp-delete-title"
+            onClick={() => {
+              if (!clientRsvpDeleteLoading) {
+                setClientRsvpDeleteTarget(null);
+              }
+            }}
+          >
+            <div className="client-rsvp-delete-modal__card" role="document" onClick={(event) => event.stopPropagation()}>
+              <h3 id="client-rsvp-delete-title">Eliminar respuesta RSVP</h3>
+              <p>
+                Esta acción borrará el registro de <strong>{clientRsvpDeleteTarget.name}</strong> y actualizará el resumen
+                de asistentes. ¿Deseas continuar?
+              </p>
+              <div className="client-rsvp-delete-modal__actions">
+                <button
+                  type="button"
+                  className="button-secondary client-rsvp-delete-modal__button"
+                  onClick={() => setClientRsvpDeleteTarget(null)}
+                  disabled={clientRsvpDeleteLoading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="button-primary client-rsvp-delete-modal__button client-rsvp-delete-modal__button--danger"
+                  onClick={() => void handleClientRsvpDeleteResponse()}
+                  disabled={clientRsvpDeleteLoading}
+                >
+                  {clientRsvpDeleteLoading ? "Eliminando..." : "Sí, eliminar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </PublicShell>
     );
   }

@@ -713,13 +713,15 @@ export function NotesSectionViewer({ items }: { items: string[] }) {
 
 export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord }) {
   const [name, setName] = useState("");
-  const [attending, setAttending] = useState("yes");
-  const [guestsCount, setGuestsCount] = useState("1");
+  const [attending, setAttending] = useState("");
+  const [guestsCount, setGuestsCount] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
-  const [savedMessage, setSavedMessage] = useState("Tu RSVP fue enviado y ya quedó registrado.");
+  const [feedbackModal, setFeedbackModal] = useState<{
+    variant: "error" | "success";
+    title: string;
+    message: string;
+  } | null>(null);
   const fields = invitation.sections.rsvp.fields || {};
   const allowGuestsCount = Boolean(fields.guests_count ?? fields.allow_guests_count);
   const allowMessage = Boolean(fields.message ?? fields.allow_message);
@@ -729,23 +731,40 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
   );
 
   async function submitRsvp({ forceCancel = false }: { forceCancel?: boolean } = {}) {
-    setError("");
-    setSaved(false);
+    setFeedbackModal(null);
+    const trimmedName = name.trim();
+    const mustSelectGuests = !forceCancel && allowGuestsCount && attending === "yes";
+    const normalizedGuestNumber = Math.trunc(Number(guestsCount || "0"));
+    const isGuestsCountValid = !mustSelectGuests || (Number.isFinite(normalizedGuestNumber) && normalizedGuestNumber >= 1);
+    const missingFields: string[] = [];
 
-    if (!name.trim()) {
-      setError("El nombre es obligatorio.");
-      return;
+    if (!trimmedName) {
+      missingFields.push("ingresa tu nombre");
     }
 
     if (!forceCancel && !attending) {
-      setError("Selecciona si asistes o no.");
+      missingFields.push("selecciona si asistes");
+    }
+
+    if (!isGuestsCountValid) {
+      missingFields.push("elige el número de asistentes");
+    }
+
+    if (missingFields.length > 0) {
+      const details =
+        missingFields.length === 1
+          ? missingFields[0]
+          : `${missingFields.slice(0, -1).join(", ")} y ${missingFields[missingFields.length - 1]}`;
+      setFeedbackModal({
+        variant: "error",
+        title: "Faltan datos por completar",
+        message: `Por favor ${details} para continuar.`,
+      });
       return;
     }
 
     const attendingValue = forceCancel ? false : attending === "yes";
-    const normalizedGuestsCount = allowGuestsCount
-      ? Math.max(1, Math.trunc(Number(guestsCount || "1") || 1))
-      : null;
+    const normalizedGuestsCount = mustSelectGuests ? Math.max(1, normalizedGuestNumber) : null;
 
     setSubmitting(true);
 
@@ -768,19 +787,23 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
         throw new Error(payload.error || "No se pudo enviar tu confirmación.");
       }
 
-      setSaved(true);
-      setSavedMessage(
-        forceCancel
+      setFeedbackModal({
+        variant: "success",
+        title: "Datos enviados con éxito",
+        message: forceCancel
           ? "Se registró la cancelación de asistencia. Si cambian de plan, puedes reenviar el formulario."
-          : "Tu RSVP fue enviado y ya quedó registrado.",
-      );
+          : "Tu confirmación fue enviada y quedó registrada.",
+      });
       setName("");
-      setAttending("yes");
-      setGuestsCount("1");
+      setAttending("");
+      setGuestsCount("");
       setMessage("");
-      window.setTimeout(() => setSaved(false), 2400);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo enviar tu confirmación.");
+      setFeedbackModal({
+        variant: "error",
+        title: "No se pudo enviar",
+        message: submitError instanceof Error ? submitError.message : "No se pudo enviar tu confirmación.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -814,18 +837,24 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
               ¿Asistes?<span aria-hidden="true">&nbsp;*</span>
             </span>
             <select className="mission-input" value={attending} onChange={(event) => setAttending(event.target.value)}>
+              <option value="">Selecciona</option>
               <option value="yes">Sí</option>
               <option value="no">No</option>
             </select>
           </label>
           {allowGuestsCount ? (
             <label className="mission-field rsvp-form__field rsvp-form__field--guests">
-              <span className="mission-label">Asistentes (total)</span>
+              <span className="mission-label">
+                Asistentes (total)
+                {attending === "yes" ? <span aria-hidden="true">&nbsp;*</span> : null}
+              </span>
               <input
                 className="mission-input"
                 type="number"
                 min={1}
                 value={guestsCount}
+                placeholder={attending === "yes" ? "Ej. 1" : "No aplica"}
+                disabled={attending !== "yes"}
                 onChange={(event) => setGuestsCount(event.target.value)}
               />
             </label>
@@ -852,19 +881,21 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
               Si ya habías confirmado y ahora no podrás asistir, usa "Cancelar asistencia".
             </p>
           </div>
-          {error ? <p className="viewer-error-text">{error}</p> : null}
         </form>
       )}
-      {saved ? (
-        <div className="rsvp-success rsvp-success--mission" aria-live="polite">
-          <div className="mission-launch" aria-hidden="true">
-            <div className="mission-launch__trail" />
-            <div className="mission-launch__rocket">
-              <MissionRocket />
-            </div>
+      {feedbackModal ? (
+        <div className="rsvp-feedback-modal" role="dialog" aria-modal="true" aria-labelledby="rsvp-feedback-modal-title">
+          <div
+            className={`rsvp-feedback-modal__card rsvp-feedback-modal__card--${feedbackModal.variant}`}
+            role="document"
+            aria-live="polite"
+          >
+            <h3 id="rsvp-feedback-modal-title">{feedbackModal.title}</h3>
+            <p>{feedbackModal.message}</p>
+            <button type="button" className="mission-button rsvp-feedback-modal__close" onClick={() => setFeedbackModal(null)}>
+              Cerrar
+            </button>
           </div>
-          <strong>Misión completada</strong>
-          <p className="mission-caption">{savedMessage}</p>
         </div>
       ) : null}
     </InvitationSectionFrameViewer>
