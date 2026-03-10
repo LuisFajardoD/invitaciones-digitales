@@ -1,4 +1,15 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  type TouchEvent as ReactTouchEvent,
+} from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   DndContext,
@@ -67,31 +78,18 @@ function formatResponseDate(input: string) {
 
 type ClientRsvpResponseStatus = "confirmed" | "cancelled" | "declined";
 
-function normalizeGuestKey(name: string) {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function resolveClientRsvpStatuses(responses: ClientRsvpView["summary"]["responses"]) {
-  const chronological = [...responses].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-  );
-  const hadPreviousConfirmation = new Set<string>();
   const statusById = new Map<string, ClientRsvpResponseStatus>();
 
-  for (const response of chronological) {
-    const guestKey = normalizeGuestKey(response.name);
+  for (const response of responses) {
     if (response.attending) {
-      hadPreviousConfirmation.add(guestKey);
       statusById.set(response.id, "confirmed");
       continue;
     }
 
-    statusById.set(response.id, hadPreviousConfirmation.has(guestKey) ? "cancelled" : "declined");
+    const cancelledGuestsRaw = Number(response.guests_count);
+    const cancelledGuests = Number.isFinite(cancelledGuestsRaw) ? Math.trunc(cancelledGuestsRaw) : 0;
+    statusById.set(response.id, cancelledGuests > 0 ? "cancelled" : "declined");
   }
 
   return statusById;
@@ -102,7 +100,7 @@ function getClientRsvpStatusMeta(status: ClientRsvpResponseStatus) {
     case "confirmed":
       return { label: "Confirmado", className: "confirmed" };
     case "cancelled":
-      return { label: "Cancelo", className: "cancelled" };
+      return { label: "Cancelado", className: "cancelled" };
     case "declined":
       return { label: "No asiste", className: "declined" };
     default:
@@ -891,6 +889,31 @@ export function App({ initialInvitationThemeId }: AppProps) {
     } finally {
       setClientRsvpDeleteLoading(false);
     }
+  }
+
+  function closeClientRsvpDeleteModal() {
+    if (clientRsvpDeleteLoading) {
+      return;
+    }
+
+    setClientRsvpDeleteTarget(null);
+  }
+
+  function handleClientRsvpDeleteBackdropInteraction(
+    event: ReactMouseEvent<HTMLDivElement> | ReactTouchEvent<HTMLDivElement>,
+  ) {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    closeClientRsvpDeleteModal();
+  }
+
+  function handleClientRsvpDeleteCancelInteraction(
+    event: ReactMouseEvent<HTMLButtonElement> | ReactTouchEvent<HTMLButtonElement>,
+  ) {
+    event.preventDefault();
+    closeClientRsvpDeleteModal();
   }
 
   async function handleClientRsvpExportPdf() {
@@ -3374,6 +3397,13 @@ export function App({ initialInvitationThemeId }: AppProps) {
             {sortedResponses.length ? (
               <div className="client-rsvp-table-wrap">
                 <table className="client-rsvp-table">
+                  <colgroup>
+                    <col className="client-rsvp-table__col client-rsvp-table__col--guest" />
+                    <col className="client-rsvp-table__col client-rsvp-table__col--attendees" />
+                    <col className="client-rsvp-table__col client-rsvp-table__col--message" />
+                    <col className="client-rsvp-table__col client-rsvp-table__col--date" />
+                    <col className="client-rsvp-table__col client-rsvp-table__col--actions" />
+                  </colgroup>
                   <thead>
                     <tr>
                       <th>Invitado / Familia</th>
@@ -3481,13 +3511,10 @@ export function App({ initialInvitationThemeId }: AppProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="client-rsvp-delete-title"
-            onClick={() => {
-              if (!clientRsvpDeleteLoading) {
-                setClientRsvpDeleteTarget(null);
-              }
-            }}
+            onClick={handleClientRsvpDeleteBackdropInteraction}
+            onTouchEnd={handleClientRsvpDeleteBackdropInteraction}
           >
-            <div className="client-rsvp-delete-modal__card" role="document" onClick={(event) => event.stopPropagation()}>
+            <div className="client-rsvp-delete-modal__card" role="document">
               <h3 id="client-rsvp-delete-title">Eliminar respuesta RSVP</h3>
               <p>
                 Esta acción borrará el registro de <strong>{clientRsvpDeleteTarget.name}</strong> y actualizará el resumen
@@ -3497,7 +3524,8 @@ export function App({ initialInvitationThemeId }: AppProps) {
                 <button
                   type="button"
                   className="button-secondary client-rsvp-delete-modal__button"
-                  onClick={() => setClientRsvpDeleteTarget(null)}
+                  onClick={handleClientRsvpDeleteCancelInteraction}
+                  onTouchEnd={handleClientRsvpDeleteCancelInteraction}
                   disabled={clientRsvpDeleteLoading}
                 >
                   Cancelar

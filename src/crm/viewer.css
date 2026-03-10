@@ -2227,6 +2227,11 @@
   grid-area: actions;
 }
 
+.rsvp-form__cancel-button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .mission-caption--wide {
   grid-column: 1 / -1;
 }
@@ -2298,6 +2303,7 @@
   padding: 22px;
   background: rgba(7, 13, 30, 0.64);
   backdrop-filter: blur(2px);
+  touch-action: manipulation;
 }
 
 .rsvp-feedback-modal__card {
@@ -2312,6 +2318,8 @@
   color: var(--text);
   padding: 22px 20px;
   box-shadow: 0 22px 48px rgba(4, 8, 18, 0.48);
+  pointer-events: auto;
+  touch-action: auto;
 }
 
 .rsvp-feedback-modal__card h3 {
@@ -2341,6 +2349,39 @@
   margin-top: 4px;
   font-size: 1rem;
   font-weight: 700;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rsvp-feedback-modal__card--cancel {
+  width: min(560px, 100%);
+}
+
+.rsvp-cancel-form {
+  display: grid;
+  gap: 12px;
+}
+
+.rsvp-cancel-form__field {
+  gap: 8px;
+}
+
+.rsvp-cancel-form__actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rsvp-cancel-form__secondary {
+  min-height: 56px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 560px) {
+  .rsvp-cancel-form__actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mission-launch {
@@ -4280,6 +4321,10 @@
 }
 
 .app-viewer[data-theme="watercolor-space"] .rsvp-feedback-modal__card--success {
+  border-color: rgba(127, 168, 196, 0.72);
+}
+
+.app-viewer[data-theme="watercolor-space"] .rsvp-feedback-modal__card--cancel {
   border-color: rgba(127, 168, 196, 0.72);
 }
 

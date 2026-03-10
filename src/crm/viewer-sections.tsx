@@ -1,4 +1,13 @@
-import { type CSSProperties, type FormEvent, type MouseEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  type FormEvent,
+  type MouseEvent,
+  type ReactNode,
+  type TouchEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { BackgroundMediaConfig, GenericSection, InvitationRecord, QuickActionItem } from "./viewer-types";
 import { normalizeKenBurns, resolveHeroBackground, resolveMediaUrl, splitTitle, trimList } from "./viewer-utils";
 
@@ -716,6 +725,10 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
   const [attending, setAttending] = useState("");
   const [guestsCount, setGuestsCount] = useState("");
   const [message, setMessage] = useState("");
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelName, setCancelName] = useState("");
+  const [cancelGuestsCount, setCancelGuestsCount] = useState("");
+  const [cancelMessage, setCancelMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [feedbackModal, setFeedbackModal] = useState<{
     variant: "error" | "success";
@@ -730,10 +743,64 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
     [invitation.rsvp_until],
   );
 
-  async function submitRsvp({ forceCancel = false }: { forceCancel?: boolean } = {}) {
+  function closeFeedbackModal() {
+    setFeedbackModal(null);
+  }
+
+  function isBackdropInteraction(event: MouseEvent<HTMLElement> | TouchEvent<HTMLElement>) {
+    return event.target === event.currentTarget;
+  }
+
+  function openCancelModal() {
+    if (submitting) {
+      return;
+    }
+
+    setFeedbackModal(null);
+    setCancelName((current) => current || name.trim());
+    setCancelGuestsCount((current) => current || guestsCount.trim());
+    setCancelMessage((current) => current || message.trim());
+    setCancelModalOpen(true);
+  }
+
+  function closeCancelModal() {
+    if (submitting) {
+      return;
+    }
+
+    setCancelModalOpen(false);
+  }
+
+  function handleCancelModalBackdropInteraction(event: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) {
+    if (!isBackdropInteraction(event)) {
+      return;
+    }
+
+    closeCancelModal();
+  }
+
+  function handleFeedbackModalBackdropInteraction(event: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) {
+    if (!isBackdropInteraction(event)) {
+      return;
+    }
+
+    closeFeedbackModal();
+  }
+
+  function handleCancelModalCloseInteraction(event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    closeCancelModal();
+  }
+
+  function handleFeedbackModalCloseInteraction(event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    closeFeedbackModal();
+  }
+
+  async function submitRsvp() {
     setFeedbackModal(null);
     const trimmedName = name.trim();
-    const mustSelectGuests = !forceCancel && allowGuestsCount && attending === "yes";
+    const mustSelectGuests = allowGuestsCount && attending === "yes";
     const normalizedGuestNumber = Math.trunc(Number(guestsCount || "0"));
     const isGuestsCountValid = !mustSelectGuests || (Number.isFinite(normalizedGuestNumber) && normalizedGuestNumber >= 1);
     const missingFields: string[] = [];
@@ -742,7 +809,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
       missingFields.push("ingresa tu nombre");
     }
 
-    if (!forceCancel && !attending) {
+    if (!attending) {
       missingFields.push("selecciona si asistes");
     }
 
@@ -763,7 +830,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
       return;
     }
 
-    const attendingValue = forceCancel ? false : attending === "yes";
+    const attendingValue = attending === "yes";
     const normalizedGuestsCount = mustSelectGuests ? Math.max(1, normalizedGuestNumber) : null;
 
     setSubmitting(true);
@@ -779,6 +846,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
           attending: attendingValue,
           guestsCount: normalizedGuestsCount,
           message: allowMessage ? message : null,
+          mode: "submit",
         }),
       });
 
@@ -790,9 +858,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
       setFeedbackModal({
         variant: "success",
         title: "Datos enviados con éxito",
-        message: forceCancel
-          ? "Se registró la cancelación de asistencia. Si cambian de plan, puedes reenviar el formulario."
-          : "Tu confirmación fue enviada y quedó registrada.",
+        message: "Tu confirmación fue enviada y quedó registrada.",
       });
       setName("");
       setAttending("");
@@ -809,9 +875,83 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
     }
   }
 
+  async function submitCancelAttendance() {
+    setFeedbackModal(null);
+    const trimmedName = cancelName.trim();
+    const normalizedGuestNumber = Math.trunc(Number(cancelGuestsCount || "0"));
+    const missingFields: string[] = [];
+
+    if (!trimmedName) {
+      missingFields.push("ingresa un nombre de referencia");
+    }
+
+    if (!Number.isFinite(normalizedGuestNumber) || normalizedGuestNumber < 1) {
+      missingFields.push("elige cuántos asistentes vas a cancelar");
+    }
+
+    if (missingFields.length > 0) {
+      const details =
+        missingFields.length === 1
+          ? missingFields[0]
+          : `${missingFields.slice(0, -1).join(", ")} y ${missingFields[missingFields.length - 1]}`;
+      setFeedbackModal({
+        variant: "error",
+        title: "Faltan datos de cancelación",
+        message: `Por favor ${details} para continuar.`,
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/public/invitations/${encodeURIComponent(invitation.slug)}/rsvp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          attending: false,
+          guestsCount: Math.max(1, normalizedGuestNumber),
+          message: allowMessage ? cancelMessage : null,
+          mode: "cancel",
+        }),
+      });
+
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo registrar la cancelación.");
+      }
+
+      setFeedbackModal({
+        variant: "success",
+        title: "Cancelación registrada",
+        message: `Se registró la cancelación para ${Math.max(1, normalizedGuestNumber)} asistente(s).`,
+      });
+      setCancelModalOpen(false);
+      setCancelName("");
+      setCancelGuestsCount("");
+      setCancelMessage("");
+    } catch (submitError) {
+      setFeedbackModal({
+        variant: "error",
+        title: "No se pudo cancelar",
+        message: submitError instanceof Error ? submitError.message : "No se pudo registrar la cancelación.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await submitRsvp();
+  }
+
+  async function handleCancelAttendanceSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await submitCancelAttendance();
   }
 
   return (
@@ -871,9 +1011,9 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
             </button>
             <button
               type="button"
-              className="mission-button mission-button--ghost quick-button"
+              className="mission-button mission-button--ghost quick-button rsvp-form__cancel-button"
               disabled={submitting}
-              onClick={() => void submitRsvp({ forceCancel: true })}
+              onClick={() => openCancelModal()}
             >
               {submitting ? "Transmitiendo..." : "Cancelar asistencia"}
             </button>
@@ -883,8 +1023,79 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
           </div>
         </form>
       )}
+      {cancelModalOpen ? (
+        <div
+          className="rsvp-feedback-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rsvp-cancel-modal-title"
+          onClick={handleCancelModalBackdropInteraction}
+          onTouchEnd={handleCancelModalBackdropInteraction}
+        >
+          <div
+            className="rsvp-feedback-modal__card rsvp-feedback-modal__card--cancel"
+            role="document"
+            aria-live="polite"
+          >
+            <h3 id="rsvp-cancel-modal-title">Cancelar asistencia</h3>
+            <p>Ingresa un nombre de referencia y cuántos asistentes deseas cancelar.</p>
+            <form className="rsvp-cancel-form" onSubmit={handleCancelAttendanceSubmit}>
+              <label className="mission-field rsvp-cancel-form__field">
+                <span className="mission-label">Nombre de referencia *</span>
+                <input
+                  className="mission-input"
+                  value={cancelName}
+                  onChange={(event) => setCancelName(event.target.value)}
+                />
+              </label>
+              <label className="mission-field rsvp-cancel-form__field">
+                <span className="mission-label">Asistentes a cancelar *</span>
+                <input
+                  className="mission-input"
+                  type="number"
+                  min={1}
+                  value={cancelGuestsCount}
+                  placeholder="Ej. 1"
+                  onChange={(event) => setCancelGuestsCount(event.target.value)}
+                />
+              </label>
+              {allowMessage ? (
+                <label className="mission-field rsvp-cancel-form__field">
+                  <span className="mission-label">Mensaje de cancelación (opcional)</span>
+                  <textarea
+                    className="mission-input"
+                    value={cancelMessage}
+                    onChange={(event) => setCancelMessage(event.target.value)}
+                  />
+                </label>
+              ) : null}
+              <div className="rsvp-cancel-form__actions">
+                <button type="submit" className="mission-button" disabled={submitting}>
+                  {submitting ? "Procesando..." : "Confirmar cancelación"}
+                </button>
+                <button
+                  type="button"
+                  className="mission-button mission-button--ghost rsvp-cancel-form__secondary"
+                  disabled={submitting}
+                  onClick={handleCancelModalCloseInteraction}
+                  onTouchEnd={handleCancelModalCloseInteraction}
+                >
+                  Cerrar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
       {feedbackModal ? (
-        <div className="rsvp-feedback-modal" role="dialog" aria-modal="true" aria-labelledby="rsvp-feedback-modal-title">
+        <div
+          className="rsvp-feedback-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rsvp-feedback-modal-title"
+          onClick={handleFeedbackModalBackdropInteraction}
+          onTouchEnd={handleFeedbackModalBackdropInteraction}
+        >
           <div
             className={`rsvp-feedback-modal__card rsvp-feedback-modal__card--${feedbackModal.variant}`}
             role="document"
@@ -892,7 +1103,12 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
           >
             <h3 id="rsvp-feedback-modal-title">{feedbackModal.title}</h3>
             <p>{feedbackModal.message}</p>
-            <button type="button" className="mission-button rsvp-feedback-modal__close" onClick={() => setFeedbackModal(null)}>
+            <button
+              type="button"
+              className="mission-button rsvp-feedback-modal__close"
+              onClick={handleFeedbackModalCloseInteraction}
+              onTouchEnd={handleFeedbackModalCloseInteraction}
+            >
               Cerrar
             </button>
           </div>
