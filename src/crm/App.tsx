@@ -69,26 +69,73 @@ import {
 import { RequireAuth, getSafeAdminRedirectPath, isProtectedAdminMode, type AdminAuthState } from "./RequireAuth";
 import { PublicShell } from "@/components/site/PublicShell";
 
+function parseResponseDate(input: string) {
+  const normalized = typeof input === "string" ? input.trim() : "";
+  if (!normalized) {
+    return null;
+  }
+
+  const directDate = new Date(normalized);
+  if (!Number.isNaN(directDate.getTime())) {
+    return directDate;
+  }
+
+  if (!normalized.includes("T")) {
+    const isoLikeDate = new Date(normalized.replace(" ", "T"));
+    if (!Number.isNaN(isoLikeDate.getTime())) {
+      return isoLikeDate;
+    }
+  }
+
+  return null;
+}
+
+function getResponseDateTimestamp(input: string) {
+  const parsedDate = parseResponseDate(input);
+  return parsedDate ? parsedDate.getTime() : 0;
+}
+
 function formatResponseDate(input: string) {
-  return new Intl.DateTimeFormat("es-MX", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(input));
+  const parsedDate = parseResponseDate(input);
+  if (!parsedDate) {
+    const rawValue = typeof input === "string" ? input.trim() : "";
+    return rawValue || "Fecha no disponible";
+  }
+
+  try {
+    return new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(parsedDate);
+  } catch {
+    return parsedDate.toLocaleString("es-MX");
+  }
 }
 
 function formatResponseDateForPdf(input: string) {
-  const value = new Date(input);
-  const datePart = new Intl.DateTimeFormat("es-MX", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(value);
-  const timePart = new Intl.DateTimeFormat("es-MX", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(value);
+  const parsedDate = parseResponseDate(input);
+  if (!parsedDate) {
+    return "Fecha no\ndisponible";
+  }
 
-  return `${datePart}\n${timePart}`;
+  try {
+    const datePart = new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(parsedDate);
+    const timePart = new Intl.DateTimeFormat("es-MX", {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(parsedDate);
+
+    return `${datePart}\n${timePart}`;
+  } catch {
+    return `${parsedDate.toLocaleDateString("es-MX")}\n${parsedDate.toLocaleTimeString("es-MX")}`;
+  }
 }
 
 type ClientRsvpResponseStatus = "confirmed" | "cancelled" | "declined";
@@ -148,7 +195,7 @@ function sortClientRsvpResponses(
       return byStatus;
     }
 
-    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+    return getResponseDateTimestamp(right.created_at) - getResponseDateTimestamp(left.created_at);
   });
 }
 

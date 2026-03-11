@@ -32,7 +32,6 @@ export function GallerySection({ data }: GallerySectionProps) {
       <InvitationSectionFrame
         eyebrow="Archivo visual"
         title="Momentos especiales"
-        subtitle="Espacio reservado para tus fotos favoritas."
         tone="gold"
       >
         <div className="gallery-grid gallery-grid--mission">

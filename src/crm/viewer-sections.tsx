@@ -628,7 +628,6 @@ export function GallerySectionViewer({
     <InvitationSectionFrameViewer
       eyebrow="Archivo visual"
       title="Momentos especiales"
-      subtitle="Espacio reservado para tus fotos favoritas."
       tone="gold"
     >
       <div className="gallery-grid gallery-grid--mission">
@@ -1136,7 +1135,7 @@ export function ContactSectionViewer({ invitation }: { invitation: InvitationRec
         )}
         <div>
           <strong>{invitation.sections.contact.whatsapp_number}</strong>
-          <p className="mission-caption">Si necesitas ayuda antes del evento, escríbenos aquí.</p>
+          <p className="mission-caption">Si necesitas ayuda antes del evento, escríbeme aquí.</p>
         </div>
       </div>
       <a className="mission-button" href={invitation.sections.contact.whatsapp_url} target="_blank" rel="noreferrer">

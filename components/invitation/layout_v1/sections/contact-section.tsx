@@ -27,7 +27,7 @@ export function ContactSection({ data }: ContactSectionProps) {
         <div className="contact-command__badge">COMMS</div>
         <div>
           <strong>{data.whatsapp_number}</strong>
-          <p className="mission-caption">Si necesitas ayuda antes del evento, escríbenos aquí.</p>
+          <p className="mission-caption">Si necesitas ayuda antes del evento, escríbeme aquí.</p>
         </div>
       </div>
       <motion.a
