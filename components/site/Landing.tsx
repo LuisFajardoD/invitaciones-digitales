@@ -17,6 +17,7 @@ type DemoItem = {
   description: string;
   slug: string;
   cover_url: string;
+  href: string;
 };
 
 type RawDemoItem = Partial<DemoItem> & {
@@ -39,6 +40,7 @@ const FALLBACK_DEMOS: DemoItem[] = [
     title: "Cumple 7 de Luis Arturo",
     description: "Tema astronautas con experiencia inmersiva, mapa y RSVP.",
     slug: "cumple-7-luis-arturo-astronautas",
+    href: "/i/cumple-7-luis-arturo-astronautas?demo=1",
     cover_url:
       "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
   },
@@ -46,6 +48,7 @@ const FALLBACK_DEMOS: DemoItem[] = [
     title: "Boda Minimal",
     description: "Estilo editorial con confirmación por WhatsApp y agenda.",
     slug: "cumple-7-luis-arturo-astronautas",
+    href: "/i/cumple-7-luis-arturo-astronautas?demo=1",
     cover_url:
       "https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1200&q=80",
   },
@@ -53,6 +56,7 @@ const FALLBACK_DEMOS: DemoItem[] = [
     title: "XV Nocturno",
     description: "Visual premium con secciones dinámicas y branding.",
     slug: "cumple-7-luis-arturo-astronautas",
+    href: "/i/cumple-7-luis-arturo-astronautas?demo=1",
     cover_url:
       "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1200&q=80",
   },
@@ -86,6 +90,7 @@ function buildDemos(settings: SiteSettingsData): DemoItem[] {
           title: (source.title || `Demo ${index + 1}`).trim(),
           description: (source.description || "Modelo listo para publicar.").trim(),
           slug,
+          href: buildDemoHref(slug),
           cover_url: (source.cover_url || coverFromSlug).trim(),
         } as DemoItem;
       })
@@ -96,6 +101,10 @@ function buildDemos(settings: SiteSettingsData): DemoItem[] {
     }
   }
   return FALLBACK_DEMOS;
+}
+
+function buildDemoHref(slug: string) {
+  return `/i/${encodeURIComponent(slug)}?demo=1`;
 }
 
 function extractDemoSlug(value: string) {
@@ -271,7 +280,7 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
           <p className={styles["landing-preview-label"]}>Demo destacada</p>
           <h2>Astronautas</h2>
           <p>{featured.title}</p>
-          <Link href={`/i/${featured.slug}`}>Abrir invitación</Link>
+          <Link href={featured.href}>Abrir invitación</Link>
         </article>
       </section>
 
@@ -338,7 +347,7 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
                 <div className={styles["landing-demo-copy"]}>
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
-                  <Link href={`/i/${item.slug}`}>Ver invitación</Link>
+                  <Link href={item.href}>Ver invitación</Link>
                 </div>
               </article>
             );

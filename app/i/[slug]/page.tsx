@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 type InvitationPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 async function resolveRequestOrigin() {
@@ -120,7 +121,7 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
   };
 }
 
-export default async function InvitationPage({ params }: InvitationPageProps) {
+export default async function InvitationPage({ params, searchParams }: InvitationPageProps) {
   const { slug } = await params;
   let invitation = null;
 
@@ -149,8 +150,13 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
     );
   }
 
+  const resolvedSearchParams = await searchParams;
+  const demoParam = resolvedSearchParams?.demo;
+  const isDemoPreview = Array.isArray(demoParam)
+    ? demoParam.includes("1") || demoParam.includes("true")
+    : demoParam === "1" || demoParam === "true";
   const isExpired = new Date().getTime() > new Date(invitation.active_until).getTime();
-  if (isExpired) {
+  if (isExpired && !isDemoPreview) {
     return (
       <div className="app-viewer public-viewer">
         <div className="theme-viewer">

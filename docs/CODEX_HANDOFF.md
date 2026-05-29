@@ -52,6 +52,7 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `app/i/viewer-react-app.tsx`
   - `src/crm/viewer-sections.tsx`
   - `src/crm/viewer.css`
+  - `/i/[slug]?demo=1` permite abrir desde landing/examples una invitacion vencida como demo sin reactivar el enlace normal enviado a invitados.
 
 - RSVP publico por slug
   - `app/api/public/invitations/[slug]/rsvp/route.ts`

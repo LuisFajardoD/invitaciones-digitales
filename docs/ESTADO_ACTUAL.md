@@ -62,6 +62,7 @@ Actualizado: 8 de marzo de 2026
   - `/admin/site`
 - Viewer:
   - `/i/[slug]`
+  - `/i/[slug]?demo=1` para previews demo desde landing/examples aunque la invitacion ya haya vencido
   - `/i/[slug]/rsvp?token=...`
   - `/api/public/invitations/[slug]/og-image`
   - `/api/public/og-card`
