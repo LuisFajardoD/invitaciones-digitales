@@ -4,6 +4,10 @@ Actualizado: 8 de marzo de 2026
 
 ## Resumen
 
+- Se agrego modo demo para enlaces de landing/examples:
+  - las tarjetas de demo abren `/i/[slug]?demo=1`
+  - el enlace publico normal `/i/[slug]` sigue mostrando expiracion cuando `active_until` ya paso
+  - se normaliza el contenido de `expired_page` para evitar mostrar URLs pegadas por error en el titulo o mensaje de expiracion
 - Se consolidaron rutas y estilos para experiencia premium en:
   - landing (`/`, `/examples`)
   - login admin

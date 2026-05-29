@@ -241,6 +241,7 @@ export interface SiteExamplesBlock {
     description: string;
     slug: string;
     cover_url: string;
+    demo_url?: string;
   }>;
 }
 

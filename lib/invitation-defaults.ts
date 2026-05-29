@@ -2,6 +2,8 @@ import { DEFAULT_SECTION_ORDER } from "@/lib/constants";
 import { demoInvitation } from "@/lib/demo-data";
 import type {
   BackgroundMediaConfig,
+  CtaLink,
+  ExpiredPage,
   GenericTextSectionData,
   HeroAstronautConfig,
   InvitationBackgroundConfig,
@@ -80,6 +82,42 @@ function normalizeGenericSection(
     ...fallback,
     ...candidate,
     items: normalizeStringList(candidate.items, fallback.items || []),
+  };
+}
+
+function hasLeakedUrl(value?: string | null) {
+  return /https?:\/\/|(?:^|\s)[\w.-]+\.(?:com|mx|net|org)\//i.test(value || "");
+}
+
+function normalizeCtaLink(value: Partial<CtaLink> | null | undefined, fallback: CtaLink): CtaLink {
+  const candidate = value || {};
+  const text = candidate.text?.trim() || fallback.text;
+  const href = candidate.href?.trim() || fallback.href;
+
+  return {
+    text: hasLeakedUrl(text) ? fallback.text : text,
+    href,
+  };
+}
+
+function normalizeExpiredPage(
+  value: Partial<ExpiredPage> | null | undefined,
+  fallback: ExpiredPage,
+): ExpiredPage {
+  const candidate = value || {};
+  const rawTitle = candidate.title?.trim() || "";
+  const rawMessage = candidate.message?.trim() || "";
+  const title = rawTitle && !hasLeakedUrl(rawTitle) && rawTitle.length <= 90 ? rawTitle : fallback.title;
+  const message =
+    rawMessage && !hasLeakedUrl(rawMessage) && rawMessage.length <= 180
+      ? rawMessage
+      : fallback.message;
+
+  return {
+    title,
+    message,
+    primary_cta: normalizeCtaLink(candidate.primary_cta, fallback.primary_cta),
+    secondary_cta: normalizeCtaLink(candidate.secondary_cta, fallback.secondary_cta),
   };
 }
 
@@ -336,6 +374,7 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
     background: nextBackground,
     sections_order: normalizedSectionOrder,
     sections: normalizedSections,
+    expired_page: normalizeExpiredPage(invitation.expired_page, fallbackRecord.expired_page),
   };
 }
 
