@@ -48,18 +48,24 @@ async function copyToClipboard(text: string) {
 
 export function InvitationsDashboard({ invitations }: InvitationsDashboardProps) {
   const [query, setQuery] = useState("");
+  const [items, setItems] = useState(invitations);
   const [toast, setToast] = useState<ToastState>({ message: "", visible: false });
+  const [deletingId, setDeletingId] = useState("");
 
   const filteredInvitations = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) {
-      return invitations;
+      return items;
     }
 
-    return invitations.filter((item) => {
+    return items.filter((item) => {
       return item.title.toLowerCase().includes(normalized) || item.slug.toLowerCase().includes(normalized);
     });
-  }, [invitations, query]);
+  }, [items, query]);
+
+  useEffect(() => {
+    setItems(invitations);
+  }, [invitations]);
 
   useEffect(() => {
     if (!toast.visible) {
@@ -91,6 +97,40 @@ export function InvitationsDashboard({ invitations }: InvitationsDashboardProps)
     }
   }
 
+  async function handleDeleteInvitation(invitation: InvitationListItem) {
+    const confirmed = window.confirm(
+      `¿Eliminar "${invitation.title}"?\n\nEsta acción también borrará sus respuestas RSVP y no se puede deshacer.`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingId(invitation.id);
+
+    try {
+      const response = await fetch(`/api/admin/invitations/${encodeURIComponent(invitation.id)}`, {
+        method: "DELETE",
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo eliminar.");
+      }
+
+      setItems((current) => current.filter((item) => item.id !== invitation.id));
+      setToast({
+        message: "Invitación eliminada",
+        visible: true,
+      });
+    } catch (deleteError) {
+      setToast({
+        message: deleteError instanceof Error ? deleteError.message : "No se pudo eliminar.",
+        visible: true,
+      });
+    } finally {
+      setDeletingId("");
+    }
+  }
+
   return (
     <PublicShell showSiteLink>
       <div className={styles["admin-layout"]}>
@@ -111,6 +151,12 @@ export function InvitationsDashboard({ invitations }: InvitationsDashboardProps)
           </label>
 
           <div className={styles["admin-topbar-actions"]}>
+            <Link
+              href="/admin/intakes"
+              className={`${styles["admin-button"]} ${styles["admin-button-secondary"]}`}
+            >
+              Formularios
+            </Link>
             <Link
               href="/admin/site"
               className={`${styles["admin-button"]} ${styles["admin-button-secondary"]}`}
@@ -171,6 +217,14 @@ export function InvitationsDashboard({ invitations }: InvitationsDashboardProps)
                         <form action={`/api/admin/invitations/${invitation.id}/duplicate`} method="post">
                           <button type="submit">Duplicar</button>
                         </form>
+                        <button
+                          type="button"
+                          className={styles["admin-more-menu-danger"]}
+                          disabled={deletingId === invitation.id}
+                          onClick={() => void handleDeleteInvitation(invitation)}
+                        >
+                          {deletingId === invitation.id ? "Eliminando..." : "Eliminar"}
+                        </button>
                       </div>
                     </details>
                   </div>

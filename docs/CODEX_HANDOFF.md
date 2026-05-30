@@ -46,6 +46,11 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `components/site/Landing.tsx`
   - `components/site/Landing.module.css`
 
+- `/brief/[token]`
+  - `app/brief/[token]/page.tsx`
+  - `components/intake/EventIntakeForm.tsx`
+  - formulario publico por token para levantar informacion del cliente; no modifica invitaciones automaticamente.
+
 - `/i/[slug]` y `/i/[slug]/rsvp`
   - `app/i/[slug]/page.tsx`
   - `app/i/[slug]/rsvp/page.tsx`
@@ -73,6 +78,14 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `components/admin/invitations-dashboard.tsx`
   - `components/admin/invitations-dashboard.module.css`
 
+- Formularios de levantamiento
+  - `app/admin/intakes/page.tsx`
+  - `app/admin/intakes/[id]/page.tsx`
+  - `app/api/admin/intakes/route.ts`
+  - `app/api/admin/intakes/[id]/route.ts`
+  - `app/api/public/intakes/[token]/route.ts`
+  - `components/intake/*`
+
 - Plantillas de invitacion
   - `app/api/admin/invitation-templates/route.ts`
   - `app/api/admin/invitations/from-template/route.ts`
@@ -99,6 +112,7 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `lib/repository.ts`
 - Modelos/tipos:
   - `types/invitations.ts`
+  - `types/intake.ts`
   - `src/crm/viewer-types.ts`
 
 ## 5) Archivos sensibles (cambiar con cuidado)

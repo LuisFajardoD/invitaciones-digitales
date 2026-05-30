@@ -445,7 +445,6 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
       const didScroll =
         scrollElement.scrollTop !== beforeTop || scrollElement.scrollLeft !== beforeLeft;
       if (didScroll) {
-        event.preventDefault();
         return;
       }
     }
@@ -455,7 +454,6 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
       return;
     }
 
-    event.preventDefault();
     frameWindow.scrollBy({
       top: event.deltaY,
       left: event.deltaX,

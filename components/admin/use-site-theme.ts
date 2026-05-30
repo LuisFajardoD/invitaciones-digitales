@@ -6,18 +6,18 @@ export type SiteThemeMode = "dark" | "light";
 
 export const SITE_THEME_STORAGE_KEY = "site-theme-mode";
 export const SITE_THEME_EVENT = "site-theme-change";
-
-function getSystemThemeMode(): SiteThemeMode {
-  if (typeof window === "undefined") {
-    return "dark";
-  }
-
-  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-}
+export const SITE_THEME_VERSION_KEY = "site-theme-mode-version";
+export const SITE_THEME_VERSION = "3";
 
 function getStoredThemeMode(): SiteThemeMode | null {
   if (typeof window === "undefined") {
     return null;
+  }
+
+  if (window.localStorage.getItem(SITE_THEME_VERSION_KEY) !== SITE_THEME_VERSION) {
+    window.localStorage.setItem(SITE_THEME_STORAGE_KEY, "light");
+    window.localStorage.setItem(SITE_THEME_VERSION_KEY, SITE_THEME_VERSION);
+    return "light";
   }
 
   const value = window.localStorage.getItem(SITE_THEME_STORAGE_KEY);
@@ -25,10 +25,10 @@ function getStoredThemeMode(): SiteThemeMode | null {
 }
 
 export function useSiteTheme() {
-  const [themeMode, setThemeMode] = useState<SiteThemeMode>("dark");
+  const [themeMode, setThemeMode] = useState<SiteThemeMode>("light");
 
   useEffect(() => {
-    setThemeMode(getStoredThemeMode() || getSystemThemeMode());
+    setThemeMode(getStoredThemeMode() || "light");
   }, []);
 
   useEffect(() => {
@@ -37,6 +37,7 @@ export function useSiteTheme() {
     }
 
     window.localStorage.setItem(SITE_THEME_STORAGE_KEY, themeMode);
+    window.localStorage.setItem(SITE_THEME_VERSION_KEY, SITE_THEME_VERSION);
     document.documentElement.dataset.siteTheme = themeMode;
     window.dispatchEvent(new CustomEvent<SiteThemeMode>(SITE_THEME_EVENT, { detail: themeMode }));
   }, [themeMode]);

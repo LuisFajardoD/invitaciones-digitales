@@ -4,6 +4,17 @@ Actualizado: 8 de marzo de 2026
 
 ## Resumen
 
+- Se agrego modulo de formularios de levantamiento:
+  - admin crea formularios en `/admin/intakes`
+  - cliente llena un enlace privado `/brief/[token]`
+  - el resumen interno vive en `/admin/intakes/[id]`
+  - se guarda en tabla separada `event_intake_forms` y no modifica invitaciones automaticamente
+  - las paginas de formularios tienen boton modo claro/oscuro; usan tema claro por default, secciones activables con casilla a la izquierda, etiquetas "Activada/Desactivada", selector de hora legible y boton principal "Guardar cambios".
+  - en preguntas frecuentes/avisos cada pregunta se puede activar por separado y se mantiene un cuadro libre para otras preguntas, reglas o avisos.
+  - se alineo la paleta visual con la landing para evitar fondos/accentos azules en CRM y formularios.
+  - el sitio, CRM, viewer publico y formularios migran a tema claro por default, manteniendo modo oscuro manual.
+- Login del CRM:
+  - se agrego casilla para recordar usuario y contrasena en este navegador usando `localStorage`.
 - Se agrego modo demo para enlaces de landing/examples:
   - las tarjetas de demo abren `/i/[slug]?demo=1`
   - el enlace publico normal `/i/[slug]` sigue mostrando expiracion cuando `active_until` ya paso

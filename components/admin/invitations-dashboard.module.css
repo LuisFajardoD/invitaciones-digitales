@@ -204,6 +204,19 @@
   background: color-mix(in srgb, var(--admin-note-bg) 70%, transparent);
 }
 
+.admin-more-menu button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.admin-more-menu-danger {
+  color: #f87171 !important;
+}
+
+.admin-more-menu-danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.12) !important;
+}
+
 .admin-empty {
   border: 1px dashed var(--admin-border);
   border-radius: 18px;

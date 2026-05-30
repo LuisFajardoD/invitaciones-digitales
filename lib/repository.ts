@@ -2,6 +2,10 @@ import { randomUUID } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { demoInvitation, demoResponses, demoSiteSettings, demoTheme } from "@/lib/demo-data";
+import {
+  normalizeEventIntakeData,
+  normalizeEventIntakeRecord,
+} from "@/lib/intake-defaults";
 import { normalizeInvitationRecord, toDatabaseInvitationRecord } from "@/lib/invitation-defaults";
 import { normalizeSiteSettingsData } from "@/lib/site-settings-defaults";
 import { hasConfiguredSupabase } from "@/lib/supabase/env";
@@ -17,6 +21,11 @@ import type {
   SiteSettingsRecord,
   ThemeRecord,
 } from "@/types/invitations";
+import type {
+  EventIntakeData,
+  EventIntakeFormRecord,
+  EventIntakeStatus,
+} from "@/types/intake";
 
 type CreateInvitationInput = {
   slug: string;
@@ -46,6 +55,7 @@ type MockStore = {
   rsvpResponses: RsvpResponse[];
   siteSettings: SiteSettingsRecord;
   themes: ThemeRecord[];
+  eventIntakeForms: EventIntakeFormRecord[];
 };
 
 const MOCK_STORE_DIR = path.join(process.cwd(), ".mock-data");
@@ -98,6 +108,7 @@ function createDefaultMockStore(): MockStore {
     rsvpResponses: cloneValue(demoResponses),
     siteSettings: cloneValue(demoSiteSettings),
     themes: [cloneValue(demoTheme)],
+    eventIntakeForms: [],
   };
 }
 
@@ -109,7 +120,12 @@ async function writeMockStore(store: MockStore) {
 async function readMockStore(): Promise<MockStore> {
   try {
     const raw = await readFile(MOCK_STORE_PATH, "utf8");
-    return JSON.parse(raw) as MockStore;
+    const store = JSON.parse(raw) as Partial<MockStore>;
+    return {
+      ...createDefaultMockStore(),
+      ...store,
+      eventIntakeForms: Array.isArray(store.eventIntakeForms) ? store.eventIntakeForms : [],
+    };
   } catch {
     const seed = createDefaultMockStore();
     await writeMockStore(seed);
@@ -244,6 +260,202 @@ export async function saveSiteSettings(data: SiteSettingsData) {
   }
 
   return record;
+}
+
+function toEventIntakeDatabaseRecord(record: EventIntakeFormRecord) {
+  const normalized = normalizeEventIntakeRecord(record);
+
+  return {
+    id: normalized.id,
+    token: normalized.token,
+    status: normalized.status,
+    client_name: normalized.client_name,
+    client_whatsapp: normalized.client_whatsapp,
+    event_data: normalized.event_data,
+    invitation_style: normalized.invitation_style,
+    main_text: normalized.main_text,
+    rsvp: normalized.rsvp,
+    itinerary: normalized.itinerary,
+    dress_code: normalized.dress_code,
+    gifts: normalized.gifts,
+    photos_multimedia: normalized.photos_multimedia,
+    faq_notices: normalized.faq_notices,
+    live_stream: normalized.live_stream,
+    lodging_transport: normalized.lodging_transport,
+    general_observations: normalized.general_observations,
+    submitted_at: normalized.submitted_at,
+    created_at: normalized.created_at,
+    updated_at: normalized.updated_at,
+  };
+}
+
+function createEventIntakeRecord(input?: Partial<EventIntakeData>): EventIntakeFormRecord {
+  const now = new Date().toISOString();
+  const data = normalizeEventIntakeData(input);
+
+  return normalizeEventIntakeRecord({
+    id: randomUUID(),
+    token: randomUUID().replace(/-/g, ""),
+    status: "new",
+    client_name: data.event_data.contact_name,
+    client_whatsapp: data.event_data.contact_whatsapp,
+    submitted_at: null,
+    created_at: now,
+    updated_at: now,
+    ...data,
+  });
+}
+
+export async function listEventIntakeForms() {
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    return [...store.eventIntakeForms]
+      .map((item) => normalizeEventIntakeRecord(item))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { data, error } = await supabase!
+    .from("event_intake_forms")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return ((data as EventIntakeFormRecord[]) || []).map((item) => normalizeEventIntakeRecord(item));
+}
+
+export async function createEventIntakeForm(input?: Partial<EventIntakeData>) {
+  const record = createEventIntakeRecord(input);
+
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    store.eventIntakeForms.unshift(record);
+    await writeMockStore(store);
+    return record;
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { error } = await supabase!
+    .from("event_intake_forms")
+    .insert(toEventIntakeDatabaseRecord(record));
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return record;
+}
+
+export async function getEventIntakeFormById(id: string) {
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    const record = store.eventIntakeForms.find((item) => item.id === id);
+    return record ? normalizeEventIntakeRecord(record) : null;
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { data, error } = await supabase!
+    .from("event_intake_forms")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? normalizeEventIntakeRecord(data as EventIntakeFormRecord) : null;
+}
+
+export async function getEventIntakeFormByToken(token: string) {
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    const record = store.eventIntakeForms.find((item) => item.token === token);
+    return record ? normalizeEventIntakeRecord(record) : null;
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { data, error } = await supabase!
+    .from("event_intake_forms")
+    .select("*")
+    .eq("token", token)
+    .maybeSingle();
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? normalizeEventIntakeRecord(data as EventIntakeFormRecord) : null;
+}
+
+export async function saveEventIntakeFormByToken(token: string, input: Partial<EventIntakeData>) {
+  const current = await getEventIntakeFormByToken(token);
+  if (!current) {
+    throw new Error("Formulario no encontrado.");
+  }
+
+  const data = normalizeEventIntakeData(input);
+  const now = new Date().toISOString();
+  const updated = normalizeEventIntakeRecord({
+    ...current,
+    ...data,
+    client_name: data.event_data.contact_name,
+    client_whatsapp: data.event_data.contact_whatsapp,
+    submitted_at: current.submitted_at || now,
+    updated_at: now,
+  });
+
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    store.eventIntakeForms = store.eventIntakeForms.map((item) =>
+      item.token === token ? updated : item,
+    );
+    await writeMockStore(store);
+    return updated;
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { error } = await supabase!
+    .from("event_intake_forms")
+    .update(toEventIntakeDatabaseRecord(updated))
+    .eq("token", token);
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return updated;
+}
+
+export async function updateEventIntakeStatus(id: string, status: EventIntakeStatus) {
+  const current = await getEventIntakeFormById(id);
+  if (!current) {
+    throw new Error("Formulario no encontrado.");
+  }
+
+  const updated = normalizeEventIntakeRecord({
+    ...current,
+    status,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    store.eventIntakeForms = store.eventIntakeForms.map((item) =>
+      item.id === id ? updated : item,
+    );
+    await writeMockStore(store);
+    return updated;
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { error } = await supabase!
+    .from("event_intake_forms")
+    .update({ status: updated.status, updated_at: updated.updated_at })
+    .eq("id", id);
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return updated;
 }
 
 export async function listInvitationTemplates() {
@@ -534,6 +746,47 @@ export async function duplicateInvitation(id: string) {
     throw new Error(error.message);
   }
   return duplicated;
+}
+
+export async function deleteInvitation(id: string) {
+  const invitation = await getInvitationById(id);
+  if (!invitation) {
+    throw new Error("Invitación no encontrada.");
+  }
+
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    store.invitations = store.invitations.filter((item) => item.id !== id);
+    store.rsvpResponses = store.rsvpResponses.filter((item) => item.invitation_id !== id);
+    store.siteSettings.data.invitation_templates = normalizeInvitationTemplates(
+      store.siteSettings.data.invitation_templates,
+    ).filter((template) => template.source_invitation_id !== id);
+    await writeMockStore(store);
+    return { id };
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { error: rsvpError } = await supabase!.from("rsvp_responses").delete().eq("invitation_id", id);
+  if (rsvpError) {
+    throw new Error(rsvpError.message);
+  }
+
+  const { error } = await supabase!.from("invitations").delete().eq("id", id);
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const siteSettings = await getSiteSettings();
+  const currentTemplates = normalizeInvitationTemplates(siteSettings.data.invitation_templates);
+  const nextTemplates = currentTemplates.filter((template) => template.source_invitation_id !== id);
+  if (nextTemplates.length !== currentTemplates.length) {
+    await saveSiteSettings({
+      ...siteSettings.data,
+      invitation_templates: nextTemplates,
+    });
+  }
+
+  return { id };
 }
 
 export async function listRsvpResponses(invitationId: string) {

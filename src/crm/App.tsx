@@ -242,6 +242,7 @@ const extraSectionKeys = [
   "transport",
   "lodging",
 ] as const;
+const ADMIN_LOGIN_REMEMBER_KEY = "inv_admin_remembered_credentials";
 
 type EditorPanelKey = "base" | "hero" | "event" | "flow" | "content" | "attention" | "extras";
 type EditorPreviewMode = "live" | "screenshot";
@@ -758,6 +759,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [rememberAdminCredentials, setRememberAdminCredentials] = useState(false);
   const [editorPreviewVersion, setEditorPreviewVersion] = useState(0);
   const [countdown, setCountdown] = useState<Array<{ label: string; value: number }>>([]);
   const [draggingSectionKey, setDraggingSectionKey] = useState<SectionKey | null>(null);
@@ -1131,6 +1133,38 @@ export function App({ initialInvitationThemeId }: AppProps) {
     }, 2200);
   }
 
+  function handleRememberAdminCredentialsChange(checked: boolean) {
+    setRememberAdminCredentials(checked);
+
+    if (!checked && typeof window !== "undefined") {
+      window.localStorage.removeItem(ADMIN_LOGIN_REMEMBER_KEY);
+    }
+  }
+
+  useEffect(() => {
+    if (route.mode !== "admin-login" || typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      const savedCredentials = window.localStorage.getItem(ADMIN_LOGIN_REMEMBER_KEY);
+      if (!savedCredentials) {
+        return;
+      }
+
+      const parsedCredentials = JSON.parse(savedCredentials) as {
+        email?: string;
+        password?: string;
+      };
+
+      setLoginEmail(parsedCredentials.email || "");
+      setLoginPassword(parsedCredentials.password || "");
+      setRememberAdminCredentials(Boolean(parsedCredentials.email || parsedCredentials.password));
+    } catch {
+      window.localStorage.removeItem(ADMIN_LOGIN_REMEMBER_KEY);
+    }
+  }, [route.mode]);
+
   useEffect(() => {
     if (route.mode !== "admin-editor") {
       return;
@@ -1347,7 +1381,15 @@ export function App({ initialInvitationThemeId }: AppProps) {
           return;
         }
 
-        const response = await fetch(`/api/public/invitations/${encodeURIComponent(route.slug)}`, { cache: "no-store" });
+        const publicInvitationParams = new URLSearchParams(search);
+        const isAdminPreview =
+          publicInvitationParams.has("crm_live") ||
+          publicInvitationParams.has("crm_preview") ||
+          publicInvitationParams.has("preview_device");
+        const publicInvitationUrl = `/api/public/invitations/${encodeURIComponent(route.slug)}${
+          isAdminPreview ? "?admin_preview=1" : ""
+        }`;
+        const response = await fetch(publicInvitationUrl, { cache: "no-store" });
         if (!response.ok) {
           const payload = (await response.json().catch(() => ({}))) as { error?: string };
           throw new Error(payload.error || "No se pudo cargar la invitación.");
@@ -2014,6 +2056,18 @@ export function App({ initialInvitationThemeId }: AppProps) {
         throw new Error(payload.error || "No se pudo iniciar sesión.");
       }
 
+      if (rememberAdminCredentials) {
+        window.localStorage.setItem(
+          ADMIN_LOGIN_REMEMBER_KEY,
+          JSON.stringify({
+            email: loginEmail.trim(),
+            password: loginPassword,
+          }),
+        );
+      } else {
+        window.localStorage.removeItem(ADMIN_LOGIN_REMEMBER_KEY);
+      }
+
       const redirectTarget = getSafeAdminRedirectPath(new URLSearchParams(window.location.search).get("redirect"));
       window.location.replace(redirectTarget);
     } catch (submitError) {
@@ -2071,6 +2125,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                 type="email"
                 value={loginEmail}
                 onChange={(event) => setLoginEmail(event.target.value)}
+                autoComplete="username"
                 required
               />
             </label>
@@ -2080,8 +2135,20 @@ export function App({ initialInvitationThemeId }: AppProps) {
                 type="password"
                 value={loginPassword}
                 onChange={(event) => setLoginPassword(event.target.value)}
+                autoComplete="current-password"
                 required
               />
+            </label>
+            <label className="viewer-remember-login">
+              <input
+                type="checkbox"
+                checked={rememberAdminCredentials}
+                onChange={(event) => handleRememberAdminCredentialsChange(event.target.checked)}
+              />
+              <span>
+                <strong>Recordar usuario y contraseña</strong>
+                <small>Usalo sólo en un equipo privado.</small>
+              </span>
             </label>
             <button type="submit" className="button-primary viewer-link viewer-login-submit" disabled={loginLoading}>
               {loginLoading ? "Entrando..." : "Entrar"}

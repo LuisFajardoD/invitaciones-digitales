@@ -34,6 +34,8 @@ type PackageItem = {
 type ThemeMode = "dark" | "light";
 
 const THEME_STORAGE_KEY = "site-theme-mode";
+const THEME_VERSION_KEY = "site-theme-mode-version";
+const THEME_VERSION = "3";
 
 const FALLBACK_DEMOS: DemoItem[] = [
   {
@@ -178,7 +180,7 @@ function resolveFeatured(demos: DemoItem[]): DemoItem {
 }
 
 export function Landing({ settings, variant = "home" }: LandingProps) {
-  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
+  const [themeMode, setThemeMode] = useState<ThemeMode>("light");
   const [coverStatus, setCoverStatus] = useState<Record<string, "loaded" | "error">>({});
   const [coverSourceIndex, setCoverSourceIndex] = useState<Record<string, number>>({});
   const demos = buildDemos(settings);
@@ -209,18 +211,25 @@ export function Landing({ settings, variant = "home" }: LandingProps) {
     themeMode === "light" ? styles["landing-root--light"] : styles["landing-root--dark"];
 
   useEffect(() => {
+    if (window.localStorage.getItem(THEME_VERSION_KEY) !== THEME_VERSION) {
+      window.localStorage.setItem(THEME_STORAGE_KEY, "light");
+      window.localStorage.setItem(THEME_VERSION_KEY, THEME_VERSION);
+      setThemeMode("light");
+      return;
+    }
+
     const savedMode = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (savedMode === "light" || savedMode === "dark") {
       setThemeMode(savedMode);
       return;
     }
 
-    const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
-    setThemeMode(prefersLight ? "light" : "dark");
+    setThemeMode("light");
   }, []);
 
   useEffect(() => {
     window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
+    window.localStorage.setItem(THEME_VERSION_KEY, THEME_VERSION);
   }, [themeMode]);
 
   return (

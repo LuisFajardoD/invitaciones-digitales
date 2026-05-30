@@ -60,6 +60,10 @@ Actualizado: 8 de marzo de 2026
   - `/admin/invitations/new`
   - `/admin/invitations/[id]`
   - `/admin/site`
+  - `/admin/intakes`
+  - `/admin/intakes/[id]`
+- Brief cliente:
+  - `/brief/[token]`
 - Viewer:
   - `/i/[slug]`
   - `/i/[slug]?demo=1` para previews demo desde landing/examples aunque la invitacion ya haya vencido

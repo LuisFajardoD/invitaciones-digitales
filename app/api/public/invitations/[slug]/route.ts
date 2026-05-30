@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
+import { getAdminSession } from "@/lib/auth";
 import { toPublicInvitation } from "@/lib/public-invitation";
-import { getPublicInvitationBySlug } from "@/lib/repository";
+import { getInvitationBySlug, getPublicInvitationBySlug } from "@/lib/repository";
 
 type Params = {
   params: Promise<{ slug: string }>;
 };
 
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
   const { slug } = await params;
   try {
-    const invitation = await getPublicInvitationBySlug(slug);
+    const { searchParams } = new URL(request.url);
+    const isAdminPreview = searchParams.get("admin_preview") === "1";
+    const adminSession = isAdminPreview ? await getAdminSession() : null;
+    const invitation = adminSession
+      ? await getInvitationBySlug(slug)
+      : await getPublicInvitationBySlug(slug);
 
     if (!invitation) {
       return NextResponse.json({ error: "Invitación no encontrada." }, { status: 404 });

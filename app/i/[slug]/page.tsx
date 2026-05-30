@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { ViewerReactApp } from "@/app/i/viewer-react-app";
-import { getPublicInvitationBySlug } from "@/lib/repository";
+import { getAdminSession } from "@/lib/auth";
+import { getInvitationBySlug, getPublicInvitationBySlug } from "@/lib/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -123,10 +124,21 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
 
 export default async function InvitationPage({ params, searchParams }: InvitationPageProps) {
   const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
+  const demoParam = resolvedSearchParams?.demo;
+  const isDemoPreview = Array.isArray(demoParam)
+    ? demoParam.includes("1") || demoParam.includes("true")
+    : demoParam === "1" || demoParam === "true";
+  const hasPreviewParam = Boolean(
+    resolvedSearchParams?.crm_live ||
+      resolvedSearchParams?.crm_preview ||
+      resolvedSearchParams?.preview_device,
+  );
   let invitation = null;
 
   try {
-    invitation = await getPublicInvitationBySlug(slug);
+    const adminSession = hasPreviewParam ? await getAdminSession() : null;
+    invitation = adminSession ? await getInvitationBySlug(slug) : await getPublicInvitationBySlug(slug);
   } catch {
     invitation = null;
   }
@@ -150,13 +162,8 @@ export default async function InvitationPage({ params, searchParams }: Invitatio
     );
   }
 
-  const resolvedSearchParams = await searchParams;
-  const demoParam = resolvedSearchParams?.demo;
-  const isDemoPreview = Array.isArray(demoParam)
-    ? demoParam.includes("1") || demoParam.includes("true")
-    : demoParam === "1" || demoParam === "true";
   const isExpired = new Date().getTime() > new Date(invitation.active_until).getTime();
-  if (isExpired && !isDemoPreview) {
+  if (isExpired && !isDemoPreview && !hasPreviewParam) {
     return (
       <div className="app-viewer public-viewer">
         <div className="theme-viewer">

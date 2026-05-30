@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import {
   SITE_THEME_EVENT,
   SITE_THEME_STORAGE_KEY,
+  SITE_THEME_VERSION,
+  SITE_THEME_VERSION_KEY,
   type SiteThemeMode,
 } from "@/components/admin/use-site-theme";
 import "../../src/crm/admin.css";
@@ -20,7 +22,13 @@ type ViewerReactAppProps = {
 
 function getInitialThemeMode(): SiteThemeMode {
   if (typeof window === "undefined") {
-    return "dark";
+    return "light";
+  }
+
+  if (window.localStorage.getItem(SITE_THEME_VERSION_KEY) !== SITE_THEME_VERSION) {
+    window.localStorage.setItem(SITE_THEME_STORAGE_KEY, "light");
+    window.localStorage.setItem(SITE_THEME_VERSION_KEY, SITE_THEME_VERSION);
+    return "light";
   }
 
   const stored = window.localStorage.getItem(SITE_THEME_STORAGE_KEY);
@@ -28,7 +36,7 @@ function getInitialThemeMode(): SiteThemeMode {
     return stored;
   }
 
-  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  return "light";
 }
 
 export function ViewerReactApp({ initialInvitationThemeId }: ViewerReactAppProps) {
