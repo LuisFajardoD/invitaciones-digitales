@@ -15,6 +15,10 @@ const HERO_TYPEWRITER_STEP_MS = 82;
 const HERO_TYPEWRITER_LINE_GAP_STEPS = 3;
 let hasPlayedAstronautTypewriter = false;
 
+function isAstronautTheme(themeId: string) {
+  return themeId === "astronautas";
+}
+
 function getKenBurnsClassName(config?: BackgroundMediaConfig) {
   const kenburns = normalizeKenBurns(config?.kenburns);
   if (!kenburns.enabled) {
@@ -100,12 +104,10 @@ export function HeroSectionViewer({
   invitation: InvitationRecord;
   assetOrigin: string;
 }) {
-  const usesAstronautTheme = invitation.theme_id === "astronautas";
+  const usesAstronautTheme = isAstronautTheme(invitation.theme_id);
   const titleLines = usesAstronautTheme
     ? buildAstronautTitleLines(invitation.sections.hero.title)
     : splitTitle(repairLegacyText(invitation.sections.hero.title));
-  const moonUrl = `${assetOrigin}/assets/luna.webp`;
-  const earthUrl = `${assetOrigin}/assets/tierra.webp`;
   const cloudOneUrl = `${assetOrigin}/assets/nube%201-01.webp`;
   const cloudTwoUrl = `${assetOrigin}/assets/nube2.webp`;
   const cloudThreeUrl = `${assetOrigin}/assets/nube3.webp`;
@@ -186,28 +188,15 @@ export function HeroSectionViewer({
       />
       <div className="hero-cinematic__drift hero-cinematic__drift--one" aria-hidden="true" />
       <div className="hero-cinematic__drift hero-cinematic__drift--two" aria-hidden="true" />
-      {usesAstronautTheme ? (
-        <>
-          <div className="hero-cinematic__cloud hero-cinematic__cloud--three" aria-hidden="true">
-            <img src={cloudThreeUrl} alt="" aria-hidden="true" />
-          </div>
-          <div className="hero-cinematic__cloud hero-cinematic__cloud--two" aria-hidden="true">
-            <img src={cloudTwoUrl} alt="" aria-hidden="true" />
-          </div>
-          <div className="hero-cinematic__cloud hero-cinematic__cloud--one" aria-hidden="true">
-            <img src={cloudOneUrl} alt="" aria-hidden="true" />
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="hero-cinematic__orb hero-cinematic__orb--moon" aria-hidden="true">
-            <img src={moonUrl} alt="" aria-hidden="true" />
-          </div>
-          <div className="hero-cinematic__orb hero-cinematic__orb--earth" aria-hidden="true">
-            <img src={earthUrl} alt="" aria-hidden="true" />
-          </div>
-        </>
-      )}
+      <div className="hero-cinematic__cloud hero-cinematic__cloud--three" aria-hidden="true">
+        <img src={cloudThreeUrl} alt="" aria-hidden="true" />
+      </div>
+      <div className="hero-cinematic__cloud hero-cinematic__cloud--two" aria-hidden="true">
+        <img src={cloudTwoUrl} alt="" aria-hidden="true" />
+      </div>
+      <div className="hero-cinematic__cloud hero-cinematic__cloud--one" aria-hidden="true">
+        <img src={cloudOneUrl} alt="" aria-hidden="true" />
+      </div>
       <div className="hero-cinematic__comet hero-cinematic__comet--one" aria-hidden="true" />
       <div className="hero-cinematic__comet hero-cinematic__comet--two" aria-hidden="true" />
       {usesAstronautTheme ? <div className="hero-cinematic__comet hero-cinematic__comet--three" aria-hidden="true" /> : null}
@@ -292,25 +281,23 @@ export function HeroSectionViewer({
           <p className="hero-cinematic__subtitle">{subtitle}</p>
         </div>
       </div>
-      {usesAstronautTheme ? (
-        <button
-          type="button"
-          className="hero-cinematic__scroll-hint"
-          aria-label="Sigue bajando para ver más información"
-          onClick={handleScrollHintClick}
-        >
-          <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--left" aria-hidden="true">
-            🪐
-          </span>
-          <span className="hero-cinematic__scroll-hint-text">Sigue bajando</span>
-          <span className="hero-cinematic__scroll-hint-icon" aria-hidden="true">
-            ↓
-          </span>
-          <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--right" aria-hidden="true">
-            ⭐
-          </span>
-        </button>
-      ) : null}
+      <button
+        type="button"
+        className="hero-cinematic__scroll-hint"
+        aria-label="Sigue bajando para ver más información"
+        onClick={handleScrollHintClick}
+      >
+        <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--left" aria-hidden="true">
+          {usesAstronautTheme ? "🪐" : "✦"}
+        </span>
+        <span className="hero-cinematic__scroll-hint-text">Sigue bajando</span>
+        <span className="hero-cinematic__scroll-hint-icon" aria-hidden="true">
+          ↓
+        </span>
+        <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--right" aria-hidden="true">
+          {usesAstronautTheme ? "⭐" : "✧"}
+        </span>
+      </button>
       {invitation.sections.hero.astronaut?.enabled && astronautUrl ? (
         <div
           className={`hero-cinematic__astronaut-art${astronautPositionClassName}`}
@@ -400,8 +387,8 @@ function InvitationSectionFrameViewer({
       <div className={`invitation-section__inner${surface === "bare" ? " invitation-section__inner--bare" : ""}`}>
         <div className="watercolor-section-decor" aria-hidden="true">
           <span className="watercolor-section-decor__item watercolor-section-decor__item--one">⭐</span>
-          <span className="watercolor-section-decor__item watercolor-section-decor__item--two">🪐</span>
-          <span className="watercolor-section-decor__item watercolor-section-decor__item--three">🚀</span>
+          <span className="watercolor-section-decor__item watercolor-section-decor__item--two">✦</span>
+          <span className="watercolor-section-decor__item watercolor-section-decor__item--three">✧</span>
         </div>
         <p className="mission-eyebrow">{eyebrow}</p>
         <h2 className="mission-title">{title}</h2>
@@ -416,10 +403,11 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
   const eventDateLabel = buildEventDateLabel(invitation);
   const arrivalTimeLabel = buildArrivalTimeLabel(invitation);
   const addressLines = splitAddressLines(invitation.sections.event_info.address_text);
+  const usesAstronautCopy = isAstronautTheme(invitation.theme_id);
 
   return (
     <InvitationSectionFrameViewer
-      eyebrow="Bitácora de misión"
+      eyebrow={usesAstronautCopy ? "Bitácora de misión" : "Datos del evento"}
       title={invitation.sections.event_info.venue_name}
       subtitle="Todo listo para el punto de encuentro."
       tone="aurora"
@@ -429,7 +417,7 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
         <div className="mission-log__frame">
           <div className="mission-log__status" aria-label="Estado de enlace">
             <span className="mission-log__status-dot" />
-            <span className="mission-log__status-label">SYNC OK</span>
+            <span className="mission-log__status-label">{usesAstronautCopy ? "SYNC OK" : "LISTO"}</span>
           </div>
           <div className="mission-log__rows">
             <div className="mission-log__row">
@@ -438,7 +426,7 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
               </span>
               <div className="mission-log__content">
                 <strong className="mission-log__value">{eventDateLabel}</strong>
-                <span className="mission-log__label">Fecha de despegue</span>
+                <span className="mission-log__label">{usesAstronautCopy ? "Fecha de despegue" : "Fecha del evento"}</span>
               </div>
             </div>
             <div className="mission-log__row">
@@ -470,12 +458,15 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
 }
 
 export function QuickActionsSectionViewer({
+  themeId,
   items,
   onAction,
 }: {
+  themeId: string;
   items: QuickActionItem[];
   onAction: (type: QuickActionItem["type"]) => void;
 }) {
+  const usesAstronautCopy = isAstronautTheme(themeId);
   const primaryItems = useMemo(
     () =>
       items.filter((item) => {
@@ -491,9 +482,9 @@ export function QuickActionsSectionViewer({
 
   return (
     <InvitationSectionFrameViewer
-      eyebrow="Control de misión"
+      eyebrow={usesAstronautCopy ? "Control de misión" : "Accesos del evento"}
       title="Acciones rápidas"
-      subtitle="Selecciona un comando y continúa la secuencia."
+      subtitle={usesAstronautCopy ? "Selecciona un comando y continúa la secuencia." : "Elige una acción para continuar."}
       tone="gold"
       surface="bare"
     >
@@ -505,6 +496,7 @@ export function QuickActionsSectionViewer({
               key: `${item.type}-${index}-primary`,
               onAction,
               emphasis: "primary",
+              usesAstronautCopy,
             }),
           )}
         </div>
@@ -516,6 +508,7 @@ export function QuickActionsSectionViewer({
             key: `${item.type}-${index}-secondary`,
             onAction,
             emphasis: "secondary",
+            usesAstronautCopy,
           }),
         )}
       </div>
@@ -528,11 +521,13 @@ function renderActionChip({
   key,
   onAction,
   emphasis,
+  usesAstronautCopy,
 }: {
   item: QuickActionItem;
   key: string;
   onAction: (type: QuickActionItem["type"]) => void;
   emphasis: "primary" | "secondary";
+  usesAstronautCopy: boolean;
 }) {
   return (
     <button type="button" key={key} className={`command-chip command-chip--${emphasis}`} onClick={() => onAction(item.type)}>
@@ -541,19 +536,22 @@ function renderActionChip({
       </span>
       <span className="command-chip__body">
         <span className="command-chip__label">{item.label}</span>
-        <span className="command-chip__code">{getActionCode(String(item.type))}</span>
+        <span className="command-chip__code">{getActionCode(String(item.type), usesAstronautCopy)}</span>
       </span>
     </button>
   );
 }
 
 export function CountdownSectionViewer({
+  themeId,
   label,
   countdown,
 }: {
+  themeId: string;
   label: string;
   countdown: Array<{ label: string; value: number }>;
 }) {
+  const usesAstronautCopy = isAstronautTheme(themeId);
   return (
     <InvitationSectionFrameViewer eyebrow="Cuenta regresiva" title={label} tone="default">
       <div className="countdown-grid-shell">
@@ -566,7 +564,9 @@ export function CountdownSectionViewer({
           ))}
         </div>
       </div>
-      <p className="mission-caption">Cada segundo nos acerca al despegue.</p>
+      <p className="mission-caption">
+        {usesAstronautCopy ? "Cada segundo nos acerca al despegue." : "Cada segundo nos acerca a la celebración."}
+      </p>
     </InvitationSectionFrameViewer>
   );
 }
@@ -589,7 +589,7 @@ export function MapSectionViewer({
   return (
     <InvitationSectionFrameViewer
       id="viewer-map-section"
-      eyebrow="Ruta estelar"
+      eyebrow={isAstronautTheme(invitation.theme_id) ? "Ruta estelar" : "Cómo llegar"}
       title="Ubicación"
       subtitle={invitation.sections.map.address_text}
       tone="aurora"
@@ -699,12 +699,14 @@ function GalleryTileViewer({
   );
 }
 
-export function NotesSectionViewer({ items }: { items: string[] }) {
+export function NotesSectionViewer({ themeId, items }: { themeId: string; items: string[] }) {
+  const usesAstronautCopy = isAstronautTheme(themeId);
+
   return (
     <InvitationSectionFrameViewer
       eyebrow="Checklist"
-      title="Antes del despegue"
-      subtitle="Detalles clave para que la misión salga perfecta."
+      title={usesAstronautCopy ? "Antes del despegue" : "Antes de la fiesta"}
+      subtitle={usesAstronautCopy ? "Detalles clave para que la misión salga perfecta." : "Detalles importantes para disfrutar el evento."}
       tone="default"
     >
       <div className="notes-list notes-list--mission">
@@ -1244,20 +1246,20 @@ function splitAddressLines(address: string) {
   return [clean.slice(0, splitIndex + 1).trim(), clean.slice(splitIndex + 1).trim()];
 }
 
-function getActionCode(type: string) {
+function getActionCode(type: string, usesAstronautCopy: boolean) {
   switch (type) {
     case "confirm":
     case "rsvp":
-      return "CMD-RSVP";
+      return usesAstronautCopy ? "CMD-RSVP" : "RSVP";
     case "location":
     case "map":
-      return "CMD-MAP";
+      return usesAstronautCopy ? "CMD-MAP" : "MAPA";
     case "calendar":
-      return "CMD-ICAL";
+      return usesAstronautCopy ? "CMD-ICAL" : "FECHA";
     case "share":
-      return "CMD-LINK";
+      return usesAstronautCopy ? "CMD-LINK" : "LINK";
     default:
-      return "CMD-ALT";
+      return usesAstronautCopy ? "CMD-ALT" : "INFO";
   }
 }
 

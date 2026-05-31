@@ -182,6 +182,10 @@
   resize: vertical;
 }
 
+.intake-textarea-compact {
+  min-height: 64px !important;
+}
+
 .intake-field input:focus,
 .intake-field textarea:focus,
 .intake-field select:focus {

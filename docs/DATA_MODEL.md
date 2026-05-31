@@ -21,7 +21,7 @@ Guarda cada invitación y su configuración (contenido + secciones + vigencia + 
 - `theme_id` (TEXT, NOT NULL)  
   Ej: `astronautas`
 - `layout_id` (TEXT, NOT NULL)  
-  Ej: `layout_v1_unico`
+  Ej: `viewer_unico`
 - `animation_profile` (TEXT, NOT NULL)  
   Valores: `lite` | `pro` | `max`
 

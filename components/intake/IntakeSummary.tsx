@@ -193,7 +193,7 @@ export function IntakeSummary({ form }: IntakeSummaryProps) {
             />
           ) : null}
           {form.dress_code.enabled ? (
-            <SummaryCard title="Código de vestimenta" items={[["Colores", form.dress_code.suggested_colors], ["Ropa / indicaciones", form.dress_code.clothing_notes], ["Temática", form.dress_code.party_theme], ["Otra indicación", form.dress_code.extra_notes]]} />
+            <SummaryCard title="Código de vestimenta" items={[["Colores", form.dress_code.suggested_colors], ["Ropa / indicaciones", form.dress_code.clothing_notes], ["Otra indicación", form.dress_code.extra_notes]]} />
           ) : null}
           {form.gifts.enabled ? (
             <SummaryCard title="Regalos" items={[["Mencionar regalos", yesNo(form.gifts.wants_gifts_mention)], ["Mesa o link", form.gifts.registry_or_link], ["Indicaciones", form.gifts.gift_notes]]} />

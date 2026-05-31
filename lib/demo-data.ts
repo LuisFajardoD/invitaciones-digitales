@@ -33,7 +33,7 @@ export const demoInvitation: InvitationRecord = {
   slug: "cumple-7-luis-arturo-astronautas",
   status: "published",
   theme_id: "astronautas",
-  layout_id: "layout_v1_unico",
+  layout_id: "viewer_unico",
   animation_profile: "max",
   timezone: "America/Mexico_City",
   event_start_at: "2026-04-18T17:00:00.000Z",

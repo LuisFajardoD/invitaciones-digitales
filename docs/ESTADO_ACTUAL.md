@@ -44,7 +44,7 @@ Actualizado: 8 de marzo de 2026
   - estilo scopeado en `.app-admin` y `src/crm/admin.css`
 - Viewer publico:
   - estilo scopeado en `.app-viewer` y `src/crm/viewer.css`
-  - tema `watercolor-space` activo para invitaciones `theme_id="astronautas"` (fallback `default` para el resto)
+  - tema `watercolor-space` activo como base unica para invitaciones publicas; no se usa el renderer legacy oscuro para nuevos temas
   - fondos de portada y secciones vuelven a responder a configuración del editor (tipo, URL, kenburns); el modo `default` en `watercolor-space` usa fallback acuarela
 - Tema dark/light:
   - sincronizado con `site-theme-mode` en localStorage

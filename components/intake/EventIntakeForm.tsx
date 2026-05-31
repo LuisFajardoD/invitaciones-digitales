@@ -505,8 +505,10 @@ export function EventIntakeForm({ form }: EventIntakeFormProps) {
 
           <SectionCard title="Código de vestimenta" description="Ropa, colores o indicaciones especiales." enabled={data.dress_code.enabled} onToggle={(value) => setSectionEnabled("dress_code", value)}>
             <div className={styles["intake-grid"]}>
-              <label className={styles["intake-field"]}><span>Colores sugeridos</span><input value={data.dress_code.suggested_colors} onChange={(event) => patchSection("dress_code", { suggested_colors: event.target.value })} /></label>
-              <label className={styles["intake-field"]}><span>Temática de la fiesta</span><input value={data.dress_code.party_theme} onChange={(event) => patchSection("dress_code", { party_theme: event.target.value })} /></label>
+              <label className={`${styles["intake-field"]} ${styles["intake-field-wide"]}`}>
+                <span>Colores sugeridos</span>
+                <textarea className={styles["intake-textarea-compact"]} value={data.dress_code.suggested_colors} onChange={(event) => patchSection("dress_code", { suggested_colors: event.target.value })} />
+              </label>
               <label className={`${styles["intake-field"]} ${styles["intake-field-wide"]}`}><span>¿Deben llevar traje de baño, ropa cómoda, disfraz, etc.?</span><textarea placeholder="Llevar traje de baño, toalla y cambio de ropa." value={data.dress_code.clothing_notes} onChange={(event) => patchSection("dress_code", { clothing_notes: event.target.value })} /></label>
               <label className={`${styles["intake-field"]} ${styles["intake-field-wide"]}`}><span>Otra indicación</span><textarea value={data.dress_code.extra_notes} onChange={(event) => patchSection("dress_code", { extra_notes: event.target.value })} /></label>
             </div>

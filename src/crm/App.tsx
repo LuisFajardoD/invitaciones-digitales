@@ -566,13 +566,19 @@ function InvitationViewerCanvas({
                 return invitation.sections.quick_actions.enabled ? (
                   <QuickActionsSectionViewer
                     key={key}
+                    themeId={invitation.theme_id}
                     items={invitation.sections.quick_actions.items}
                     onAction={(type) => void quickActionHandlers[type]()}
                   />
                 ) : null;
               case "countdown":
                 return invitation.sections.countdown.enabled ? (
-                  <CountdownSectionViewer key={key} label={invitation.sections.countdown.label} countdown={countdown} />
+                  <CountdownSectionViewer
+                    key={key}
+                    themeId={invitation.theme_id}
+                    label={invitation.sections.countdown.label}
+                    countdown={countdown}
+                  />
                 ) : null;
               case "map":
                 return invitation.sections.map.enabled && mapsUrl ? (
@@ -590,7 +596,7 @@ function InvitationViewerCanvas({
                 ) : null;
               case "notes":
                 return invitation.sections.notes.enabled && noteItems.length ? (
-                  <NotesSectionViewer key={key} items={noteItems} />
+                  <NotesSectionViewer key={key} themeId={invitation.theme_id} items={noteItems} />
                 ) : null;
               case "rsvp":
                 return invitation.sections.rsvp.enabled ? <RsvpSectionViewer key={key} invitation={invitation} /> : null;
@@ -725,8 +731,8 @@ async function warmInvitationEntryMedia(invitation: InvitationRecord, assetOrigi
   await Promise.race([Promise.all(tasks), waitFor(2600)]);
 }
 
-function resolveViewerThemeKey(themeId?: string) {
-  return themeId === "astronautas" ? "watercolor-space" : "default";
+function resolveViewerThemeKey(_themeId?: string) {
+  return "watercolor-space";
 }
 
 type AppProps = {

@@ -13,6 +13,9 @@ Actualizado: 8 de marzo de 2026
   - en preguntas frecuentes/avisos cada pregunta se puede activar por separado y se mantiene un cuadro libre para otras preguntas, reglas o avisos.
   - se alineo la paleta visual con la landing para evitar fondos/accentos azules en CRM y formularios.
   - el sitio, CRM, viewer publico y formularios migran a tema claro por default, manteniendo modo oscuro manual.
+- Viewer publico:
+  - se elimino el renderer legacy `components/invitation/layout_v1` para evitar tomar versiones viejas de diseno.
+  - cualquier `theme_id` del viewer resuelve a la base visual pastel `watercolor-space`; los nombres de tema solo deben activar detalles especificos.
 - Login del CRM:
   - se agrego casilla para recordar usuario y contrasena en este navegador usando `localStorage`.
 - Se agrego modo demo para enlaces de landing/examples:

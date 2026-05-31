@@ -32,8 +32,8 @@ Todo vive en Next.js. No hay workspace Vite activo en esta version.
   - `src/crm/viewer.css` -> scope viewer publico (`.app-viewer`)
   - `components/site/*.module.css` -> landing/login/public shell
   - Tema viewer por `data-theme` en `src/crm/App.tsx`:
-    - `default` (base)
-    - `watercolor-space` para `theme_id="astronautas"`
+    - `watercolor-space` como base unica activa para invitaciones publicas
+    - `theme_id="astronautas"` solo activa detalles tematicos especificos, no cambia a un renderer viejo
   - En `watercolor-space`, el fallback visual `default` vive en CSS (`viewer-stage__fallback` y `hero-cinematic__media--default`) y los fondos imagen/video siguen siendo controlados por editor.
 
 ## 3) Rutas y responsables
