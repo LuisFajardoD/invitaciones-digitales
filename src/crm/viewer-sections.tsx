@@ -1302,7 +1302,7 @@ export function GenericBlockViewer({
   data: GenericSection;
 }) {
   const items = trimList(data.items);
-  const text = data.text?.trim() || "Información adicional para la misión.";
+  const text = data.text?.trim();
   const visibleTitle = data.title?.trim() || title;
   const normalizedTitle = visibleTitle
     .toLowerCase()
@@ -1330,7 +1330,7 @@ export function GenericBlockViewer({
     <InvitationSectionFrameViewer
       eyebrow={eyebrow}
       title={visibleTitle}
-      subtitle={text}
+      subtitle={text || undefined}
       tone="default"
       sectionClassName="invitation-section--generic-block"
       decorIcon={getSectionDecorIcon(themeId, getGenericSectionDecorKey(visibleTitle))}
