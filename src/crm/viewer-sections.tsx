@@ -551,8 +551,8 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
                 <CalendarGlyph />
               </span>
               <div className="mission-log__content">
-                <strong className="mission-log__value">{eventDateLabel}</strong>
                 <span className="mission-log__label">{usesAstronautCopy ? "Fecha de despegue" : "Fecha del evento"}</span>
+                <strong className="mission-log__value">{eventDateLabel}</strong>
               </div>
             </div>
             <div className="mission-log__row">
@@ -560,8 +560,8 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
                 <ClockGlyph />
               </span>
               <div className="mission-log__content">
-                <strong className="mission-log__value">{arrivalTimeLabel}</strong>
                 <span className="mission-log__label">Hora de llegada</span>
+                <strong className="mission-log__value">{arrivalTimeLabel}</strong>
               </div>
             </div>
             <div className="mission-log__row mission-log__row--address">
@@ -569,11 +569,11 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
                 <PinGlyph />
               </span>
               <div className="mission-log__content">
+                <span className="mission-log__label">Punto de encuentro</span>
                 <strong className="mission-log__value mission-log__value--address">
                   {addressLines[0]}
                   {addressLines[1] ? <span className="mission-log__value-line">{addressLines[1]}</span> : null}
                 </strong>
-                <span className="mission-log__label">Punto de encuentro</span>
               </div>
             </div>
           </div>
