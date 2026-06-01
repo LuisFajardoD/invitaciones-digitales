@@ -528,12 +528,13 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
   const arrivalTimeLabel = buildArrivalTimeLabel(invitation);
   const addressLines = splitAddressLines(invitation.sections.event_info.address_text);
   const usesAstronautCopy = isAstronautTheme(invitation.theme_id);
+  const usesMermaidTheme = isMermaidTheme(invitation.theme_id);
 
   return (
     <InvitationSectionFrameViewer
       eyebrow={usesAstronautCopy ? "Bitácora de misión" : "Datos del evento"}
       title={invitation.sections.event_info.venue_name}
-      subtitle="Todo listo para el punto de encuentro."
+      subtitle={usesMermaidTheme ? undefined : "Todo listo para el punto de encuentro."}
       tone="aurora"
       surface="bare"
       decorIcon={getSectionDecorIcon(invitation.theme_id, "event_info")}
