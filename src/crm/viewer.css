@@ -2379,6 +2379,10 @@
   transition: transform 0.22s ease;
 }
 
+.gallery-tile--wide .gallery-tile__media {
+  object-position: center bottom;
+}
+
 .gallery-tile-button:hover .gallery-tile__media,
 .gallery-tile-button:focus-visible .gallery-tile__media {
   transform: scale(1.03);
