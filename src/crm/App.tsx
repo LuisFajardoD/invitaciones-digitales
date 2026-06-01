@@ -2230,9 +2230,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
             <div className="viewer-launch-loader viewer-launch-loader--sirenas" aria-hidden="true">
               <span className="viewer-launch-loader__sea-bubbles" />
               <span className="viewer-launch-loader__sea-bubbles viewer-launch-loader__sea-bubbles--two" />
-              <span className="viewer-launch-loader__shell">
-                <img src={`${assetOrigin}/assets/sirenas/concha.svg`} alt="" aria-hidden="true" />
-              </span>
+              <span className="viewer-launch-loader__pearl" />
             </div>
           ) : (
             <div className="viewer-launch-loader" aria-hidden="true">

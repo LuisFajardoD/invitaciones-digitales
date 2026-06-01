@@ -247,7 +247,6 @@ export function HeroSectionViewer({
           {telemetryDetail ? <p className="hero-cinematic__mermaid-age">{telemetryDetail}</p> : null}
           {subtitle ? (
             <div className="hero-cinematic__mermaid-shell">
-              <img src={`${assetOrigin}/assets/sirenas/concha.svg`} alt="" aria-hidden="true" />
               <p>{subtitle}</p>
             </div>
           ) : null}
