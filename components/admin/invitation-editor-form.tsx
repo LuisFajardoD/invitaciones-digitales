@@ -65,6 +65,7 @@ type ExtraSectionKey =
   | "lodging";
 
 type ContentEditorSectionKey =
+  | "event_info"
   | "quick_actions"
   | "countdown"
   | "map"
@@ -133,6 +134,7 @@ const extraSectionKeys: ExtraSectionKey[] = [
 ];
 
 const contentEditorSectionKeys: ContentEditorSectionKey[] = [
+  "event_info",
   "quick_actions",
   "countdown",
   "map",
@@ -182,7 +184,6 @@ const WHATSAPP_QA_CHECKLIST: string[] = [
 const editorCategories: Array<{ key: EditorCategoryKey; label: string }> = [
   { key: "base", label: "Base" },
   { key: "portada", label: "Portada" },
-  { key: "evento", label: "Evento" },
   { key: "flujo", label: "Flujo" },
   { key: "contenido", label: "Contenido" },
 ];
@@ -1088,6 +1089,88 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
     }
 
     switch (key) {
+      case "event_info":
+        return (
+          <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
+            <label className="field">
+              <span>Lugar</span>
+              <input
+                value={draft.sections.event_info.venue_name}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      event_info: { ...draft.sections.event_info, venue_name: event.target.value },
+                    },
+                  })
+                }
+              />
+            </label>
+            <label className="field-wide">
+              <span>Dirección del evento</span>
+              <input
+                value={draft.sections.event_info.address_text}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      event_info: { ...draft.sections.event_info, address_text: value },
+                      map: { ...draft.sections.map, address_text: value },
+                    },
+                  });
+                }}
+              />
+            </label>
+            <label className="field">
+              <span>Dia de la semana</span>
+              <input
+                value={draft.sections.event_info.weekday_text}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      event_info: { ...draft.sections.event_info, weekday_text: event.target.value },
+                    },
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              <span>Fecha visible</span>
+              <input
+                value={draft.sections.event_info.date_text}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      event_info: { ...draft.sections.event_info, date_text: event.target.value },
+                    },
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              <span>Hora visible</span>
+              <input
+                value={draft.sections.event_info.time_text}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      event_info: { ...draft.sections.event_info, time_text: event.target.value },
+                    },
+                  })
+                }
+              />
+            </label>
+          </div>
+        );
       case "quick_actions":
         return (
           <div className="admin-subpanel quick-actions-editor">
