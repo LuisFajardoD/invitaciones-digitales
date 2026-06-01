@@ -5099,12 +5099,12 @@
   > .viewer-stage__media
   > .viewer-media-frame {
   background-color: #b9f4ff;
-  background-image:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(194, 246, 255, 0.18) 42%, rgba(255, 255, 255, 0.14) 100%),
-    url("/assets/sirenas/fondo.avif");
+  background-image: url("/assets/sirenas/fondo.avif");
   background-position: center top;
-  background-size: min(100%, 941px) auto;
+  background-size: 100% auto;
   background-repeat: repeat-y;
+  animation: none;
+  transform: none;
 }
 
 .app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas
