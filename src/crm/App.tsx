@@ -280,6 +280,16 @@ function getEditorSectionLabel(key: SectionKey) {
   return sectionDisplayLabels[key];
 }
 
+function getDefaultChecklistTitle(themeId: string) {
+  return themeId === "astronautas" ? "Antes del despegue" : "Antes de la fiesta";
+}
+
+function getDefaultChecklistText(themeId: string) {
+  return themeId === "astronautas"
+    ? "Detalles clave para que la misión salga perfecta."
+    : "Detalles importantes para disfrutar el evento.";
+}
+
 function getOrderedSectionKeys(order: SectionKey[]) {
   const valid = order.filter((key) => allSectionKeys.includes(key));
   const missing = allSectionKeys.filter((key) => !valid.includes(key));
@@ -597,7 +607,13 @@ function InvitationViewerCanvas({
                 ) : null;
               case "notes":
                 return invitation.sections.notes.enabled && noteItems.length ? (
-                  <NotesSectionViewer key={key} themeId={invitation.theme_id} items={noteItems} />
+                  <NotesSectionViewer
+                    key={key}
+                    themeId={invitation.theme_id}
+                    title={invitation.sections.notes.title}
+                    text={invitation.sections.notes.text}
+                    items={noteItems}
+                  />
                 ) : null;
               case "rsvp":
                 return invitation.sections.rsvp.enabled ? <RsvpSectionViewer key={key} invitation={invitation} /> : null;
@@ -1841,6 +1857,23 @@ export function App({ initialInvitationThemeId }: AppProps) {
     });
   }
 
+  function updateEditorNotesSection(next: Partial<InvitationRecord["sections"]["notes"]>) {
+    if (!editorDraft) {
+      return;
+    }
+
+    updateEditorDraft({
+      ...editorDraft,
+      sections: {
+        ...editorDraft.sections,
+        notes: {
+          ...editorDraft.sections.notes,
+          ...next,
+        },
+      },
+    });
+  }
+
   function updateEditorMap(
     next: Omit<Partial<InvitationRecord["sections"]["map"]>, "embed"> & {
       embed?: Partial<NonNullable<InvitationRecord["sections"]["map"]["embed"]>>;
@@ -3024,12 +3057,28 @@ export function App({ initialInvitationThemeId }: AppProps) {
               </div>
             </div>
             <div className="viewer-field viewer-field--wide">
-              <span>Avisos importantes</span>
+              <span>Checklist</span>
+              <div className="viewer-stack-item">
+                <label className="viewer-field">
+                  <span>Título visible</span>
+                  <input
+                    value={editorDraft.sections.notes.title ?? getDefaultChecklistTitle(editorDraft.theme_id)}
+                    onChange={(event) => updateEditorNotesSection({ title: event.target.value })}
+                  />
+                </label>
+                <label className="viewer-field">
+                  <span>Descripción</span>
+                  <textarea
+                    value={editorDraft.sections.notes.text ?? getDefaultChecklistText(editorDraft.theme_id)}
+                    onChange={(event) => updateEditorNotesSection({ text: event.target.value })}
+                  />
+                </label>
+              </div>
               <div className="viewer-stack-list">
                 {editorDraft.sections.notes.items.map((item, index) => (
                   <div key={`note-${index}`} className="viewer-stack-item">
                     <label className="viewer-field">
-                      <span>Aviso {index + 1}</span>
+                      <span>Punto {index + 1}</span>
                       <input
                         value={item}
                         onChange={(event) => updateEditorNoteItem(index, event.target.value)}
@@ -3045,7 +3094,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                   </div>
                 ))}
                 <button type="button" className="viewer-mini-button" onClick={addEditorNoteItem}>
-                  Agregar aviso
+                  Agregar punto
                 </button>
               </div>
             </div>

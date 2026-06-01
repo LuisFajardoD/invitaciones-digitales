@@ -124,6 +124,16 @@ const extraSectionKeys: ExtraSectionKey[] = [
 
 const editableSectionLabels: Record<SectionKey, string> = sectionDisplayLabels;
 
+function getDefaultChecklistTitle(themeId: string) {
+  return themeId === "astronautas" ? "Antes del despegue" : "Antes de la fiesta";
+}
+
+function getDefaultChecklistText(themeId: string) {
+  return themeId === "astronautas"
+    ? "Detalles clave para que la misión salga perfecta."
+    : "Detalles importantes para disfrutar el evento.";
+}
+
 const quickActionTypeOptions: Array<{
   value: QuickActionItem["type"];
   label: string;
@@ -679,6 +689,19 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
         notes: {
           ...draft.sections.notes,
           items: draft.sections.notes.items.filter((_, itemIndex) => itemIndex !== index),
+        },
+      },
+    });
+  }
+
+  function updateNotesSection(next: Partial<InvitationRecord["sections"]["notes"]>) {
+    updateDraft({
+      ...draft,
+      sections: {
+        ...draft.sections,
+        notes: {
+          ...draft.sections.notes,
+          ...next,
         },
       },
     });
@@ -1672,14 +1695,33 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             </div>
           </div>
           <div className="field-wide">
-            <span>Avisos importantes</span>
+            <span>Checklist</span>
+            <div className="admin-subpanel">
+              <div className={styles["inv-editor-form-grid"]}>
+                <label className="field">
+                  <span>Título visible</span>
+                  <input
+                    value={draft.sections.notes.title ?? getDefaultChecklistTitle(draft.theme_id)}
+                    onChange={(event) => updateNotesSection({ title: event.target.value })}
+                  />
+                </label>
+                <label className="field field-wide">
+                  <span>Descripción</span>
+                  <textarea
+                    value={draft.sections.notes.text ?? getDefaultChecklistText(draft.theme_id)}
+                    onChange={(event) => updateNotesSection({ text: event.target.value })}
+                    placeholder="Texto breve que aparece debajo del título."
+                  />
+                </label>
+              </div>
+            </div>
             <div className="admin-subpanel simple-list-editor">
               <EditorGridList
                 columnsTemplate="minmax(0, 1fr) auto"
-                headers={["Aviso", "Acciones"]}
+                headers={["Punto", "Acciones"]}
                 emptyState={
                   <p className={styles["inv-editor-grid-empty"]}>
-                    No hay avisos todavía. Agrega uno para que aparezca en avisos importantes.
+                    No hay puntos todavía. Agrega uno para que aparezca en Checklist.
                   </p>
                 }
                 hasRows={draft.sections.notes.items.length > 0}
@@ -1688,12 +1730,12 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                   <EditorGridRow key={`note-${index}`} columnsTemplate="minmax(0, 1fr) auto">
                     <div className={styles["inv-editor-grid-cell"]}>
                       <label className="field" htmlFor={`note-item-${index}`}>
-                        <span className={styles["inv-editor-sr-only"]}>Aviso</span>
+                        <span className={styles["inv-editor-sr-only"]}>Punto</span>
                         <input
                           id={`note-item-${index}`}
                           value={item}
                           onChange={(event) => updateNoteItem(index, event.target.value)}
-                          placeholder="Escribe un aviso o indicación"
+                          placeholder="Escribe un punto del checklist"
                         />
                       </label>
                     </div>
@@ -1710,7 +1752,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 ))}
               </EditorGridList>
               <button type="button" className="button-secondary" onClick={addNoteItem}>
-                Agregar aviso
+                Agregar punto
               </button>
             </div>
           </div>

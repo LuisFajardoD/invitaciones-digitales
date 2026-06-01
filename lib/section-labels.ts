@@ -7,7 +7,7 @@ export const sectionDisplayLabels: Record<SectionKey, string> = {
   countdown: "Cuenta regresiva",
   map: "Ubicaci\u00f3n",
   gallery: "Galer\u00eda de fotos",
-  notes: "Avisos importantes",
+  notes: "Checklist",
   rsvp: "Confirma tu asistencia",
   contact: "Contacto",
   itinerary: "Itinerario",

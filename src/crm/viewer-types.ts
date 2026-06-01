@@ -118,6 +118,8 @@ export type InvitationRecord = {
     };
     notes: {
       enabled: boolean;
+      title?: string;
+      text?: string;
       items: string[];
     };
     rsvp: {

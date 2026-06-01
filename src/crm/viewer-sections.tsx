@@ -842,14 +842,27 @@ function GalleryTileViewer({
   );
 }
 
-export function NotesSectionViewer({ themeId, items }: { themeId: string; items: string[] }) {
+export function NotesSectionViewer({
+  themeId,
+  title,
+  text,
+  items,
+}: {
+  themeId: string;
+  title?: string;
+  text?: string;
+  items: string[];
+}) {
   const usesAstronautCopy = isAstronautTheme(themeId);
+  const visibleTitle = title?.trim() || (usesAstronautCopy ? "Antes del despegue" : "Antes de la fiesta");
+  const visibleText =
+    text?.trim() || (usesAstronautCopy ? "Detalles clave para que la misión salga perfecta." : "Detalles importantes para disfrutar el evento.");
 
   return (
     <InvitationSectionFrameViewer
       eyebrow="Checklist"
-      title={usesAstronautCopy ? "Antes del despegue" : "Antes de la fiesta"}
-      subtitle={usesAstronautCopy ? "Detalles clave para que la misión salga perfecta." : "Detalles importantes para disfrutar el evento."}
+      title={visibleTitle}
+      subtitle={visibleText}
       tone="default"
       decorIcon={getSectionDecorIcon(themeId, "notes")}
     >

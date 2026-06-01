@@ -128,6 +128,8 @@ export interface GallerySectionData extends SectionBase {
 }
 
 export interface NotesSectionData extends SectionBase {
+  title?: string;
+  text?: string;
   items: string[];
 }
 
