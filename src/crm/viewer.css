@@ -923,13 +923,13 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 74%;
+  width: 78%;
   margin: 0;
   transform: translate(-50%, -50%);
   color: #ffffff;
   font-family: "Moms Kids Up", "Fredoka", sans-serif;
-  font-size: clamp(1.02rem, 3.4vw, 1.6rem);
-  line-height: 1.12;
+  font-size: clamp(1.16rem, 3.95vw, 1.84rem);
+  line-height: 1.04;
   text-align: center;
   text-transform: uppercase;
   text-shadow:
