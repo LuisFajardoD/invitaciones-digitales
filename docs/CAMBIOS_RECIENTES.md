@@ -16,6 +16,7 @@ Actualizado: 8 de marzo de 2026
 - Viewer publico:
   - se elimino el renderer legacy `components/invitation/layout_v1` para evitar tomar versiones viejas de diseno.
   - cualquier `theme_id` del viewer resuelve a la base visual pastel `watercolor-space`; los nombres de tema solo deben activar detalles especificos.
+  - se agrego portada tematica para `theme_id="sirenas"` con fondo marino, burbujas, personaje flotante en video, concha y fuentes locales.
 - Login del CRM:
   - se agrego casilla para recordar usuario y contrasena en este navegador usando `localStorage`.
 - Se agrego modo demo para enlaces de landing/examples:

@@ -1325,14 +1325,14 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           </div>
 
           <div className="field-wide admin-subpanel">
-            <strong>Astronauta</strong>
+            <strong>Personaje flotante</strong>
             <div className="form-grid" style={{ marginTop: 12 }}>
               <label className="checkbox-tile">
                 <input type="checkbox" checked={heroAstronaut.enabled} onChange={(event) => updateHeroAstronaut({ enabled: event.target.checked })} />
-                <span>Mostrar astronauta</span>
+                <span>Mostrar personaje</span>
               </label>
               <label className="field">
-                <span>URL del astronauta</span>
+                <span>URL del personaje</span>
                 <input value={heroAstronaut.image_url} onChange={(event) => updateHeroAstronaut({ image_url: event.target.value })} />
               </label>
               <label className="field">
@@ -1606,7 +1606,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             </div>
           </div>
           <div className="field-wide">
-            <span>Archivo visual</span>
+            <span>Galería de fotos</span>
             <div className="admin-subpanel simple-list-editor">
               <div className="form-grid" style={{ marginBottom: 12 }}>
                 <label className="field">
@@ -1636,7 +1636,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 headers={["URL de imagen", "Acciones"]}
                 emptyState={
                   <p className={styles["inv-editor-grid-empty"]}>
-                    No hay imágenes todavía. Agrega una para que aparezca en Archivo visual.
+                    No hay imágenes todavía. Agrega una para que aparezca en la galería de fotos.
                   </p>
                 }
                 hasRows={draft.sections.gallery.image_urls.length > 0}
@@ -1672,14 +1672,14 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             </div>
           </div>
           <div className="field-wide">
-            <span>Checklist</span>
+            <span>Avisos importantes</span>
             <div className="admin-subpanel simple-list-editor">
               <EditorGridList
                 columnsTemplate="minmax(0, 1fr) auto"
-                headers={["Punto", "Acciones"]}
+                headers={["Aviso", "Acciones"]}
                 emptyState={
                   <p className={styles["inv-editor-grid-empty"]}>
-                    No hay puntos todavía. Agrega uno para que aparezca en Checklist.
+                    No hay avisos todavía. Agrega uno para que aparezca en avisos importantes.
                   </p>
                 }
                 hasRows={draft.sections.notes.items.length > 0}
@@ -1688,12 +1688,12 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                   <EditorGridRow key={`note-${index}`} columnsTemplate="minmax(0, 1fr) auto">
                     <div className={styles["inv-editor-grid-cell"]}>
                       <label className="field" htmlFor={`note-item-${index}`}>
-                        <span className={styles["inv-editor-sr-only"]}>Punto</span>
+                        <span className={styles["inv-editor-sr-only"]}>Aviso</span>
                         <input
                           id={`note-item-${index}`}
                           value={item}
                           onChange={(event) => updateNoteItem(index, event.target.value)}
-                          placeholder="Escribe un detalle"
+                          placeholder="Escribe un aviso o indicación"
                         />
                       </label>
                     </div>
@@ -1710,7 +1710,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 ))}
               </EditorGridList>
               <button type="button" className="button-secondary" onClick={addNoteItem}>
-                Agregar punto
+                Agregar aviso
               </button>
             </div>
           </div>
@@ -1866,7 +1866,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
 
             <section className={`admin-subpanel ${styles["inv-editor-attention-card"]}`}>
               <div className={styles["inv-editor-attention-head"]}>
-                <strong>Canal directo (WhatsApp)</strong>
+                <strong>Contacto por WhatsApp</strong>
                 <p className="helper-text">Define el contacto principal y el enlace de salida que ve el cliente.</p>
               </div>
               <div className={`form-grid ${styles["inv-editor-attention-form-grid"]}`}>
@@ -1972,7 +1972,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 className={`button-secondary ${styles["inv-editor-share-help-button"]}`}
                 onClick={() => setIsWhatsAppChecklistOpen(true)}
               >
-                Checklist WhatsApp
+                Revisión WhatsApp
               </button>
             </div>
             <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
@@ -2164,7 +2164,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
             <header className={styles["inv-editor-modal-head"]}>
               <div>
                 <p className="eyebrow">Publicacion</p>
-                <h3 id="wa-checklist-title">Checklist WhatsApp</h3>
+                <h3 id="wa-checklist-title">Revisión WhatsApp</h3>
               </div>
               <button
                 type="button"

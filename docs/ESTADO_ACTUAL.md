@@ -45,6 +45,7 @@ Actualizado: 8 de marzo de 2026
 - Viewer publico:
   - estilo scopeado en `.app-viewer` y `src/crm/viewer.css`
   - tema `watercolor-space` activo como base unica para invitaciones publicas; no se usa el renderer legacy oscuro para nuevos temas
+  - `theme_id` puede activar detalles tematicos sin cambiar de renderer; actualmente `astronautas` conserva decoracion espacial y `sirenas` usa portada submarina con assets locales
   - fondos de portada y secciones vuelven a responder a configuración del editor (tipo, URL, kenburns); el modo `default` en `watercolor-space` usa fallback acuarela
 - Tema dark/light:
   - sincronizado con `site-theme-mode` en localStorage

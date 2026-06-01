@@ -2601,7 +2601,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
               </div>
             </div>
             <div className="viewer-field viewer-field--wide">
-              <span>Astronauta</span>
+              <span>Personaje flotante</span>
               <div className="viewer-stack-list">
                 <div className="viewer-stack-item">
                   <div className="cover-card__controls-row cover-card__controls-row--astronaut">
@@ -2655,7 +2655,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                     </label>
                   </div>
                   <label className="viewer-field">
-                    <span>URL del astronauta</span>
+                    <span>URL del personaje</span>
                     <input
                       value={editorDraft.sections.hero.astronaut?.image_url || ""}
                       onChange={(event) =>
@@ -2964,7 +2964,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
               </div>
             </div>
             <div className="viewer-field viewer-field--wide">
-              <span>Archivo visual</span>
+              <span>Galería de fotos</span>
               <div className="viewer-stack-list">
                 {editorDraft.sections.gallery.image_urls.map((item, index) => (
                   <div key={`gallery-${index}`} className="viewer-stack-item">
@@ -2991,12 +2991,12 @@ export function App({ initialInvitationThemeId }: AppProps) {
               </div>
             </div>
             <div className="viewer-field viewer-field--wide">
-              <span>Checklist</span>
+              <span>Avisos importantes</span>
               <div className="viewer-stack-list">
                 {editorDraft.sections.notes.items.map((item, index) => (
                   <div key={`note-${index}`} className="viewer-stack-item">
                     <label className="viewer-field">
-                      <span>Punto {index + 1}</span>
+                      <span>Aviso {index + 1}</span>
                       <input
                         value={item}
                         onChange={(event) => updateEditorNoteItem(index, event.target.value)}
@@ -3012,7 +3012,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                   </div>
                 ))}
                 <button type="button" className="viewer-mini-button" onClick={addEditorNoteItem}>
-                  Agregar punto
+                  Agregar aviso
                 </button>
               </div>
             </div>

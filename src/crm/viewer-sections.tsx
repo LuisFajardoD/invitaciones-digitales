@@ -13,10 +13,15 @@ import { normalizeKenBurns, resolveHeroBackground, resolveMediaUrl, splitTitle, 
 
 const HERO_TYPEWRITER_STEP_MS = 82;
 const HERO_TYPEWRITER_LINE_GAP_STEPS = 3;
+const HERO_BUBBLE_COUNT = 18;
 let hasPlayedAstronautTypewriter = false;
 
 function isAstronautTheme(themeId: string) {
   return themeId === "astronautas";
+}
+
+function isMermaidTheme(themeId: string) {
+  return themeId === "sirenas";
 }
 
 function getKenBurnsClassName(config?: BackgroundMediaConfig) {
@@ -43,6 +48,10 @@ function getAstronautClass(
     default:
       return "";
   }
+}
+
+function isVideoAsset(url: string) {
+  return /\.(?:mp4|webm|mov|m4v)(?:[?#].*)?$/i.test(url.trim());
 }
 
 export function BackgroundMediaViewer({
@@ -105,9 +114,11 @@ export function HeroSectionViewer({
   assetOrigin: string;
 }) {
   const usesAstronautTheme = isAstronautTheme(invitation.theme_id);
+  const usesMermaidTheme = isMermaidTheme(invitation.theme_id);
+  const heroTitle = repairLegacyText(invitation.sections.hero.title).trim();
   const titleLines = usesAstronautTheme
-    ? buildAstronautTitleLines(invitation.sections.hero.title)
-    : splitTitle(repairLegacyText(invitation.sections.hero.title));
+    ? buildAstronautTitleLines(heroTitle).filter(Boolean)
+    : splitTitle(heroTitle).filter(Boolean);
   const cloudOneUrl = `${assetOrigin}/assets/nube%201-01.webp`;
   const cloudTwoUrl = `${assetOrigin}/assets/nube2.webp`;
   const cloudThreeUrl = `${assetOrigin}/assets/nube3.webp`;
@@ -120,9 +131,14 @@ export function HeroSectionViewer({
   const astronautUrl = resolveMediaUrl(normalizedAstronautAsset, assetOrigin);
   const astronautPosition = invitation.sections.hero.astronaut?.position;
   const astronautPositionClassName = getAstronautClass(astronautPosition);
-  const telemetryLabel = repairLegacyText(invitation.sections.hero.badge?.trim() || "PROTOCOLO DE DESPEGUE");
-  const telemetryDetail = repairLegacyText(invitation.sections.hero.accent?.trim() || "ID: LA-07");
-  const subtitle = repairLegacyText(invitation.sections.hero.subtitle);
+  const telemetryLabel = repairLegacyText(
+    invitation.sections.hero.badge?.trim() || (usesAstronautTheme ? "PROTOCOLO DE DESPEGUE" : ""),
+  );
+  const telemetryDetail = repairLegacyText(
+    invitation.sections.hero.accent?.trim() || (usesAstronautTheme ? "ID: LA-07" : ""),
+  );
+  const subtitle = repairLegacyText(invitation.sections.hero.subtitle).trim();
+  const hasHeroCopy = Boolean(telemetryLabel || telemetryDetail || titleLines.length || subtitle);
   const animatedTitleLines = useMemo(() => {
     let cursor = 0;
 
@@ -179,108 +195,140 @@ export function HeroSectionViewer({
   }
 
   return (
-    <section className={`hero-cinematic${usesAstronautTheme ? " hero-cinematic--astronautas" : ""}`}>
+    <section
+      className={`hero-cinematic${usesAstronautTheme ? " hero-cinematic--astronautas" : ""}${
+        usesMermaidTheme ? " hero-cinematic--sirenas" : ""
+      }`}
+    >
       <BackgroundMediaViewer
         config={heroBackground}
         assetOrigin={assetOrigin}
         className="hero-cinematic__media"
         fallbackClassName="hero-cinematic__media--default"
       />
-      <div className="hero-cinematic__drift hero-cinematic__drift--one" aria-hidden="true" />
-      <div className="hero-cinematic__drift hero-cinematic__drift--two" aria-hidden="true" />
-      <div className="hero-cinematic__cloud hero-cinematic__cloud--three" aria-hidden="true">
-        <img src={cloudThreeUrl} alt="" aria-hidden="true" />
-      </div>
-      <div className="hero-cinematic__cloud hero-cinematic__cloud--two" aria-hidden="true">
-        <img src={cloudTwoUrl} alt="" aria-hidden="true" />
-      </div>
-      <div className="hero-cinematic__cloud hero-cinematic__cloud--one" aria-hidden="true">
-        <img src={cloudOneUrl} alt="" aria-hidden="true" />
-      </div>
-      <div className="hero-cinematic__comet hero-cinematic__comet--one" aria-hidden="true" />
-      <div className="hero-cinematic__comet hero-cinematic__comet--two" aria-hidden="true" />
-      {usesAstronautTheme ? <div className="hero-cinematic__comet hero-cinematic__comet--three" aria-hidden="true" /> : null}
       {usesAstronautTheme ? (
-        <div className="watercolor-hero-decor" aria-hidden="true">
-          <div className="watercolor-hero-decor__rocket">
-            <MissionRocket />
+        <>
+          <div className="hero-cinematic__drift hero-cinematic__drift--one" aria-hidden="true" />
+          <div className="hero-cinematic__drift hero-cinematic__drift--two" aria-hidden="true" />
+          <div className="hero-cinematic__cloud hero-cinematic__cloud--three" aria-hidden="true">
+            <img src={cloudThreeUrl} alt="" aria-hidden="true" />
           </div>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--star">⭐</span>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--planet">🪐</span>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--moon">🌙</span>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--satellite">🛰️</span>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--cloud">☁️</span>
+          <div className="hero-cinematic__cloud hero-cinematic__cloud--two" aria-hidden="true">
+            <img src={cloudTwoUrl} alt="" aria-hidden="true" />
+          </div>
+          <div className="hero-cinematic__cloud hero-cinematic__cloud--one" aria-hidden="true">
+            <img src={cloudOneUrl} alt="" aria-hidden="true" />
+          </div>
+          <div className="hero-cinematic__comet hero-cinematic__comet--one" aria-hidden="true" />
+          <div className="hero-cinematic__comet hero-cinematic__comet--two" aria-hidden="true" />
+          <div className="hero-cinematic__comet hero-cinematic__comet--three" aria-hidden="true" />
+          <div className="watercolor-hero-decor" aria-hidden="true">
+            <div className="watercolor-hero-decor__rocket">
+              <MissionRocket />
+            </div>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--star">⭐</span>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--planet">🪐</span>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--moon">🌙</span>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--satellite">🛰️</span>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--cloud">☁️</span>
+          </div>
+        </>
+      ) : (
+        <div className="hero-cinematic__bubbles" aria-hidden="true">
+          {Array.from({ length: HERO_BUBBLE_COUNT }, (_, index) => (
+            <span key={`hero-bubble-${index}`} className="hero-cinematic__bubble" />
+          ))}
         </div>
-      ) : null}
+      )}
+      {usesMermaidTheme ? (
+        <div className="hero-cinematic__mermaid-copy">
+          {telemetryLabel ? <p className="hero-cinematic__mermaid-kingdom">{telemetryLabel}</p> : null}
+          {heroTitle ? <h1 className="hero-cinematic__mermaid-name">{heroTitle}</h1> : null}
+          {telemetryDetail ? <p className="hero-cinematic__mermaid-age">{telemetryDetail}</p> : null}
+          {subtitle ? (
+            <div className="hero-cinematic__mermaid-shell">
+              <img src={`${assetOrigin}/assets/sirenas/concha.svg`} alt="" aria-hidden="true" />
+              <p>{subtitle}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : hasHeroCopy ? (
       <div className="hero-cinematic__content">
         <div className="hero-cinematic__copy">
-          <div className="hero-cinematic__telemetry-wrap">
-            <p className="hero-cinematic__telemetry">{telemetryLabel}</p>
-            <div className="hero-cinematic__telemetry-detail">
-              <span>{telemetryDetail}</span>
+          {telemetryLabel || telemetryDetail ? (
+            <div className="hero-cinematic__telemetry-wrap">
+              {telemetryLabel ? <p className="hero-cinematic__telemetry">{telemetryLabel}</p> : null}
+              {telemetryDetail ? (
+                <div className="hero-cinematic__telemetry-detail">
+                  <span>{telemetryDetail}</span>
+                </div>
+              ) : null}
+              <div className="hero-cinematic__telemetry-line" aria-hidden="true" />
             </div>
-            <div className="hero-cinematic__telemetry-line" aria-hidden="true" />
-          </div>
-          <div className="hero-typewriter" aria-label={repairLegacyText(invitation.sections.hero.title)}>
-            {animatedTitleLines.map((lineData, index) => (
-              <div key={`${lineData.line}-${index}`} className="hero-typewriter__row">
-                <span className={`hero-typewriter__line ${index === 0 ? "hero-typewriter__line--lead" : "hero-typewriter__line--main"}`}>
-                  {usesAstronautTheme ? (
-                    <>
-                      {isTypewriterComplete ? (
-                        <span className="hero-typewriter__line-text hero-typewriter__line-text--complete" aria-hidden="true">
-                          {lineData.line}
-                          {index === animatedTitleLines.length - 1 ? (
-                            <span className="hero-typewriter__caret hero-typewriter__caret--steady" aria-hidden="true" />
-                          ) : null}
-                        </span>
-                      ) : (
-                        <>
-                          <span
-                            className="hero-typewriter__line-text"
-                            aria-hidden="true"
-                            style={
-                              {
-                                "--line-delay": `${lineData.startDelayIndex * HERO_TYPEWRITER_STEP_MS}ms`,
-                                "--line-duration": `${Math.max(lineData.chars.length, 1) * HERO_TYPEWRITER_STEP_MS}ms`,
-                                "--line-active-duration": `${(Math.max(lineData.chars.length, 1) + 1) * HERO_TYPEWRITER_STEP_MS}ms`,
-                                "--line-steps": String(Math.max(lineData.chars.length, 1)),
-                              } as CSSProperties
-                            }
-                          >
-                            {lineData.chars.map((char, charIndex) => {
-                              const delayMs = (lineData.startDelayIndex + charIndex) * HERO_TYPEWRITER_STEP_MS;
-                              return (
-                                <span
-                                  key={`${lineData.line}-${charIndex}-${char}`}
-                                  className="hero-typewriter__glyph"
-                                  style={{ "--char-delay": `${delayMs}ms` } as CSSProperties}
-                                >
-                                  {char === " " ? "\u00A0" : char}
-                                </span>
-                              );
-                            })}
-                            <span
-                              className={`hero-typewriter__caret ${
-                                index === animatedTitleLines.length - 1 ? "hero-typewriter__caret--persist" : ""
-                              }`}
-                              aria-hidden="true"
-                            />
+          ) : null}
+          {animatedTitleLines.length ? (
+            <div className="hero-typewriter" aria-label={heroTitle}>
+              {animatedTitleLines.map((lineData, index) => (
+                <div key={`${lineData.line}-${index}`} className="hero-typewriter__row">
+                  <span className={`hero-typewriter__line ${index === 0 ? "hero-typewriter__line--lead" : "hero-typewriter__line--main"}`}>
+                    {usesAstronautTheme ? (
+                      <>
+                        {isTypewriterComplete ? (
+                          <span className="hero-typewriter__line-text hero-typewriter__line-text--complete" aria-hidden="true">
+                            {lineData.line}
+                            {index === animatedTitleLines.length - 1 ? (
+                              <span className="hero-typewriter__caret hero-typewriter__caret--steady" aria-hidden="true" />
+                            ) : null}
                           </span>
-                          <span className="hero-typewriter__sr-only">{lineData.line}</span>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    lineData.line
-                  )}
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="hero-cinematic__subtitle">{subtitle}</p>
+                        ) : (
+                          <>
+                            <span
+                              className="hero-typewriter__line-text"
+                              aria-hidden="true"
+                              style={
+                                {
+                                  "--line-delay": `${lineData.startDelayIndex * HERO_TYPEWRITER_STEP_MS}ms`,
+                                  "--line-duration": `${Math.max(lineData.chars.length, 1) * HERO_TYPEWRITER_STEP_MS}ms`,
+                                  "--line-active-duration": `${(Math.max(lineData.chars.length, 1) + 1) * HERO_TYPEWRITER_STEP_MS}ms`,
+                                  "--line-steps": String(Math.max(lineData.chars.length, 1)),
+                                } as CSSProperties
+                              }
+                            >
+                              {lineData.chars.map((char, charIndex) => {
+                                const delayMs = (lineData.startDelayIndex + charIndex) * HERO_TYPEWRITER_STEP_MS;
+                                return (
+                                  <span
+                                    key={`${lineData.line}-${charIndex}-${char}`}
+                                    className="hero-typewriter__glyph"
+                                    style={{ "--char-delay": `${delayMs}ms` } as CSSProperties}
+                                  >
+                                    {char === " " ? "\u00A0" : char}
+                                  </span>
+                                );
+                              })}
+                              <span
+                                className={`hero-typewriter__caret ${
+                                  index === animatedTitleLines.length - 1 ? "hero-typewriter__caret--persist" : ""
+                                }`}
+                                aria-hidden="true"
+                              />
+                            </span>
+                            <span className="hero-typewriter__sr-only">{lineData.line}</span>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      lineData.line
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {subtitle ? <p className="hero-cinematic__subtitle">{subtitle}</p> : null}
         </div>
       </div>
+      ) : null}
       <button
         type="button"
         className="hero-cinematic__scroll-hint"
@@ -304,7 +352,13 @@ export function HeroSectionViewer({
           style={{ opacity: invitation.sections.hero.astronaut?.opacity ?? 1 }}
           aria-hidden="true"
         >
-          <img src={astronautUrl} alt="" aria-hidden="true" loading="eager" />
+          {isVideoAsset(astronautUrl) ? (
+            <video className="hero-cinematic__astronaut-media" autoPlay loop muted playsInline>
+              <source src={astronautUrl} />
+            </video>
+          ) : (
+            <img className="hero-cinematic__astronaut-media" src={astronautUrl} alt="" aria-hidden="true" loading="eager" />
+          )}
         </div>
       ) : null}
     </section>

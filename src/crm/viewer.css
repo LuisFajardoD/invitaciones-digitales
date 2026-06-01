@@ -1,5 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Orbitron:wght@500;600;700;800&display=swap");
 
+@font-face {
+  font-family: "Mermaid Babies";
+  src: url("/assets/sirenas/mermaid-babies/Mermaid%20Babies.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Moms Kids Up";
+  src: url("/assets/sirenas/moms-kids/Moms%20Kids%20Up%202023.ttf") format("truetype");
+  font-display: swap;
+}
+
 .app-viewer {
   color-scheme: dark;
   font-family: "Segoe UI", sans-serif;
@@ -545,10 +557,16 @@
   animation: viewer-hero-float-astronaut 14s ease-in-out infinite;
 }
 
-.hero-cinematic__astronaut-art img {
+.hero-cinematic__astronaut-art img,
+.hero-cinematic__astronaut-art video,
+.hero-cinematic__astronaut-media {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.hero-cinematic__astronaut-art video {
+  object-fit: contain;
 }
 
 .hero-cinematic__astronaut-art--bottom-left {
@@ -664,6 +682,155 @@
   width: clamp(98px, 15vw, 176px);
   opacity: 0.62;
   animation: viewer-hero-comet-three 7.2s linear infinite;
+}
+
+.hero-cinematic__bubbles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-cinematic__bubble {
+  --bubble-size: 18px;
+  --bubble-left: 50%;
+  --bubble-delay: 0s;
+  --bubble-duration: 9s;
+  --bubble-drift: 18px;
+  position: absolute;
+  left: var(--bubble-left);
+  bottom: -14%;
+  width: var(--bubble-size);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.86) 0 9%, transparent 10%),
+    radial-gradient(circle at 64% 72%, rgba(255, 255, 255, 0.22), rgba(142, 228, 255, 0.16) 52%, rgba(255, 255, 255, 0.08));
+  box-shadow:
+    inset 2px 3px 7px rgba(255, 255, 255, 0.2),
+    0 0 15px rgba(151, 234, 255, 0.22);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.72);
+  animation: viewer-bubble-rise var(--bubble-duration) linear infinite;
+  animation-delay: var(--bubble-delay);
+}
+
+.hero-cinematic__bubble:nth-child(1) { --bubble-left: 6%; --bubble-size: 14px; --bubble-delay: -1.2s; --bubble-duration: 8.8s; --bubble-drift: 28px; }
+.hero-cinematic__bubble:nth-child(2) { --bubble-left: 14%; --bubble-size: 24px; --bubble-delay: -5.7s; --bubble-duration: 12.4s; --bubble-drift: -18px; }
+.hero-cinematic__bubble:nth-child(3) { --bubble-left: 21%; --bubble-size: 10px; --bubble-delay: -3.1s; --bubble-duration: 7.2s; --bubble-drift: 16px; }
+.hero-cinematic__bubble:nth-child(4) { --bubble-left: 29%; --bubble-size: 19px; --bubble-delay: -9.2s; --bubble-duration: 13.6s; --bubble-drift: -26px; }
+.hero-cinematic__bubble:nth-child(5) { --bubble-left: 38%; --bubble-size: 12px; --bubble-delay: -2.4s; --bubble-duration: 8.4s; --bubble-drift: 24px; }
+.hero-cinematic__bubble:nth-child(6) { --bubble-left: 46%; --bubble-size: 28px; --bubble-delay: -7.5s; --bubble-duration: 14.2s; --bubble-drift: -20px; }
+.hero-cinematic__bubble:nth-child(7) { --bubble-left: 55%; --bubble-size: 15px; --bubble-delay: -4.6s; --bubble-duration: 9.4s; --bubble-drift: 30px; }
+.hero-cinematic__bubble:nth-child(8) { --bubble-left: 63%; --bubble-size: 22px; --bubble-delay: -10.8s; --bubble-duration: 15.6s; --bubble-drift: -30px; }
+.hero-cinematic__bubble:nth-child(9) { --bubble-left: 72%; --bubble-size: 11px; --bubble-delay: -6.1s; --bubble-duration: 8.2s; --bubble-drift: 14px; }
+.hero-cinematic__bubble:nth-child(10) { --bubble-left: 80%; --bubble-size: 26px; --bubble-delay: -12.3s; --bubble-duration: 16.2s; --bubble-drift: -24px; }
+.hero-cinematic__bubble:nth-child(11) { --bubble-left: 89%; --bubble-size: 13px; --bubble-delay: -3.8s; --bubble-duration: 9s; --bubble-drift: 22px; }
+.hero-cinematic__bubble:nth-child(12) { --bubble-left: 96%; --bubble-size: 20px; --bubble-delay: -8.7s; --bubble-duration: 12.8s; --bubble-drift: -18px; }
+.hero-cinematic__bubble:nth-child(13) { --bubble-left: 10%; --bubble-size: 9px; --bubble-delay: -11.1s; --bubble-duration: 10.2s; --bubble-drift: -12px; }
+.hero-cinematic__bubble:nth-child(14) { --bubble-left: 34%; --bubble-size: 17px; --bubble-delay: -13.8s; --bubble-duration: 17s; --bubble-drift: 34px; }
+.hero-cinematic__bubble:nth-child(15) { --bubble-left: 51%; --bubble-size: 8px; --bubble-delay: -1.9s; --bubble-duration: 7.8s; --bubble-drift: -16px; }
+.hero-cinematic__bubble:nth-child(16) { --bubble-left: 68%; --bubble-size: 18px; --bubble-delay: -15.2s; --bubble-duration: 18.4s; --bubble-drift: 32px; }
+.hero-cinematic__bubble:nth-child(17) { --bubble-left: 84%; --bubble-size: 10px; --bubble-delay: -4.2s; --bubble-duration: 8.6s; --bubble-drift: -10px; }
+.hero-cinematic__bubble:nth-child(18) { --bubble-left: 44%; --bubble-size: 21px; --bubble-delay: -6.8s; --bubble-duration: 11.8s; --bubble-drift: 20px; }
+
+.hero-cinematic__mermaid-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  color: #ffffff;
+}
+
+.hero-cinematic__mermaid-kingdom {
+  position: absolute;
+  top: clamp(36px, 5.8vh, 58px);
+  left: 50%;
+  width: min(88%, 560px);
+  margin: 0;
+  transform: translateX(-50%);
+  color: #05060a;
+  font-family: "Mermaid Babies", "Fredoka", cursive;
+  font-size: clamp(0.58rem, 2.3vw, 0.92rem);
+  letter-spacing: 0.48em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hero-cinematic__mermaid-name {
+  position: absolute;
+  top: clamp(58px, 8.6vh, 86px);
+  left: 50%;
+  width: min(86%, 660px);
+  margin: 0;
+  transform: translateX(-50%);
+  color: #f39bd4;
+  font-family: "Mermaid Babies", "Fredoka", cursive;
+  font-size: clamp(4.28rem, 17.2vw, 7.8rem);
+  font-weight: 400;
+  line-height: 0.76;
+  letter-spacing: 0.01em;
+  text-align: center;
+  text-wrap: balance;
+  -webkit-text-stroke: clamp(2px, 0.8vw, 5px) #ffffff;
+  paint-order: stroke fill;
+  text-shadow:
+    0 3px 0 rgba(255, 255, 255, 0.9),
+    0 7px 0 rgba(231, 68, 143, 0.34);
+}
+
+.hero-cinematic__mermaid-age {
+  position: absolute;
+  top: clamp(222px, 28.4vh, 306px);
+  left: 43%;
+  margin: 0;
+  transform: translateX(-50%) rotate(-1deg);
+  color: #fff114;
+  font-family: "Mermaid Babies", "Fredoka", cursive;
+  font-size: clamp(3.08rem, 11.2vw, 5.05rem);
+  font-weight: 400;
+  line-height: 0.9;
+  white-space: nowrap;
+  -webkit-text-stroke: clamp(2px, 0.65vw, 4px) #05060a;
+  paint-order: stroke fill;
+  text-shadow: 0 5px 0 rgba(255, 255, 255, 0.34);
+}
+
+.hero-cinematic__mermaid-shell {
+  position: absolute;
+  left: clamp(18px, 5vw, 56px);
+  bottom: clamp(104px, 14vh, 160px);
+  width: clamp(166px, 34vw, 242px);
+  z-index: 4;
+  margin: 0;
+  filter: drop-shadow(0 5px 0 rgba(39, 45, 68, 0.74)) drop-shadow(0 12px 14px rgba(11, 22, 49, 0.18));
+}
+
+.hero-cinematic__mermaid-shell img {
+  width: 100%;
+  height: auto;
+  opacity: 0.62;
+}
+
+.hero-cinematic__mermaid-shell p {
+  position: absolute;
+  top: 31%;
+  left: 15%;
+  width: 68%;
+  margin: 0;
+  color: #ffffff;
+  font-family: "Moms Kids Up", "Fredoka", sans-serif;
+  font-size: clamp(0.82rem, 2.8vw, 1.32rem);
+  line-height: 1.12;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow:
+    0 3px 0 rgba(121, 50, 54, 0.42),
+    0 6px 8px rgba(25, 31, 58, 0.2);
 }
 
 .hero-cinematic__content {
@@ -3085,6 +3252,26 @@
   }
 }
 
+@keyframes viewer-bubble-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.66);
+  }
+
+  12% {
+    opacity: 0.72;
+  }
+
+  78% {
+    opacity: 0.62;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--bubble-drift), -118vh, 0) scale(1.08);
+  }
+}
+
 @keyframes hero-typewriter-glyph-on {
   to {
     opacity: 1;
@@ -3233,6 +3420,7 @@
   .hero-cinematic__astronaut-art,
   .hero-cinematic__drift,
   .hero-cinematic__comet,
+  .hero-cinematic__bubble,
   .viewer-hero__planet--moon,
   .viewer-hero__planet--earth,
   .viewer-hero__astronaut,
@@ -3917,7 +4105,9 @@
   bottom: 18px;
 }
 
-.app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art img {
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art img,
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-art video,
+.app-viewer[data-theme="watercolor-space"] .hero-cinematic__astronaut-media {
   animation: watercolor-astronaut-balloon-sway 2.8s ease-in-out infinite;
   transform-origin: 50% 16%;
 }
