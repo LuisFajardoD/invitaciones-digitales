@@ -648,7 +648,7 @@ function preloadImageResource(url: string) {
   });
 }
 
-function preloadVideoMetadata(url: string) {
+function preloadVideoResource(url: string) {
   return new Promise<void>((resolve) => {
     if (!url) {
       resolve();
@@ -657,17 +657,19 @@ function preloadVideoMetadata(url: string) {
 
     const video = document.createElement("video");
     const finish = () => {
-      video.onloadeddata = null;
+      video.oncanplay = null;
       video.onerror = null;
       video.src = "";
       resolve();
     };
 
-    video.preload = "metadata";
+    video.preload = "auto";
     video.muted = true;
-    video.onloadeddata = finish;
+    video.playsInline = true;
+    video.oncanplay = finish;
     video.onerror = finish;
     video.src = url;
+    void video.load();
   });
 }
 
@@ -712,6 +714,15 @@ async function warmInvitationEntryMedia(invitation: InvitationRecord, assetOrigi
   registerBackgroundMedia(resolveShellBackground(invitation));
   registerBackgroundMedia(resolveHeroBackground(invitation));
 
+  const heroCharacterUrl = invitation.sections.hero.astronaut?.image_url?.trim();
+  if (heroCharacterUrl) {
+    if (/\.(webm|mp4|mov)(\?|#|$)/i.test(heroCharacterUrl)) {
+      addVideo(heroCharacterUrl);
+    } else {
+      addImage(heroCharacterUrl);
+    }
+  }
+
   const firstGalleryImage = invitation.sections.gallery.image_urls
     .map((item) => item.trim())
     .find(Boolean);
@@ -721,14 +732,14 @@ async function warmInvitationEntryMedia(invitation: InvitationRecord, assetOrigi
 
   const tasks = [
     ...Array.from(imageUrls).map((url) => withTimeout(preloadImageResource(url), 2200)),
-    ...Array.from(videoUrls).map((url) => withTimeout(preloadVideoMetadata(url), 2200)),
+    ...Array.from(videoUrls).map((url) => withTimeout(preloadVideoResource(url), 3400)),
   ];
 
   if (!tasks.length) {
     return;
   }
 
-  await Promise.race([Promise.all(tasks), waitFor(2600)]);
+  await Promise.race([Promise.all(tasks), waitFor(3600)]);
 }
 
 function resolveViewerThemeKey(_themeId?: string) {
@@ -2201,25 +2212,42 @@ export function App({ initialInvitationThemeId }: AppProps) {
 
   const showPublicInvitationLoader =
     route.mode === "invitation" && !error && (loading || (Boolean(invitation) && !publicInvitationReady));
+  const isMermaidLaunchScreen = viewerThemeId === "sirenas";
 
   if (showPublicInvitationLoader) {
     return (
-      <main className="app-viewer app-viewer--launch-screen" data-theme={viewerThemeKey} aria-busy="true">
+      <main
+        className={`app-viewer app-viewer--launch-screen${
+          isMermaidLaunchScreen ? " app-viewer--launch-screen-sirenas" : ""
+        }`}
+        data-theme={viewerThemeKey}
+        aria-busy="true"
+      >
         <section className="viewer-launch-panel" role="status" aria-live="polite">
           <p className="viewer-launch-panel__eyebrow">Cargando</p>
           <h1 className="viewer-launch-panel__title">Preparando invitación...</h1>
-          <div className="viewer-launch-loader" aria-hidden="true">
-            <span className="viewer-launch-loader__stars" />
-            <span className="viewer-launch-loader__smoke" />
-            <span className="viewer-launch-loader__rocket">
-              <span className="viewer-launch-loader__window" />
-              <span className="viewer-launch-loader__fin viewer-launch-loader__fin--left" />
-              <span className="viewer-launch-loader__fin viewer-launch-loader__fin--right" />
-              <span className="viewer-launch-loader__flame" />
-            </span>
-          </div>
+          {isMermaidLaunchScreen ? (
+            <div className="viewer-launch-loader viewer-launch-loader--sirenas" aria-hidden="true">
+              <span className="viewer-launch-loader__sea-bubbles" />
+              <span className="viewer-launch-loader__sea-bubbles viewer-launch-loader__sea-bubbles--two" />
+              <span className="viewer-launch-loader__shell">
+                <img src={`${assetOrigin}/assets/sirenas/concha.svg`} alt="" aria-hidden="true" />
+              </span>
+            </div>
+          ) : (
+            <div className="viewer-launch-loader" aria-hidden="true">
+              <span className="viewer-launch-loader__stars" />
+              <span className="viewer-launch-loader__smoke" />
+              <span className="viewer-launch-loader__rocket">
+                <span className="viewer-launch-loader__window" />
+                <span className="viewer-launch-loader__fin viewer-launch-loader__fin--left" />
+                <span className="viewer-launch-loader__fin viewer-launch-loader__fin--right" />
+                <span className="viewer-launch-loader__flame" />
+              </span>
+            </div>
+          )}
           <p className="viewer-launch-panel__caption">
-            Sincronizando contenido...
+            {isMermaidLaunchScreen ? "Preparando burbujas y detalles..." : "Sincronizando contenido..."}
           </p>
         </section>
       </main>

@@ -353,7 +353,7 @@ export function HeroSectionViewer({
           aria-hidden="true"
         >
           {isVideoAsset(astronautUrl) ? (
-            <video className="hero-cinematic__astronaut-media" autoPlay loop muted playsInline>
+            <video className="hero-cinematic__astronaut-media" autoPlay loop muted playsInline preload="auto">
               <source src={astronautUrl} />
             </video>
           ) : (
