@@ -5093,6 +5093,33 @@
   background-repeat: repeat;
 }
 
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas .viewer-stage__fallback,
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas
+  .viewer-stage
+  > .viewer-stage__media
+  > .viewer-media-frame {
+  background-color: #b9f4ff;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(194, 246, 255, 0.18) 42%, rgba(255, 255, 255, 0.14) 100%),
+    url("/assets/sirenas/fondo.avif");
+  background-position: center top;
+  background-size: min(100%, 941px) auto;
+  background-repeat: repeat-y;
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas
+  .viewer-stage
+  > .viewer-stage__media
+  > .viewer-media-frame
+  > .viewer-media-image,
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas
+  .viewer-stage
+  > .viewer-stage__media
+  > .viewer-media-frame
+  > .viewer-media-video {
+  display: none;
+}
+
 .app-viewer[data-theme="watercolor-space"] .invitation-section {
   --wc-card-bg: #bdedff;
   --wc-card-subtle: #d8f4ff;

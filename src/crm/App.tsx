@@ -746,6 +746,10 @@ function resolveViewerThemeKey(_themeId?: string) {
   return "watercolor-space";
 }
 
+function resolveViewerThemeClass(themeId?: string) {
+  return themeId ? ` app-viewer--theme-${themeId}` : "";
+}
+
 type AppProps = {
   initialInvitationThemeId?: string;
 };
@@ -819,6 +823,8 @@ export function App({ initialInvitationThemeId }: AppProps) {
     invitation?.theme_id || (route.mode === "invitation" || route.mode === "client-rsvp" ? initialInvitationThemeId : undefined);
   const viewerThemeKey = resolveViewerThemeKey(viewerThemeId);
   const previewThemeKey = resolveViewerThemeKey(editorDraft?.theme_id);
+  const viewerThemeClass = resolveViewerThemeClass(viewerThemeId);
+  const previewThemeClass = resolveViewerThemeClass(editorDraft?.theme_id);
 
   function stopLivePreviewDrag() {
     if (!livePreviewDragStateRef.current.active) {
@@ -3434,7 +3440,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                       onLostPointerCapture={stopLivePreviewDrag}
                     >
                       <div className="viewer-phone-device__canvas-scale">
-                        <div className="app-viewer" data-theme={previewThemeKey}>
+                        <div className={`app-viewer${previewThemeClass}`} data-theme={previewThemeKey}>
                           <div className="theme-viewer">
                             <div className="viewer-shell viewer-shell--embedded">
                               <InvitationViewerCanvas
@@ -3746,7 +3752,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
   }
 
   return (
-    <main className="app-viewer viewer-shell viewer-shell--public" data-theme={viewerThemeKey}>
+    <main className={`app-viewer viewer-shell viewer-shell--public${viewerThemeClass}`} data-theme={viewerThemeKey}>
       <div className="theme-viewer">
         <div className="viewer-public-frame">
           <InvitationViewerCanvas invitation={invitation} assetOrigin={assetOrigin} countdown={countdown} />
