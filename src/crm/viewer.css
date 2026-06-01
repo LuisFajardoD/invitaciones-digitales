@@ -887,7 +887,7 @@
 
 .hero-cinematic__mermaid-age {
   position: absolute;
-  top: clamp(222px, 28.4vh, 306px);
+  top: clamp(192px, calc(28.4vh - 30px), 276px);
   left: 50%;
   z-index: 6;
   margin: 0;
@@ -905,7 +905,7 @@
 
 .hero-cinematic__mermaid-shell {
   position: absolute;
-  left: clamp(18px, 5vw, 56px);
+  left: calc(clamp(18px, 5vw, 56px) - 40px);
   bottom: clamp(96px, 12.5vh, 146px);
   width: clamp(206px, 41vw, 292px);
   z-index: 4;
@@ -916,18 +916,19 @@
 .hero-cinematic__mermaid-shell img {
   width: 100%;
   height: auto;
-  opacity: 0.58;
+  opacity: 0.82;
 }
 
 .hero-cinematic__mermaid-shell p {
   position: absolute;
-  top: 31%;
-  left: 15%;
-  width: 68%;
+  top: 50%;
+  left: 50%;
+  width: 74%;
   margin: 0;
+  transform: translate(-50%, -50%);
   color: #ffffff;
   font-family: "Moms Kids Up", "Fredoka", sans-serif;
-  font-size: clamp(0.82rem, 2.8vw, 1.32rem);
+  font-size: clamp(1.02rem, 3.4vw, 1.6rem);
   line-height: 1.12;
   text-align: center;
   text-transform: uppercase;
