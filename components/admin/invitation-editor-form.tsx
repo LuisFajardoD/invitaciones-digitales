@@ -64,6 +64,16 @@ type ExtraSectionKey =
   | "transport"
   | "lodging";
 
+type ContentEditorSectionKey =
+  | "quick_actions"
+  | "countdown"
+  | "map"
+  | "gallery"
+  | "notes"
+  | "rsvp"
+  | "contact"
+  | ExtraSectionKey;
+
 type EditorCategoryKey =
   | "base"
   | "portada"
@@ -122,6 +132,23 @@ const extraSectionKeys: ExtraSectionKey[] = [
   "lodging",
 ];
 
+const contentEditorSectionKeys: ContentEditorSectionKey[] = [
+  "quick_actions",
+  "countdown",
+  "map",
+  "gallery",
+  "notes",
+  "itinerary",
+  "dress_code",
+  "gifts",
+  "faq",
+  "rsvp",
+  "contact",
+  "livestream",
+  "transport",
+  "lodging",
+];
+
 const editableSectionLabels: Record<SectionKey, string> = sectionDisplayLabels;
 
 function getDefaultChecklistTitle(themeId: string) {
@@ -158,8 +185,6 @@ const editorCategories: Array<{ key: EditorCategoryKey; label: string }> = [
   { key: "evento", label: "Evento" },
   { key: "flujo", label: "Flujo" },
   { key: "contenido", label: "Contenido" },
-  { key: "atencion", label: "Atencion" },
-  { key: "extras", label: "Extras" },
 ];
 
 const DEVICE_PRESET_STORAGE_KEY = "inv-editor-device-preset";
@@ -240,6 +265,10 @@ function getOrderedSectionKeys(order: SectionKey[]) {
   return [...validOrder, ...missingKeys];
 }
 
+function isContentEditorSectionKey(key: SectionKey): key is ContentEditorSectionKey {
+  return contentEditorSectionKeys.includes(key as ContentEditorSectionKey);
+}
+
 function getEditableQuickActionType(type: string): QuickActionItem["type"] {
   if (type === "rsvp") {
     return "confirm";
@@ -291,6 +320,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
   const orderedSectionKeys = getOrderedSectionKeys(draft.sections_order);
+  const orderedContentSectionKeys = orderedSectionKeys.filter(isContentEditorSectionKey);
 
   useEffect(() => {
     const savedPreset =
@@ -979,6 +1009,588 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
     [selectedDevicePreset],
   );
 
+  function renderGenericContentEditor(key: ExtraSectionKey) {
+    return (
+      <>
+        <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
+          <label className="field">
+            <span>Titulo visible</span>
+            <input
+              value={draft.sections[key].title || ""}
+              onChange={(event) => updateExtraSection(key, { title: event.target.value })}
+              placeholder={editableSectionLabels[key]}
+            />
+          </label>
+          <label className="field">
+            <span>URL opcional</span>
+            <input
+              value={draft.sections[key].url || ""}
+              onChange={(event) => updateExtraSection(key, { url: event.target.value })}
+              placeholder="https://..."
+            />
+          </label>
+          <label className="field-wide">
+            <span>Descripción</span>
+            <textarea
+              value={draft.sections[key].text || ""}
+              onChange={(event) => updateExtraSection(key, { text: event.target.value })}
+              placeholder="Escribe aquí el texto que se mostrará en esta sección."
+            />
+          </label>
+        </div>
+        <div className="simple-list-editor" style={{ marginTop: 14 }}>
+          <EditorGridList
+            columnsTemplate="minmax(0, 1fr) auto"
+            headers={["Punto", "Acciones"]}
+            emptyState={
+              <p className={styles["inv-editor-grid-empty"]}>
+                No hay puntos todavía. Agrega los que necesites para esta sección.
+              </p>
+            }
+            hasRows={(draft.sections[key].items || []).length > 0}
+          >
+            {(draft.sections[key].items || []).map((item, index) => (
+              <EditorGridRow key={`${key}-item-${index}`} columnsTemplate="minmax(0, 1fr) auto">
+                <div className={styles["inv-editor-grid-cell"]}>
+                  <label className="field" htmlFor={`${key}-item-${index}`}>
+                    <span className={styles["inv-editor-sr-only"]}>Punto</span>
+                    <input
+                      id={`${key}-item-${index}`}
+                      value={item}
+                      onChange={(event) => updateExtraSectionItem(key, index, event.target.value)}
+                      placeholder="Escribe un punto"
+                    />
+                  </label>
+                </div>
+                <div className={styles["inv-editor-grid-row-actions"]}>
+                  <button
+                    type="button"
+                    className="button-secondary simple-list-editor__remove"
+                    onClick={() => removeExtraSectionItem(key, index)}
+                  >
+                    Quitar
+                  </button>
+                </div>
+              </EditorGridRow>
+            ))}
+          </EditorGridList>
+          <button type="button" className="button-secondary" onClick={() => addExtraSectionItem(key)}>
+            Agregar punto
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  function renderContentEditorFields(key: ContentEditorSectionKey) {
+    if (extraSectionKeys.includes(key as ExtraSectionKey)) {
+      return renderGenericContentEditor(key as ExtraSectionKey);
+    }
+
+    switch (key) {
+      case "quick_actions":
+        return (
+          <div className="admin-subpanel quick-actions-editor">
+            <EditorGridList
+              columnsTemplate="minmax(0, 0.9fr) minmax(0, 1.1fr) auto"
+              headers={["Tipo", "Texto del boton", "Acciones"]}
+              emptyState={
+                <p className={styles["inv-editor-grid-empty"]}>
+                  No hay acciones todavía. Agrega una para que aparezca en la invitación.
+                </p>
+              }
+              hasRows={draft.sections.quick_actions.items.length > 0}
+            >
+              {draft.sections.quick_actions.items.map((item, index) => (
+                <EditorGridRow
+                  key={`${item.type}-${item.label}-${index}`}
+                  columnsTemplate="minmax(0, 0.9fr) minmax(0, 1.1fr) auto"
+                >
+                  <div className={styles["inv-editor-grid-cell"]}>
+                    <label className="field" htmlFor={`quick-action-type-${index}`}>
+                      <span className={styles["inv-editor-sr-only"]}>Tipo</span>
+                      <select
+                        id={`quick-action-type-${index}`}
+                        value={getEditableQuickActionType(String(item.type))}
+                        onChange={(event) =>
+                          updateQuickAction(index, {
+                            type: event.target.value as QuickActionItem["type"],
+                          })
+                        }
+                      >
+                        {quickActionTypeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className={styles["inv-editor-grid-cell"]}>
+                    <label className="field" htmlFor={`quick-action-label-${index}`}>
+                      <span className={styles["inv-editor-sr-only"]}>Texto del boton</span>
+                      <input
+                        id={`quick-action-label-${index}`}
+                        value={item.label}
+                        onChange={(event) =>
+                          updateQuickAction(index, {
+                            label: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                  <div className={styles["inv-editor-grid-row-actions"]}>
+                    <button
+                      type="button"
+                      className="button-secondary quick-actions-editor__remove"
+                      onClick={() => removeQuickAction(index)}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </EditorGridRow>
+              ))}
+            </EditorGridList>
+            <button type="button" className="button-secondary" onClick={addQuickAction}>
+              Agregar accion
+            </button>
+          </div>
+        );
+      case "countdown":
+        return (
+          <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
+            <label className="field">
+              <span>Texto de cuenta regresiva</span>
+              <input
+                value={draft.sections.countdown.label}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: { ...draft.sections, countdown: { ...draft.sections.countdown, label: event.target.value } },
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              <span>Fecha/hora objetivo</span>
+              <input
+                type="datetime-local"
+                value={toLocalDatetimeValue(draft.sections.countdown.target_at)}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      countdown: { ...draft.sections.countdown, target_at: fromLocalDatetimeValue(event.target.value) },
+                    },
+                  })
+                }
+              />
+            </label>
+          </div>
+        );
+      case "map":
+        return (
+          <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
+            <label className="field-wide">
+              <span>Dirección visible</span>
+              <input
+                value={draft.sections.map.address_text}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: { ...draft.sections, map: { ...draft.sections.map, address_text: event.target.value } },
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              <span>Latitud</span>
+              <input
+                value={String(draft.sections.map.embed.lat)}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      map: { ...draft.sections.map, embed: { ...draft.sections.map.embed, lat: Number(event.target.value) } },
+                    },
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              <span>Longitud</span>
+              <input
+                value={String(draft.sections.map.embed.lng)}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      map: { ...draft.sections.map, embed: { ...draft.sections.map.embed, lng: Number(event.target.value) } },
+                    },
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              <span>Zoom</span>
+              <input
+                type="number"
+                min="0"
+                max="22"
+                value={String(draft.sections.map.embed.zoom)}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      map: { ...draft.sections.map, embed: { ...draft.sections.map.embed, zoom: Number(event.target.value) } },
+                    },
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              <span>URL de Google Maps</span>
+              <input
+                value={draft.sections.map.maps_url}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: { ...draft.sections, map: { ...draft.sections.map, maps_url: event.target.value } },
+                  })
+                }
+              />
+            </label>
+            <label className="checkbox-tile">
+              <input
+                type="checkbox"
+                checked={typeof draft.sections.map.dark === "boolean" ? draft.sections.map.dark : mapUsesDarkDefault}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: { ...draft.sections, map: { ...draft.sections.map, dark: event.target.checked } },
+                  })
+                }
+              />
+              <span>Mapa oscuro</span>
+            </label>
+          </div>
+        );
+      case "gallery":
+        return (
+          <div className="admin-subpanel simple-list-editor">
+            <div className="form-grid" style={{ marginBottom: 12 }}>
+              <label className="field">
+                <span>Máximo de imágenes visibles</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={String(draft.sections.gallery.max_images)}
+                  onChange={(event) =>
+                    updateDraft({
+                      ...draft,
+                      sections: {
+                        ...draft.sections,
+                        gallery: {
+                          ...draft.sections.gallery,
+                          max_images: Math.max(1, Number(event.target.value) || 1),
+                        },
+                      },
+                    })
+                  }
+                />
+              </label>
+            </div>
+            <EditorGridList
+              columnsTemplate="minmax(0, 1fr) auto"
+              headers={["URL de imagen", "Acciones"]}
+              emptyState={
+                <p className={styles["inv-editor-grid-empty"]}>
+                  No hay imágenes todavía. Agrega una para que aparezca en la galería de fotos.
+                </p>
+              }
+              hasRows={draft.sections.gallery.image_urls.length > 0}
+            >
+              {draft.sections.gallery.image_urls.map((item, index) => (
+                <EditorGridRow key={`gallery-${index}`} columnsTemplate="minmax(0, 1fr) auto">
+                  <div className={styles["inv-editor-grid-cell"]}>
+                    <label className="field" htmlFor={`gallery-url-${index}`}>
+                      <span className={styles["inv-editor-sr-only"]}>URL de imagen</span>
+                      <input
+                        id={`gallery-url-${index}`}
+                        value={item}
+                        onChange={(event) => updateGalleryItem(index, event.target.value)}
+                        placeholder="https://..."
+                      />
+                    </label>
+                  </div>
+                  <div className={styles["inv-editor-grid-row-actions"]}>
+                    <button
+                      type="button"
+                      className="button-secondary simple-list-editor__remove"
+                      onClick={() => removeGalleryItem(index)}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </EditorGridRow>
+              ))}
+            </EditorGridList>
+            <button type="button" className="button-secondary" onClick={addGalleryItem}>
+              Agregar imagen
+            </button>
+          </div>
+        );
+      case "notes":
+        return (
+          <>
+            <div className="admin-subpanel">
+              <div className={styles["inv-editor-form-grid"]}>
+                <label className="field">
+                  <span>Título visible</span>
+                  <input
+                    value={draft.sections.notes.title ?? getDefaultChecklistTitle(draft.theme_id)}
+                    onChange={(event) => updateNotesSection({ title: event.target.value })}
+                  />
+                </label>
+                <label className="field field-wide">
+                  <span>Descripción</span>
+                  <textarea
+                    value={draft.sections.notes.text ?? getDefaultChecklistText(draft.theme_id)}
+                    onChange={(event) => updateNotesSection({ text: event.target.value })}
+                    placeholder="Texto breve que aparece debajo del título."
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="admin-subpanel simple-list-editor">
+              <EditorGridList
+                columnsTemplate="minmax(0, 1fr) auto"
+                headers={["Punto", "Acciones"]}
+                emptyState={
+                  <p className={styles["inv-editor-grid-empty"]}>
+                    No hay puntos todavía. Agrega uno para que aparezca en Checklist.
+                  </p>
+                }
+                hasRows={draft.sections.notes.items.length > 0}
+              >
+                {draft.sections.notes.items.map((item, index) => (
+                  <EditorGridRow key={`note-${index}`} columnsTemplate="minmax(0, 1fr) auto">
+                    <div className={styles["inv-editor-grid-cell"]}>
+                      <label className="field" htmlFor={`note-item-${index}`}>
+                        <span className={styles["inv-editor-sr-only"]}>Punto</span>
+                        <input
+                          id={`note-item-${index}`}
+                          value={item}
+                          onChange={(event) => updateNoteItem(index, event.target.value)}
+                          placeholder="Escribe un punto del checklist"
+                        />
+                      </label>
+                    </div>
+                    <div className={styles["inv-editor-grid-row-actions"]}>
+                      <button
+                        type="button"
+                        className="button-secondary simple-list-editor__remove"
+                        onClick={() => removeNoteItem(index)}
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </EditorGridRow>
+                ))}
+              </EditorGridList>
+              <button type="button" className="button-secondary" onClick={addNoteItem}>
+                Agregar punto
+              </button>
+            </div>
+          </>
+        );
+      case "rsvp":
+        return (
+          <div className={styles["inv-editor-attention-layout"]}>
+            <div className={styles["inv-editor-attention-toggles"]}>
+              <label className="checkbox-tile">
+                <input
+                  type="checkbox"
+                  checked={draft.sections.rsvp.fields.guests_count}
+                  onChange={(event) =>
+                    updateDraft({
+                      ...draft,
+                      sections: {
+                        ...draft.sections,
+                        rsvp: {
+                          ...draft.sections.rsvp,
+                          fields: { ...draft.sections.rsvp.fields, guests_count: event.target.checked },
+                        },
+                      },
+                    })
+                  }
+                />
+                <span>Permitir # asistentes</span>
+              </label>
+              <label className="checkbox-tile">
+                <input
+                  type="checkbox"
+                  checked={draft.sections.rsvp.fields.message}
+                  onChange={(event) =>
+                    updateDraft({
+                      ...draft,
+                      sections: {
+                        ...draft.sections,
+                        rsvp: {
+                          ...draft.sections.rsvp,
+                          fields: { ...draft.sections.rsvp.fields, message: event.target.checked },
+                        },
+                      },
+                    })
+                  }
+                />
+                <span>Permitir mensaje</span>
+              </label>
+            </div>
+            <div className={`form-grid ${styles["inv-editor-attention-form-grid"]}`}>
+              <label className="field-wide">
+                <span>Mensaje de RSVP cerrado</span>
+                <input
+                  value={draft.sections.rsvp.closed_message}
+                  onChange={(event) =>
+                    updateDraft({
+                      ...draft,
+                      sections: { ...draft.sections, rsvp: { ...draft.sections.rsvp, closed_message: event.target.value } },
+                    })
+                  }
+                />
+              </label>
+            </div>
+          </div>
+        );
+      case "contact":
+        return (
+          <div className={`form-grid ${styles["inv-editor-attention-form-grid"]}`}>
+            <label className="field">
+              <span>Nombre del contacto</span>
+              <input
+                value={draft.sections.contact.name}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: { ...draft.sections, contact: { ...draft.sections.contact, name: event.target.value } },
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              <span>Texto visible</span>
+              <input
+                value={draft.sections.contact.label}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: { ...draft.sections, contact: { ...draft.sections.contact, label: event.target.value } },
+                  })
+                }
+              />
+            </label>
+            <label className="field">
+              <span>URL foto de contacto (opcional)</span>
+              <input
+                value={draft.sections.contact.avatar_image_url || ""}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      contact: {
+                        ...draft.sections.contact,
+                        avatar_image_url: event.target.value,
+                      },
+                    },
+                  })
+                }
+                placeholder="/assets/... o https://..."
+              />
+            </label>
+            <label className="field">
+              <span>WhatsApp</span>
+              <input
+                value={draft.sections.contact.whatsapp_number}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      contact: {
+                        ...draft.sections.contact,
+                        whatsapp_number: event.target.value,
+                        whatsapp_url: event.target.value.trim()
+                          ? createWhatsAppUrl(event.target.value, `Hola, quiero detalles de ${draft.sections.hero.title}.`)
+                          : draft.sections.contact.whatsapp_url,
+                      },
+                    },
+                  })
+                }
+              />
+            </label>
+            <label className="field-wide">
+              <span>URL de WhatsApp</span>
+              <input
+                value={draft.sections.contact.whatsapp_url}
+                onChange={(event) =>
+                  updateDraft({
+                    ...draft,
+                    sections: {
+                      ...draft.sections,
+                      contact: { ...draft.sections.contact, whatsapp_url: event.target.value },
+                    },
+                  })
+                }
+                placeholder="https://wa.me/..."
+              />
+            </label>
+          </div>
+        );
+      default:
+        return null;
+    }
+  }
+
+  function renderContentEditorCard(key: ContentEditorSectionKey) {
+    const enabled = draft.sections[key].enabled;
+    return (
+      <section
+        key={key}
+        className={`${styles["inv-editor-content-card"]} ${
+          enabled ? "" : styles["inv-editor-content-card--disabled"]
+        }`}
+      >
+        <header className={styles["inv-editor-content-card-head"]}>
+          <div>
+            <p className="eyebrow">Sección</p>
+            <h4>{editableSectionLabels[key]}</h4>
+            <p className="helper-text">
+              {enabled
+                ? "Activa en la invitación y ubicada según el flujo."
+                : "Desactivada en Flujo. Puedes editarla, pero no se mostrará hasta activarla."}
+            </p>
+          </div>
+          <span
+            className={`${styles["inv-editor-content-status"]} ${
+              enabled ? styles["inv-editor-content-status--active"] : ""
+            }`}
+          >
+            {enabled ? "Activa" : "Desactivada"}
+          </span>
+        </header>
+        <div className={styles["inv-editor-content-fields"]}>{renderContentEditorFields(key)}</div>
+      </section>
+    );
+  }
+
   return (
     <div className={styles["inv-editor-page"]}>
       <EditorCategoryNav selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
@@ -1118,8 +1730,12 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           {["portada", "evento", "contenido", "atencion", "extras"].includes(selectedCategory) ? (
           <EditorSection
             eyebrow={activeCategoryLabel}
-            title={`Ajustes de ${activeCategoryLabel}`}
-            description="Solo se muestran los ajustes de la categoria seleccionada."
+            title={selectedCategory === "contenido" ? "Contenido de la invitación" : `Ajustes de ${activeCategoryLabel}`}
+            description={
+              selectedCategory === "contenido"
+                ? "Estas secciones siguen el mismo orden y estado que definiste en Flujo."
+                : "Solo se muestran los ajustes de la categoria seleccionada."
+            }
           >
             <div className={`form-grid ${styles["inv-editor-form-grid"]}`}>
           {selectedCategory === "portada" ? (
@@ -1558,205 +2174,9 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
           </>
           ) : null}
           {selectedCategory === "contenido" ? (
-          <>
-          <div className="field-wide">
-            <span>Acciones rapidas</span>
-            <div className="admin-subpanel quick-actions-editor">
-              <EditorGridList
-                columnsTemplate="minmax(0, 0.9fr) minmax(0, 1.1fr) auto"
-                headers={["Tipo", "Texto del boton", "Acciones"]}
-                emptyState={
-                  <p className={styles["inv-editor-grid-empty"]}>
-                    No hay acciones todavía. Agrega una para que aparezca en la invitación.
-                  </p>
-                }
-                hasRows={draft.sections.quick_actions.items.length > 0}
-              >
-                {draft.sections.quick_actions.items.map((item, index) => (
-                  <EditorGridRow
-                    key={`${item.type}-${item.label}-${index}`}
-                    columnsTemplate="minmax(0, 0.9fr) minmax(0, 1.1fr) auto"
-                  >
-                    <div className={styles["inv-editor-grid-cell"]}>
-                      <label className="field" htmlFor={`quick-action-type-${index}`}>
-                        <span className={styles["inv-editor-sr-only"]}>Tipo</span>
-                        <select
-                          id={`quick-action-type-${index}`}
-                          value={getEditableQuickActionType(String(item.type))}
-                          onChange={(event) =>
-                            updateQuickAction(index, {
-                              type: event.target.value as QuickActionItem["type"],
-                            })
-                          }
-                        >
-                          {quickActionTypeOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-                    <div className={styles["inv-editor-grid-cell"]}>
-                      <label className="field" htmlFor={`quick-action-label-${index}`}>
-                        <span className={styles["inv-editor-sr-only"]}>Texto del boton</span>
-                        <input
-                          id={`quick-action-label-${index}`}
-                          value={item.label}
-                          onChange={(event) =>
-                            updateQuickAction(index, {
-                              label: event.target.value,
-                            })
-                          }
-                        />
-                      </label>
-                    </div>
-                    <div className={styles["inv-editor-grid-row-actions"]}>
-                      <button
-                        type="button"
-                        className="button-secondary quick-actions-editor__remove"
-                        onClick={() => removeQuickAction(index)}
-                      >
-                        Quitar
-                      </button>
-                    </div>
-                  </EditorGridRow>
-                ))}
-              </EditorGridList>
-              <button type="button" className="button-secondary" onClick={addQuickAction}>
-                Agregar accion
-              </button>
-            </div>
+          <div className={styles["inv-editor-content-flow"]}>
+            {orderedContentSectionKeys.map((key) => renderContentEditorCard(key))}
           </div>
-          <div className="field-wide">
-            <span>Galería de fotos</span>
-            <div className="admin-subpanel simple-list-editor">
-              <div className="form-grid" style={{ marginBottom: 12 }}>
-                <label className="field">
-                  <span>Máximo de imágenes visibles</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max="20"
-                    value={String(draft.sections.gallery.max_images)}
-                    onChange={(event) =>
-                      updateDraft({
-                        ...draft,
-                        sections: {
-                          ...draft.sections,
-                          gallery: {
-                            ...draft.sections.gallery,
-                            max_images: Math.max(1, Number(event.target.value) || 1),
-                          },
-                        },
-                      })
-                    }
-                  />
-                </label>
-              </div>
-              <EditorGridList
-                columnsTemplate="minmax(0, 1fr) auto"
-                headers={["URL de imagen", "Acciones"]}
-                emptyState={
-                  <p className={styles["inv-editor-grid-empty"]}>
-                    No hay imágenes todavía. Agrega una para que aparezca en la galería de fotos.
-                  </p>
-                }
-                hasRows={draft.sections.gallery.image_urls.length > 0}
-              >
-                {draft.sections.gallery.image_urls.map((item, index) => (
-                  <EditorGridRow key={`gallery-${index}`} columnsTemplate="minmax(0, 1fr) auto">
-                    <div className={styles["inv-editor-grid-cell"]}>
-                      <label className="field" htmlFor={`gallery-url-${index}`}>
-                        <span className={styles["inv-editor-sr-only"]}>URL de imagen</span>
-                        <input
-                          id={`gallery-url-${index}`}
-                          value={item}
-                          onChange={(event) => updateGalleryItem(index, event.target.value)}
-                          placeholder="https://..."
-                        />
-                      </label>
-                    </div>
-                    <div className={styles["inv-editor-grid-row-actions"]}>
-                      <button
-                        type="button"
-                        className="button-secondary simple-list-editor__remove"
-                        onClick={() => removeGalleryItem(index)}
-                      >
-                        Quitar
-                      </button>
-                    </div>
-                  </EditorGridRow>
-                ))}
-              </EditorGridList>
-              <button type="button" className="button-secondary" onClick={addGalleryItem}>
-                Agregar imagen
-              </button>
-            </div>
-          </div>
-          <div className="field-wide">
-            <span>Checklist</span>
-            <div className="admin-subpanel">
-              <div className={styles["inv-editor-form-grid"]}>
-                <label className="field">
-                  <span>Título visible</span>
-                  <input
-                    value={draft.sections.notes.title ?? getDefaultChecklistTitle(draft.theme_id)}
-                    onChange={(event) => updateNotesSection({ title: event.target.value })}
-                  />
-                </label>
-                <label className="field field-wide">
-                  <span>Descripción</span>
-                  <textarea
-                    value={draft.sections.notes.text ?? getDefaultChecklistText(draft.theme_id)}
-                    onChange={(event) => updateNotesSection({ text: event.target.value })}
-                    placeholder="Texto breve que aparece debajo del título."
-                  />
-                </label>
-              </div>
-            </div>
-            <div className="admin-subpanel simple-list-editor">
-              <EditorGridList
-                columnsTemplate="minmax(0, 1fr) auto"
-                headers={["Punto", "Acciones"]}
-                emptyState={
-                  <p className={styles["inv-editor-grid-empty"]}>
-                    No hay puntos todavía. Agrega uno para que aparezca en Checklist.
-                  </p>
-                }
-                hasRows={draft.sections.notes.items.length > 0}
-              >
-                {draft.sections.notes.items.map((item, index) => (
-                  <EditorGridRow key={`note-${index}`} columnsTemplate="minmax(0, 1fr) auto">
-                    <div className={styles["inv-editor-grid-cell"]}>
-                      <label className="field" htmlFor={`note-item-${index}`}>
-                        <span className={styles["inv-editor-sr-only"]}>Punto</span>
-                        <input
-                          id={`note-item-${index}`}
-                          value={item}
-                          onChange={(event) => updateNoteItem(index, event.target.value)}
-                          placeholder="Escribe un punto del checklist"
-                        />
-                      </label>
-                    </div>
-                    <div className={styles["inv-editor-grid-row-actions"]}>
-                      <button
-                        type="button"
-                        className="button-secondary simple-list-editor__remove"
-                        onClick={() => removeNoteItem(index)}
-                      >
-                        Quitar
-                      </button>
-                    </div>
-                  </EditorGridRow>
-                ))}
-              </EditorGridList>
-              <button type="button" className="button-secondary" onClick={addNoteItem}>
-                Agregar punto
-              </button>
-            </div>
-          </div>
-          </>
           ) : null}
           {selectedCategory === "extras" ? (
           <>
