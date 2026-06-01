@@ -24,6 +24,70 @@ function isMermaidTheme(themeId: string) {
   return themeId === "sirenas";
 }
 
+const MERMAID_SECTION_DECOR_ICONS: Record<string, string> = {
+  event_info: "🐚",
+  quick_actions: "🐠",
+  countdown: "🫧",
+  map: "🌊",
+  gallery: "🪸",
+  notes: "⭐",
+  rsvp: "🦀",
+  contact: "🐬",
+  itinerary: "🐙",
+  dress_code: "🐡",
+  gifts: "🦪",
+  faq: "🐢",
+  live_stream: "🧜‍♀️",
+  transport: "🐟",
+  lodging: "🪼",
+};
+
+function getSectionDecorIcon(themeId: string, sectionKey: string) {
+  if (!isMermaidTheme(themeId)) {
+    return "⭐";
+  }
+
+  return MERMAID_SECTION_DECOR_ICONS[sectionKey] || "🫧";
+}
+
+function getGenericSectionDecorKey(title: string) {
+  const normalizedTitle = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+  if (normalizedTitle.includes("itinerario") || normalizedTitle.includes("agenda")) {
+    return "itinerary";
+  }
+
+  if (normalizedTitle.includes("vestimenta") || normalizedTitle.includes("dress code")) {
+    return "dress_code";
+  }
+
+  if (normalizedTitle.includes("regal")) {
+    return "gifts";
+  }
+
+  if (normalizedTitle.includes("preguntas") || normalizedTitle.includes("avisos")) {
+    return "faq";
+  }
+
+  if (normalizedTitle.includes("transmision") || normalizedTitle.includes("vivo")) {
+    return "live_stream";
+  }
+
+  if (normalizedTitle.includes("transporte")) {
+    return "transport";
+  }
+
+  if (normalizedTitle.includes("hospedaje") || normalizedTitle.includes("alojamiento")) {
+    return "lodging";
+  }
+
+  return "generic";
+}
+
 function getKenBurnsClassName(config?: BackgroundMediaConfig) {
   const kenburns = normalizeKenBurns(config?.kenburns);
   if (!kenburns.enabled) {
@@ -413,6 +477,7 @@ function InvitationSectionFrameViewer({
   tone = "default",
   surface = "default",
   sectionClassName = "",
+  decorIcon = "⭐",
   children,
 }: {
   id?: string;
@@ -422,6 +487,7 @@ function InvitationSectionFrameViewer({
   tone?: "default" | "aurora" | "gold";
   surface?: "default" | "bare";
   sectionClassName?: string;
+  decorIcon?: string;
   children: ReactNode;
 }) {
   return (
@@ -438,8 +504,13 @@ function InvitationSectionFrameViewer({
         </>
       )}
       <div className={`invitation-section__inner${surface === "bare" ? " invitation-section__inner--bare" : ""}`}>
-        <div className="watercolor-section-decor" aria-hidden="true">
-          <span className="watercolor-section-decor__item watercolor-section-decor__item--one">⭐</span>
+        <div
+          className={`watercolor-section-decor${
+            decorIcon === "⭐" ? "" : " watercolor-section-decor--mermaid"
+          }`}
+          aria-hidden="true"
+        >
+          <span className="watercolor-section-decor__item watercolor-section-decor__item--one">{decorIcon}</span>
           <span className="watercolor-section-decor__item watercolor-section-decor__item--two">✦</span>
           <span className="watercolor-section-decor__item watercolor-section-decor__item--three">✧</span>
         </div>
@@ -465,6 +536,7 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
       subtitle="Todo listo para el punto de encuentro."
       tone="aurora"
       surface="bare"
+      decorIcon={getSectionDecorIcon(invitation.theme_id, "event_info")}
     >
       <div className="mission-log mission-log--hud">
         <div className="mission-log__frame">
@@ -540,6 +612,7 @@ export function QuickActionsSectionViewer({
       subtitle={usesAstronautCopy ? "Selecciona un comando y continúa la secuencia." : "Elige una acción para continuar."}
       tone="gold"
       surface="bare"
+      decorIcon={getSectionDecorIcon(themeId, "quick_actions")}
     >
       {primaryDockItems.length ? (
         <div className="command-dock" role="group" aria-label="Comandos principales">
@@ -606,7 +679,12 @@ export function CountdownSectionViewer({
 }) {
   const usesAstronautCopy = isAstronautTheme(themeId);
   return (
-    <InvitationSectionFrameViewer eyebrow="Cuenta regresiva" title={label} tone="default">
+    <InvitationSectionFrameViewer
+      eyebrow="Cuenta regresiva"
+      title={label}
+      tone="default"
+      decorIcon={getSectionDecorIcon(themeId, "countdown")}
+    >
       <div className="countdown-grid-shell">
         <div className="countdown-grid countdown-grid--mission">
           {countdown.map((item) => (
@@ -646,6 +724,7 @@ export function MapSectionViewer({
       title="Ubicación"
       subtitle={invitation.sections.map.address_text}
       tone="aurora"
+      decorIcon={getSectionDecorIcon(invitation.theme_id, "map")}
     >
       {mapEmbedUrl ? (
         <div className="mission-map-shell">
@@ -665,11 +744,13 @@ export function MapSectionViewer({
 }
 
 export function GallerySectionViewer({
+  themeId,
   images,
   maxImages,
   assetOrigin,
   onOpen,
 }: {
+  themeId: string;
   images: string[];
   maxImages: number;
   assetOrigin: string;
@@ -682,6 +763,7 @@ export function GallerySectionViewer({
       eyebrow="Archivo visual"
       title="Momentos especiales"
       tone="gold"
+      decorIcon={getSectionDecorIcon(themeId, "gallery")}
     >
       <div className="gallery-grid gallery-grid--mission">
         {Array.from({ length: totalSlots }).map((_, index) => {
@@ -761,6 +843,7 @@ export function NotesSectionViewer({ themeId, items }: { themeId: string; items:
       title={usesAstronautCopy ? "Antes del despegue" : "Antes de la fiesta"}
       subtitle={usesAstronautCopy ? "Detalles clave para que la misión salga perfecta." : "Detalles importantes para disfrutar el evento."}
       tone="default"
+      decorIcon={getSectionDecorIcon(themeId, "notes")}
     >
       <div className="notes-list notes-list--mission">
         {items.map((item, index) => (
@@ -1015,6 +1098,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
       title="Confirma tu asistencia"
       subtitle="Envíanos tu respuesta para cerrar la bitácora."
       tone="aurora"
+      decorIcon={getSectionDecorIcon(invitation.theme_id, "rsvp")}
     >
       {isClosed ? (
         <div className="mission-closed-state">
@@ -1181,6 +1265,7 @@ export function ContactSectionViewer({ invitation }: { invitation: InvitationRec
       title={invitation.sections.contact.name}
       subtitle={invitation.sections.contact.label}
       tone="gold"
+      decorIcon={getSectionDecorIcon(invitation.theme_id, "contact")}
     >
       <div className="contact-command">
         {avatarImageUrl ? (
@@ -1201,9 +1286,11 @@ export function ContactSectionViewer({ invitation }: { invitation: InvitationRec
 }
 
 export function GenericBlockViewer({
+  themeId,
   title,
   data,
 }: {
+  themeId: string;
   title: string;
   data: GenericSection;
 }) {
@@ -1239,6 +1326,7 @@ export function GenericBlockViewer({
       subtitle={text}
       tone="default"
       sectionClassName="invitation-section--generic-block"
+      decorIcon={getSectionDecorIcon(themeId, getGenericSectionDecorKey(visibleTitle))}
     >
       {items.length ? (
         <div className="notes-list notes-list--mission">

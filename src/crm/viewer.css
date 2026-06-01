@@ -4409,6 +4409,28 @@
   opacity: 0.52;
 }
 
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas .watercolor-section-decor__item--one {
+  top: 10px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 5px 14px rgba(56, 116, 139, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+  font-size: 1.12rem;
+  opacity: 0.98;
+  filter: drop-shadow(0 2px 3px rgba(72, 111, 128, 0.18));
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas .watercolor-section-decor__item--two,
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas .watercolor-section-decor__item--three {
+  display: none;
+}
+
 .app-viewer[data-theme="watercolor-space"] .mission-eyebrow {
   position: relative;
   z-index: 2;

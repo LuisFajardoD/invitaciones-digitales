@@ -588,6 +588,7 @@ function InvitationViewerCanvas({
                 return invitation.sections.gallery.enabled ? (
                   <GallerySectionViewer
                     key={key}
+                    themeId={invitation.theme_id}
                     images={galleryImages}
                     maxImages={galleryMaxImages}
                     assetOrigin={assetOrigin}
@@ -605,7 +606,7 @@ function InvitationViewerCanvas({
               default: {
                 const section = genericSections[key];
                 return section?.enabled ? (
-                  <GenericBlockViewer key={key} title={sectionDisplayLabels[key]} data={section} />
+                  <GenericBlockViewer key={key} themeId={invitation.theme_id} title={sectionDisplayLabels[key]} data={section} />
                 ) : null;
               }
             }
