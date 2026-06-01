@@ -769,10 +769,14 @@ export function GallerySectionViewer({
         {Array.from({ length: totalSlots }).map((_, index) => {
           const imageUrl = images[index] || "";
           const src = resolveMediaUrl(imageUrl, assetOrigin);
+          const shouldSpanFull = images.length % 2 === 1 && index === images.length - 1 && images.length > 1;
 
           if (!src) {
             return (
-              <div key={`placeholder-${index}`} className="gallery-tile gallery-tile--placeholder">
+              <div
+                key={`placeholder-${index}`}
+                className={`gallery-tile gallery-tile--placeholder${shouldSpanFull ? " gallery-tile--wide" : ""}`}
+              >
                 <span>Espacio {index + 1}</span>
               </div>
             );
@@ -783,6 +787,7 @@ export function GallerySectionViewer({
               key={`${src}-${index}`}
               imageUrl={src}
               index={index}
+              spanFull={shouldSpanFull}
               onOpen={() => onOpen(src)}
             />
           );
@@ -800,17 +805,19 @@ export function GallerySectionViewer({
 function GalleryTileViewer({
   imageUrl,
   index,
+  spanFull,
   onOpen,
 }: {
   imageUrl: string;
   index: number;
+  spanFull?: boolean;
   onOpen: () => void;
 }) {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
     return (
-      <div className="gallery-tile gallery-tile--placeholder">
+      <div className={`gallery-tile gallery-tile--placeholder${spanFull ? " gallery-tile--wide" : ""}`}>
         <span>Imagen {index + 1} no disponible</span>
       </div>
     );
@@ -819,7 +826,7 @@ function GalleryTileViewer({
   return (
     <button
       type="button"
-      className="gallery-tile gallery-tile--mission gallery-tile-button"
+      className={`gallery-tile gallery-tile--mission gallery-tile-button${spanFull ? " gallery-tile--wide" : ""}`}
       onClick={onOpen}
       aria-label={`Abrir imagen ${index + 1}`}
     >
