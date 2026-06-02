@@ -564,7 +564,7 @@ function InvitationViewerCanvas({
           className="viewer-stage__media"
           fallbackClassName="viewer-stage__fallback"
         />
-        {shouldShowLiquidOverlay ? <MermaidLiquidOverlay variant="stage" /> : null}
+        {shouldShowLiquidOverlay ? <MermaidWaterBackdrop /> : null}
         <div className="viewer-stage__content">
           {orderedSectionKeys.map((key) => {
             switch (key) {
@@ -819,7 +819,11 @@ function createMermaidLiquidTextureUrl() {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-function MermaidLiquidOverlay({ variant = "stage" }: { variant?: "stage" | "hero" }) {
+function MermaidWaterBackdrop() {
+  return <div className="viewer-water-backdrop" aria-hidden="true" />;
+}
+
+function MermaidLiquidOverlay({ variant = "hero" }: { variant?: "hero" }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -830,6 +834,7 @@ function MermaidLiquidOverlay({ variant = "stage" }: { variant?: "stage" | "hero
     const activeCanvas: HTMLCanvasElement = canvas;
 
     type LiquidBackgroundApp = {
+      addDrop: (x: number, y: number, radius: number, strength: number) => void;
       loadImage: (url: string) => void;
       setRain: (enabled: boolean) => void;
       destroy?: () => void;
@@ -850,31 +855,43 @@ function MermaidLiquidOverlay({ variant = "stage" }: { variant?: "stage" | "hero
 
     let liquidApp: LiquidBackgroundApp | null = null;
     let cancelled = false;
-    const forwardedPointerEvents = ["pointerdown", "pointermove", "pointerup", "pointerleave"] as const;
+    let lastMoveAt = 0;
 
-    function forwardPointerEvent(event: PointerEvent) {
-      activeCanvas.dispatchEvent(
-        new PointerEvent(event.type, {
-          pointerId: event.pointerId,
-          pointerType: event.pointerType,
-          isPrimary: event.isPrimary,
-          clientX: event.clientX,
-          clientY: event.clientY,
-          screenX: event.screenX,
-          screenY: event.screenY,
-          buttons: event.buttons,
-          button: event.button,
-          pressure: event.pressure,
-          tiltX: event.tiltX,
-          tiltY: event.tiltY,
-          altKey: event.altKey,
-          ctrlKey: event.ctrlKey,
-          metaKey: event.metaKey,
-          shiftKey: event.shiftKey,
-          bubbles: false,
-          cancelable: false,
-        }),
-      );
+    function addControlledDrop(event: PointerEvent, strength: number) {
+      if (!liquidApp) {
+        return;
+      }
+
+      const bounds = activeCanvas.getBoundingClientRect();
+      if (
+        event.clientX < bounds.left ||
+        event.clientX > bounds.right ||
+        event.clientY < bounds.top ||
+        event.clientY > bounds.bottom
+      ) {
+        return;
+      }
+
+      const x = ((event.clientX - bounds.left) / Math.max(bounds.width, 1)) * 2 - 1;
+      const y = -(((event.clientY - bounds.top) / Math.max(bounds.height, 1)) * 2 - 1);
+      liquidApp.addDrop(x, y, 0.018, strength);
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      addControlledDrop(event, 0.028);
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      if (event.buttons !== 1 && event.pointerType !== "touch") {
+        return;
+      }
+
+      const now = performance.now();
+      if (now - lastMoveAt < 96) {
+        return;
+      }
+      lastMoveAt = now;
+      addControlledDrop(event, 0.006);
     }
 
     void (async () => {
@@ -898,18 +915,15 @@ function MermaidLiquidOverlay({ variant = "stage" }: { variant?: "stage" | "hero
       app.liquidPlane.material.metalness = 0.82;
       app.liquidPlane.material.roughness = 0.18;
       app.liquidPlane.uniforms.displacementScale.value = 6.2;
-      app.setRain(true);
-      app.setRainTime(0.032);
+      app.setRain(false);
     })();
-    forwardedPointerEvents.forEach((eventName) => {
-      window.addEventListener(eventName, forwardPointerEvent, { passive: true });
-    });
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
 
     return () => {
       cancelled = true;
-      forwardedPointerEvents.forEach((eventName) => {
-        window.removeEventListener(eventName, forwardPointerEvent);
-      });
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("pointermove", handlePointerMove);
       liquidApp?.destroy?.();
       liquidApp?.dispose?.();
     };
