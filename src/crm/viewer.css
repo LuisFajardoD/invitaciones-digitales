@@ -4750,6 +4750,15 @@
   z-index: 2;
   border: 1px solid var(--wc-border);
   background: rgba(255, 255, 255, 0.84);
+  color: var(--wc-secondary);
+}
+
+.app-viewer[data-theme="watercolor-space"] .contact-command strong {
+  color: var(--wc-primary);
+}
+
+.app-viewer[data-theme="watercolor-space"] .contact-command p {
+  color: var(--wc-secondary);
 }
 
 .app-viewer[data-theme="watercolor-space"] .contact-command__badge {
