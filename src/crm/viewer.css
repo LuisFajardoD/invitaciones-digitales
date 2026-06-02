@@ -139,6 +139,33 @@
   overflow-anchor: none;
 }
 
+.viewer-liquid-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: screen;
+  opacity: 0.55;
+}
+
+.viewer-liquid-overlay canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.viewer-shell.viewer-shell--public .viewer-liquid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+
+.viewer-shell.viewer-shell--public .viewer-liquid-overlay canvas {
+  width: 100vw;
+  height: 100svh;
+}
+
 .viewer-stage__fallback {
   background:
     radial-gradient(circle at 14% 18%, rgba(118, 247, 255, 0.12), transparent 22%),
@@ -496,6 +523,10 @@
   .app-viewer--launch-screen .viewer-launch-loader__pearl,
   .app-viewer--launch-screen-sirenas .viewer-launch-panel::before {
     animation: none;
+  }
+
+  .viewer-liquid-overlay {
+    display: none;
   }
 }
 

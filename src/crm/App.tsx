@@ -514,6 +514,7 @@ function InvitationViewerCanvas({
     transport: invitation.sections.transport,
     lodging: invitation.sections.lodging,
   };
+  const shouldShowLiquidOverlay = invitation.theme_id === "sirenas";
 
   const quickActionHandlers = {
     confirm: () => {
@@ -628,6 +629,7 @@ function InvitationViewerCanvas({
             }
           })}
         </div>
+        {shouldShowLiquidOverlay ? <MermaidLiquidOverlay /> : null}
       </div>
 
       {allowLightbox && lightboxImage ? <LightboxViewer image={lightboxImage} onClose={() => setLightboxImage("")} /> : null}
@@ -765,6 +767,183 @@ function resolveViewerThemeKey(_themeId?: string) {
 
 function resolveViewerThemeClass(themeId?: string) {
   return themeId ? ` app-viewer--theme-${themeId}` : "";
+}
+
+function MermaidLiquidOverlay() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
+    if (!canvasElement) {
+      return undefined;
+    }
+
+    const drawingContext = canvasElement.getContext("2d");
+    if (!drawingContext) {
+      return undefined;
+    }
+    const activeCanvas: HTMLCanvasElement = canvasElement;
+    const activeContext: CanvasRenderingContext2D = drawingContext;
+
+    type Ripple = {
+      x: number;
+      y: number;
+      age: number;
+      radius: number;
+      strength: number;
+    };
+
+    const ripples: Ripple[] = [];
+    let animationFrame = 0;
+    let lastInteraction = 0;
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+
+    function resizeCanvas() {
+      const rect = activeCanvas.getBoundingClientRect();
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = Math.max(1, Math.round(rect.width));
+      height = Math.max(1, Math.round(rect.height));
+      activeCanvas.width = Math.round(width * dpr);
+      activeCanvas.height = Math.round(height * dpr);
+      activeContext.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function addRipple(clientX: number, clientY: number, strength = 1) {
+      const rect = activeCanvas.getBoundingClientRect();
+      ripples.push({
+        x: clientX - rect.left,
+        y: clientY - rect.top,
+        age: 0,
+        radius: 16,
+        strength,
+      });
+
+      if (ripples.length > 18) {
+        ripples.shift();
+      }
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      const now = performance.now();
+      if (now - lastInteraction < 80) {
+        return;
+      }
+
+      lastInteraction = now;
+      addRipple(event.clientX, event.clientY, event.pointerType === "touch" ? 1.25 : 0.82);
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      addRipple(event.clientX, event.clientY, 1.55);
+    }
+
+    function drawCaustics(time: number) {
+      activeContext.save();
+      activeContext.globalCompositeOperation = "screen";
+      activeContext.lineCap = "round";
+      activeContext.lineJoin = "round";
+
+      for (let line = 0; line < 10; line += 1) {
+        const y = ((line * 93 + time * (0.018 + line * 0.0017)) % (height + 120)) - 60;
+        const amplitude = 8 + (line % 3) * 4;
+        activeContext.beginPath();
+        activeContext.strokeStyle = `rgba(255, 255, 255, ${0.055 + (line % 4) * 0.012})`;
+        activeContext.lineWidth = 1.2 + (line % 3) * 0.42;
+
+        for (let x = -30; x <= width + 30; x += 18) {
+          const waveY = y + Math.sin(x * 0.026 + time * 0.0018 + line) * amplitude;
+          if (x === -30) {
+            activeContext.moveTo(x, waveY);
+          } else {
+            activeContext.lineTo(x, waveY);
+          }
+        }
+
+        activeContext.stroke();
+      }
+
+      activeContext.restore();
+    }
+
+    function drawRipple(ripple: Ripple) {
+      const progress = ripple.age / 68;
+      const alpha = Math.max(0, (1 - progress) * 0.42 * ripple.strength);
+      const radius = ripple.radius + progress * 96;
+
+      activeContext.save();
+      activeContext.globalCompositeOperation = "screen";
+
+      const glow = activeContext.createRadialGradient(ripple.x, ripple.y, 0, ripple.x, ripple.y, radius);
+      glow.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.46})`);
+      glow.addColorStop(0.42, `rgba(164, 235, 255, ${alpha * 0.22})`);
+      glow.addColorStop(1, "rgba(164, 235, 255, 0)");
+      activeContext.fillStyle = glow;
+      activeContext.beginPath();
+      activeContext.arc(ripple.x, ripple.y, radius, 0, Math.PI * 2);
+      activeContext.fill();
+
+      activeContext.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+      activeContext.lineWidth = 1.4;
+      activeContext.beginPath();
+      activeContext.arc(ripple.x, ripple.y, radius * 0.72, 0, Math.PI * 2);
+      activeContext.stroke();
+
+      activeContext.strokeStyle = `rgba(126, 222, 255, ${alpha * 0.62})`;
+      activeContext.lineWidth = 1;
+      activeContext.beginPath();
+      activeContext.arc(ripple.x, ripple.y, radius * 1.05, 0, Math.PI * 2);
+      activeContext.stroke();
+
+      activeContext.restore();
+    }
+
+    function draw(time: number) {
+      activeContext.clearRect(0, 0, width, height);
+
+      const veil = activeContext.createLinearGradient(0, 0, width, height);
+      veil.addColorStop(0, "rgba(255, 255, 255, 0.045)");
+      veil.addColorStop(0.48, "rgba(76, 207, 247, 0.035)");
+      veil.addColorStop(1, "rgba(255, 255, 255, 0.04)");
+      activeContext.fillStyle = veil;
+      activeContext.fillRect(0, 0, width, height);
+
+      drawCaustics(time);
+
+      for (let index = ripples.length - 1; index >= 0; index -= 1) {
+        const ripple = ripples[index];
+        ripple.age += 1;
+        drawRipple(ripple);
+
+        if (ripple.age > 68) {
+          ripples.splice(index, 1);
+        }
+      }
+
+      animationFrame = window.requestAnimationFrame(draw);
+    }
+
+    resizeCanvas();
+    animationFrame = window.requestAnimationFrame(draw);
+
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, []);
+
+  return (
+    <div className="viewer-liquid-overlay" aria-hidden="true">
+      <canvas ref={canvasRef} />
+    </div>
+  );
 }
 
 type AppProps = {
