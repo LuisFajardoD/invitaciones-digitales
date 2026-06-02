@@ -145,7 +145,8 @@
   z-index: 3;
   pointer-events: none;
   overflow: hidden;
-  opacity: 0.42;
+  mix-blend-mode: screen;
+  opacity: 0.34;
 }
 
 .viewer-liquid-overlay canvas {

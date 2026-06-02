@@ -769,6 +769,39 @@ function resolveViewerThemeClass(themeId?: string) {
   return themeId ? ` app-viewer--theme-${themeId}` : "";
 }
 
+function createMermaidLiquidTextureUrl() {
+  const wavePaths = Array.from({ length: 13 }, (_, index) => {
+    const y = 44 + index * 66;
+    const offset = index % 2 === 0 ? 0 : -72;
+    return `<path d="M${offset} ${y} C 110 ${y - 45}, 210 ${y + 58}, 360 ${y} S 610 ${y - 54}, 760 ${y} S 1020 ${y + 52}, 1200 ${y - 10}" />`;
+  }).join("");
+
+  const bubbles = Array.from({ length: 32 }, (_, index) => {
+    const x = (index * 137) % 1200;
+    const y = (index * 83) % 800;
+    const radius = 18 + ((index * 11) % 34);
+    const opacity = 0.08 + ((index % 5) * 0.035);
+    return `<circle cx="${x}" cy="${y}" r="${radius}" opacity="${opacity}" />`;
+  }).join("");
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+    <rect width="1200" height="800" fill="#000"/>
+    <g fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round" opacity=".34" filter="url(#soft)">
+      ${wavePaths}
+    </g>
+    <g fill="#7fefff" opacity=".38" filter="url(#soft)">
+      ${bubbles}
+    </g>
+    <defs>
+      <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="8"/>
+      </filter>
+    </defs>
+  </svg>`;
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 function MermaidLiquidOverlay() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -841,8 +874,9 @@ function MermaidLiquidOverlay() {
       const app = module.default(activeCanvas);
       liquidApp = app;
       activeCanvas.dataset.liquidReady = "true";
+      activeCanvas.dataset.liquidTexture = "water-only";
 
-      app.loadImage("https://assets.codepen.io/33787/liquid.webp");
+      app.loadImage(createMermaidLiquidTextureUrl());
       app.liquidPlane.material.metalness = 0.75;
       app.liquidPlane.material.roughness = 0.25;
       app.liquidPlane.uniforms.displacementScale.value = 5;
