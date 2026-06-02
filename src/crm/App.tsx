@@ -856,6 +856,7 @@ function MermaidLiquidOverlay({ variant = "hero" }: { variant?: "hero" }) {
     let liquidApp: LiquidBackgroundApp | null = null;
     let cancelled = false;
     let lastMoveAt = 0;
+    let initialDropTimer: number | null = null;
 
     function addControlledDrop(event: PointerEvent, strength: number) {
       if (!liquidApp) {
@@ -916,12 +917,20 @@ function MermaidLiquidOverlay({ variant = "hero" }: { variant?: "hero" }) {
       app.liquidPlane.material.roughness = 0.18;
       app.liquidPlane.uniforms.displacementScale.value = 6.2;
       app.setRain(false);
-    })();
+      initialDropTimer = window.setTimeout(() => {
+        if (!cancelled) {
+          app.addDrop(0, 0, 0.034, 0.035);
+        }
+      }, 680);
+     })();
     window.addEventListener("pointerdown", handlePointerDown, { passive: true });
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
 
     return () => {
       cancelled = true;
+      if (initialDropTimer) {
+        window.clearTimeout(initialDropTimer);
+      }
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("pointermove", handlePointerMove);
       liquidApp?.destroy?.();
