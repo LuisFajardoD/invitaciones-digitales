@@ -1388,6 +1388,11 @@ function buildEventDateLabel(invitation: InvitationRecord) {
 }
 
 function buildArrivalTimeLabel(invitation: InvitationRecord) {
+  const explicitTimeText = (invitation.sections.event_info.time_text || "").trim();
+  if (explicitTimeText) {
+    return explicitTimeText;
+  }
+
   try {
     return new Intl.DateTimeFormat("en-US", {
       timeZone: invitation.timezone || "America/Mexico_City",
