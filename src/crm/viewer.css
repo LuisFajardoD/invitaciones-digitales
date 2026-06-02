@@ -172,7 +172,7 @@
   transform: translateX(-50%);
   pointer-events: none;
   overflow: hidden;
-  opacity: 0.52;
+  opacity: 0.74;
   mix-blend-mode: screen;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 430 620'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='2.8' stroke-linecap='round' opacity='.46'%3E%3Cpath d='M-34 78 C 42 34 92 118 158 78 S 266 34 344 88 S 432 122 474 68'/%3E%3Cpath d='M-54 192 C 34 146 92 222 176 186 S 312 142 480 204'/%3E%3Cpath d='M-38 312 C 70 256 140 354 238 306 S 360 270 470 328'/%3E%3Cpath d='M-48 458 C 54 402 132 492 226 452 S 350 416 482 472'/%3E%3C/g%3E%3Cg fill='none' stroke='%237ef9ff' stroke-width='2' stroke-linecap='round' opacity='.34'%3E%3Cpath d='M24 -40 C 88 84 20 180 86 288 S 156 470 110 660'/%3E%3Cpath d='M202 -64 C 260 74 168 190 236 330 S 306 478 268 680'/%3E%3Cpath d='M370 -28 C 420 108 328 238 392 362 S 448 510 406 664'/%3E%3C/g%3E%3C/svg%3E"),
@@ -183,6 +183,7 @@
   background-size: 430px 620px;
   background-repeat: repeat-y;
   background-position: top center;
+  animation: viewer-water-backdrop-flow 18s ease-in-out infinite alternate;
 }
 
 .viewer-water-backdrop::after {
@@ -194,7 +195,39 @@
     linear-gradient(70deg, transparent 0 30%, rgba(123, 246, 255, 0.16) 30% 32%, transparent 34% 100%);
   background-size: 360px 520px;
   background-repeat: repeat-y;
-  opacity: 0.7;
+  opacity: 0.92;
+  animation: viewer-water-backdrop-glimmer 16s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+@keyframes viewer-water-backdrop-flow {
+  0% {
+    background-position:
+      top center,
+      0 0,
+      0 0,
+      0 0,
+      0 0;
+  }
+  100% {
+    background-position:
+      center 56px,
+      24px 18px,
+      -18px 36px,
+      16px -28px,
+      -22px 42px;
+  }
+}
+
+@keyframes viewer-water-backdrop-glimmer {
+  0% {
+    opacity: 0.56;
+    transform: translate3d(-18px, -24px, 0) skewY(-2deg);
+  }
+  100% {
+    opacity: 0.95;
+    transform: translate3d(22px, 38px, 0) skewY(2deg);
+  }
 }
 
 .viewer-shell.viewer-shell--public .viewer-liquid-overlay--stage {
@@ -564,6 +597,11 @@
 
   .viewer-liquid-overlay {
     display: none;
+  }
+
+  .viewer-water-backdrop,
+  .viewer-water-backdrop::after {
+    animation: none;
   }
 }
 
@@ -3684,6 +3722,11 @@
   }
 
   .hero-cinematic--astronautas .hero-typewriter__caret {
+    animation: none;
+  }
+
+  .viewer-water-backdrop,
+  .viewer-water-backdrop::after {
     animation: none;
   }
 }

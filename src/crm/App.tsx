@@ -834,7 +834,6 @@ function MermaidLiquidOverlay({ variant = "hero" }: { variant?: "hero" }) {
     const activeCanvas: HTMLCanvasElement = canvas;
 
     type LiquidBackgroundApp = {
-      addDrop: (x: number, y: number, radius: number, strength: number) => void;
       loadImage: (url: string) => void;
       setRain: (enabled: boolean) => void;
       destroy?: () => void;
@@ -849,6 +848,7 @@ function MermaidLiquidOverlay({ variant = "hero" }: { variant?: "hero" }) {
             value: number;
           };
         };
+        addDrop: (x: number, y: number, radius: number, strength: number) => void;
       };
       setRainTime: (timeDelta: number) => void;
     };
@@ -875,7 +875,7 @@ function MermaidLiquidOverlay({ variant = "hero" }: { variant?: "hero" }) {
 
       const x = ((event.clientX - bounds.left) / Math.max(bounds.width, 1)) * 2 - 1;
       const y = -(((event.clientY - bounds.top) / Math.max(bounds.height, 1)) * 2 - 1);
-      liquidApp.addDrop(x, y, 0.018, strength);
+      liquidApp.liquidPlane.addDrop(x, y, 0.018, strength);
     }
 
     function handlePointerDown(event: PointerEvent) {
@@ -919,7 +919,7 @@ function MermaidLiquidOverlay({ variant = "hero" }: { variant?: "hero" }) {
       app.setRain(false);
       initialDropTimer = window.setTimeout(() => {
         if (!cancelled) {
-          app.addDrop(0, 0, 0.034, 0.035);
+          app.liquidPlane.addDrop(0, 0, 0.034, 0.035);
         }
       }, 680);
      })();
