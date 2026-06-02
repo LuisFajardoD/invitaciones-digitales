@@ -13,7 +13,7 @@ import { normalizeKenBurns, resolveHeroBackground, resolveMediaUrl, splitTitle, 
 
 const HERO_TYPEWRITER_STEP_MS = 82;
 const HERO_TYPEWRITER_LINE_GAP_STEPS = 3;
-const HERO_BUBBLE_COUNT = 18;
+const HERO_BUBBLE_COUNT = 28;
 let hasPlayedAstronautTypewriter = false;
 
 function isAstronautTheme(themeId: string) {
@@ -308,7 +308,6 @@ export function HeroSectionViewer({
       )}
       {usesMermaidTheme ? (
         <div className="hero-cinematic__mermaid-copy">
-          {telemetryLabel ? <p className="hero-cinematic__mermaid-kingdom">{telemetryLabel}</p> : null}
           {heroTitle ? <h1 className="hero-cinematic__mermaid-name">{heroTitle}</h1> : null}
           {telemetryDetail ? <p className="hero-cinematic__mermaid-age">{telemetryDetail}</p> : null}
           {subtitle ? (

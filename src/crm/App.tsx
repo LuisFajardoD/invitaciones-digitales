@@ -514,7 +514,7 @@ function InvitationViewerCanvas({
     transport: invitation.sections.transport,
     lodging: invitation.sections.lodging,
   };
-  const shouldShowLiquidOverlay = invitation.theme_id === "sirenas";
+  const shouldShowLiquidOverlay = false;
 
   const quickActionHandlers = {
     confirm: () => {

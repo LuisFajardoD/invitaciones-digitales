@@ -943,6 +943,16 @@
 .hero-cinematic__bubble:nth-child(16) { --bubble-left: 68%; --bubble-size: 18px; --bubble-delay: -15.2s; --bubble-duration: 18.4s; --bubble-drift: 32px; }
 .hero-cinematic__bubble:nth-child(17) { --bubble-left: 84%; --bubble-size: 10px; --bubble-delay: -4.2s; --bubble-duration: 8.6s; --bubble-drift: -10px; }
 .hero-cinematic__bubble:nth-child(18) { --bubble-left: 44%; --bubble-size: 21px; --bubble-delay: -6.8s; --bubble-duration: 11.8s; --bubble-drift: 20px; }
+.hero-cinematic__bubble:nth-child(19) { --bubble-left: 18%; --bubble-size: 16px; --bubble-delay: -14.6s; --bubble-duration: 14.8s; --bubble-drift: 26px; }
+.hero-cinematic__bubble:nth-child(20) { --bubble-left: 74%; --bubble-size: 17px; --bubble-delay: -2.9s; --bubble-duration: 10.6s; --bubble-drift: -22px; }
+.hero-cinematic__bubble:nth-child(21) { --bubble-left: 4%; --bubble-size: 22px; --bubble-delay: -6.4s; --bubble-duration: 13.2s; --bubble-drift: 16px; }
+.hero-cinematic__bubble:nth-child(22) { --bubble-left: 92%; --bubble-size: 24px; --bubble-delay: -9.9s; --bubble-duration: 15.8s; --bubble-drift: -28px; }
+.hero-cinematic__bubble:nth-child(23) { --bubble-left: 27%; --bubble-size: 8px; --bubble-delay: -5.2s; --bubble-duration: 7.6s; --bubble-drift: -14px; }
+.hero-cinematic__bubble:nth-child(24) { --bubble-left: 59%; --bubble-size: 9px; --bubble-delay: -12.7s; --bubble-duration: 9.8s; --bubble-drift: 18px; }
+.hero-cinematic__bubble:nth-child(25) { --bubble-left: 32%; --bubble-size: 26px; --bubble-delay: -16.6s; --bubble-duration: 18.8s; --bubble-drift: -32px; }
+.hero-cinematic__bubble:nth-child(26) { --bubble-left: 66%; --bubble-size: 13px; --bubble-delay: -7.9s; --bubble-duration: 12.2s; --bubble-drift: 24px; }
+.hero-cinematic__bubble:nth-child(27) { --bubble-left: 12%; --bubble-size: 11px; --bubble-delay: -0.8s; --bubble-duration: 8.2s; --bubble-drift: -20px; }
+.hero-cinematic__bubble:nth-child(28) { --bubble-left: 86%; --bubble-size: 15px; --bubble-delay: -11.7s; --bubble-duration: 11.4s; --bubble-drift: 20px; }
 
 .hero-cinematic__mermaid-copy {
   position: absolute;
