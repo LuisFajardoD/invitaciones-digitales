@@ -770,31 +770,43 @@ function resolveViewerThemeClass(themeId?: string) {
 }
 
 function createMermaidLiquidTextureUrl() {
-  const wavePaths = Array.from({ length: 13 }, (_, index) => {
-    const y = 44 + index * 66;
-    const offset = index % 2 === 0 ? 0 : -72;
-    return `<path d="M${offset} ${y} C 110 ${y - 45}, 210 ${y + 58}, 360 ${y} S 610 ${y - 54}, 760 ${y} S 1020 ${y + 52}, 1200 ${y - 10}" />`;
+  const causticPaths = Array.from({ length: 18 }, (_, index) => {
+    const y = 26 + index * 48;
+    const offset = index % 2 === 0 ? -90 : -20;
+    return `<path d="M${offset} ${y} C 95 ${y - 46}, 185 ${y + 50}, 315 ${y + 2} S 520 ${y - 55}, 690 ${y + 8} S 940 ${y + 52}, 1230 ${y - 18}" />`;
   }).join("");
 
-  const bubbles = Array.from({ length: 32 }, (_, index) => {
-    const x = (index * 137) % 1200;
-    const y = (index * 83) % 800;
-    const radius = 18 + ((index * 11) % 34);
-    const opacity = 0.08 + ((index % 5) * 0.035);
+  const crossingPaths = Array.from({ length: 10 }, (_, index) => {
+    const x = 50 + index * 128;
+    const offset = index % 2 === 0 ? 0 : 70;
+    return `<path d="M${x} -40 C ${x + 92} 120, ${x - 76} 260, ${x + 46} 410 S ${x + 180} 650, ${x + offset} 840" />`;
+  }).join("");
+
+  const bubbles = Array.from({ length: 42 }, (_, index) => {
+    const x = (index * 149) % 1200;
+    const y = (index * 97) % 800;
+    const radius = 12 + ((index * 13) % 44);
+    const opacity = 0.12 + ((index % 6) * 0.035);
     return `<circle cx="${x}" cy="${y}" r="${radius}" opacity="${opacity}" />`;
   }).join("");
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
     <rect width="1200" height="800" fill="#000"/>
-    <g fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round" opacity=".34" filter="url(#soft)">
-      ${wavePaths}
+    <g fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" opacity=".72" filter="url(#glow)">
+      ${causticPaths}
     </g>
-    <g fill="#7fefff" opacity=".38" filter="url(#soft)">
+    <g fill="none" stroke="#74f5ff" stroke-width="7" stroke-linecap="round" opacity=".46" filter="url(#glow)">
+      ${crossingPaths}
+    </g>
+    <g fill="#8cf8ff" opacity=".5" filter="url(#soft)">
       ${bubbles}
     </g>
     <defs>
+      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3.4"/>
+      </filter>
       <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="8"/>
+        <feGaussianBlur stdDeviation="7"/>
       </filter>
     </defs>
   </svg>`;
@@ -874,12 +886,12 @@ function MermaidLiquidOverlay() {
       const app = module.default(activeCanvas);
       liquidApp = app;
       activeCanvas.dataset.liquidReady = "true";
-      activeCanvas.dataset.liquidTexture = "water-only";
+      activeCanvas.dataset.liquidTexture = "caustics-water-only";
 
       app.loadImage(createMermaidLiquidTextureUrl());
-      app.liquidPlane.material.metalness = 0.75;
-      app.liquidPlane.material.roughness = 0.25;
-      app.liquidPlane.uniforms.displacementScale.value = 5;
+      app.liquidPlane.material.metalness = 0.82;
+      app.liquidPlane.material.roughness = 0.18;
+      app.liquidPlane.uniforms.displacementScale.value = 6.2;
       app.setRain(false);
     })();
     forwardedPointerEvents.forEach((eventName) => {
