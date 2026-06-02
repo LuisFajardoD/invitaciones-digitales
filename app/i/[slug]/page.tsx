@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { ViewerReactApp } from "@/app/i/viewer-react-app";
 import { getAdminSession } from "@/lib/auth";
+import { getInvitationOgImageOverride } from "@/lib/invitation-og-overrides";
 import { getInvitationBySlug, getPublicInvitationBySlug } from "@/lib/repository";
 
 export const dynamic = "force-dynamic";
@@ -83,7 +84,9 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
     };
   }
 
+  const ogImageOverride = getInvitationOgImageOverride(invitation.slug);
   const ogImageSource =
+    ogImageOverride?.path ||
     invitation.share.og_image_url ||
     invitation.sections.hero.background?.image_url ||
     invitation.sections.hero.background_image_url ||
@@ -92,7 +95,7 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
     origin,
     rawUrl: ogImageSource,
     fallbackSlug: invitation.slug,
-    version: invitation.updated_at,
+    version: ogImageOverride?.version ?? invitation.updated_at,
   });
 
   return {
@@ -108,6 +111,9 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
       images: [
         {
           url: ogImageUrl,
+          width: ogImageOverride?.width ?? 1200,
+          height: ogImageOverride?.height ?? 630,
+          type: ogImageOverride?.type ?? "image/jpeg",
           alt: invitation.share.og_title,
         },
       ],

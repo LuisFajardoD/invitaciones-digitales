@@ -44,7 +44,8 @@ Actualizado: 8 de marzo de 2026
   - `og:image:width`, `og:image:height` y `og:image:type` definidos en metadata
   - `/api/public/invitations/[slug]/og-image` mantenido como redirect legacy con guard anti-loop
   - hotfix de estabilidad: metadata ahora prioriza URL de imagen OG directa (sin pasar por `/api/public/og-card`) para evitar fallos 503 del endpoint dinámico en producción
-  - ajuste adicional: metadata vuelve a respetar totalmente `share.og_image_url` configurable en el editor (sin override local por slug)
+  - ajuste adicional: metadata respeta `share.og_image_url` configurable en el editor, excepto overrides puntuales por slug cuando una invitacion requiere una imagen OG versionada y estable para WhatsApp
+  - la invitacion de Julieta usa imagen OG dedicada en `/assets/sirenas/julieta-og-v1.jpg` y su enlace RSVP usa `/assets/sirenas/rsvp-og-v1.jpg`
 - Se renovó la landing comercial y su editor:
   - paquetes recomendados en `lib/site-packages.ts` (Imagen Esencial, Interactiva, Video, Web Esencial, Web Premium)
   - servicio/alcance web, extras y politicas renderizadas en `/` y `/examples`

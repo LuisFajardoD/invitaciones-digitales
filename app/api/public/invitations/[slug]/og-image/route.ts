@@ -1,4 +1,5 @@
 import { getPublicInvitationBySlug } from "@/lib/repository";
+import { buildVersionedOgImagePath, getInvitationOgImageOverride } from "@/lib/invitation-og-overrides";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -28,6 +29,13 @@ export async function GET(request: Request, { params }: Params) {
   const { slug } = await params;
   const fallbackImage = new URL("/assets/hero-space-backdrop.svg", request.url).toString();
   const selfPath = `/api/public/invitations/${encodeURIComponent(slug)}/og-image`;
+  const override = getInvitationOgImageOverride(slug);
+
+  if (override) {
+    return NextResponse.redirect(new URL(buildVersionedOgImagePath(override), request.url).toString(), {
+      status: 302,
+    });
+  }
 
   try {
     const invitation = await getPublicInvitationBySlug(slug);
