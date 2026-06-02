@@ -173,9 +173,11 @@ export function BackgroundMediaViewer({
 export function HeroSectionViewer({
   invitation,
   assetOrigin,
+  heroOverlay,
 }: {
   invitation: InvitationRecord;
   assetOrigin: string;
+  heroOverlay?: ReactNode;
 }) {
   const usesAstronautTheme = isAstronautTheme(invitation.theme_id);
   const usesMermaidTheme = isMermaidTheme(invitation.theme_id);
@@ -424,6 +426,7 @@ export function HeroSectionViewer({
           )}
         </div>
       ) : null}
+      {heroOverlay}
     </section>
   );
 }
@@ -1286,6 +1289,7 @@ export function ContactSectionViewer({ invitation }: { invitation: InvitationRec
       title={invitation.sections.contact.name}
       subtitle={invitation.sections.contact.label}
       tone="gold"
+      sectionClassName="invitation-section--contact"
       decorIcon={getSectionDecorIcon(invitation.theme_id, "contact")}
     >
       <div className="contact-command">

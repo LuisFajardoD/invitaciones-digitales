@@ -134,7 +134,7 @@
 }
 
 .viewer-stage__content {
-  z-index: 1;
+  z-index: 2;
   /* Prevent scroll anchoring jumps when async content above changes. */
   overflow-anchor: none;
 }
@@ -149,21 +149,24 @@
   opacity: 0.58;
 }
 
+.viewer-liquid-overlay--stage {
+  z-index: 1;
+}
+
+.viewer-liquid-overlay--hero {
+  z-index: 12;
+}
+
 .viewer-liquid-overlay canvas {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-.viewer-shell.viewer-shell--public .viewer-liquid-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-}
-
-.viewer-shell.viewer-shell--public .viewer-liquid-overlay canvas {
-  width: 100vw;
-  height: 100svh;
+.viewer-shell.viewer-shell--public .viewer-liquid-overlay--stage {
+  inset: 0 auto 0 50%;
+  width: min(100%, 430px);
+  transform: translateX(-50%);
 }
 
 .viewer-stage__fallback {
@@ -5319,8 +5322,9 @@
 }
 
 .app-viewer[data-theme="watercolor-space"] .invitation-section__inner {
-  background: var(--wc-card-bg) !important;
+  background: color-mix(in srgb, var(--wc-card-bg) 88%, transparent) !important;
   border-color: var(--wc-card-border) !important;
+  backdrop-filter: blur(2px);
 }
 
 .app-viewer[data-theme="watercolor-space"] .invitation-section .mission-log__frame,
@@ -5334,9 +5338,36 @@
 .app-viewer[data-theme="watercolor-space"] .invitation-section .rsvp-success--mission,
 .app-viewer[data-theme="watercolor-space"] .invitation-section .mission-button--ghost,
 .app-viewer[data-theme="watercolor-space"] .invitation-section .mission-log__status {
-  background-color: var(--wc-card-subtle);
+  background-color: color-mix(in srgb, var(--wc-card-subtle) 86%, transparent);
   background-image: none;
   border-color: var(--wc-card-border) !important;
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas
+  .invitation-section--contact {
+  --wc-card-bg: #d9f7e5;
+  --wc-card-subtle: #eafbf0;
+  --wc-card-border: #a7e0bb;
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas
+  .invitation-section--contact
+  .invitation-section__inner {
+  background: rgba(217, 247, 229, 0.9) !important;
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas
+  .invitation-section--contact
+  .contact-command {
+  background: rgba(234, 251, 240, 0.88);
+}
+
+.app-viewer[data-theme="watercolor-space"].app-viewer--theme-sirenas
+  .invitation-section--contact
+  .mission-button {
+  background: linear-gradient(135deg, #baf2c7, #88e0a2);
+  border-color: #7dd799;
+  color: #37674b;
 }
 
 .app-viewer[data-theme="watercolor-space"] .invitation-section__inner,
