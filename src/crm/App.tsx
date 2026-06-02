@@ -775,43 +775,43 @@ function resolveViewerThemeClass(themeId?: string) {
 }
 
 function createMermaidLiquidTextureUrl() {
-  const causticPaths = Array.from({ length: 34 }, (_, index) => {
-    const y = 18 + index * 34;
-    const offset = index % 2 === 0 ? -44 : -12;
-    return `<path d="M${offset} ${y} C 58 ${y - 24}, 116 ${y + 28}, 198 ${y + 2} S 334 ${y - 30}, 444 ${y + 4} S 602 ${y + 28}, 758 ${y - 12}" />`;
+  const causticPaths = Array.from({ length: 18 }, (_, index) => {
+    const y = 26 + index * 48;
+    const offset = index % 2 === 0 ? -90 : -20;
+    return `<path d="M${offset} ${y} C 96 ${y - 44}, 180 ${y + 44}, 318 ${y} S 520 ${y - 52}, 684 ${y + 8} S 930 ${y + 38}, 1240 ${y - 18}" />`;
   }).join("");
 
-  const crossingPaths = Array.from({ length: 18 }, (_, index) => {
-    const x = 22 + index * 42;
-    const offset = index % 2 === 0 ? -18 : 26;
-    return `<path d="M${x} -32 C ${x + 34} 118, ${x - 28} 276, ${x + 18} 430 S ${x + 70} 780, ${x + offset} 1220" />`;
+  const crossingPaths = Array.from({ length: 10 }, (_, index) => {
+    const x = 50 + index * 128;
+    const offset = index % 2 === 0 ? 0 : 70;
+    return `<path d="M${x} -80 C ${x + 84} 92, ${x - 56} 204, ${x + 22} 360 S ${x + 112} 596, ${x + offset} 880" />`;
   }).join("");
 
-  const bubbles = Array.from({ length: 58 }, (_, index) => {
-    const x = (index * 67) % 720;
-    const y = (index * 113) % 1200;
-    const radius = 4 + ((index * 7) % 18);
-    const opacity = 0.14 + ((index % 5) * 0.028);
+  const bubbles = Array.from({ length: 46 }, (_, index) => {
+    const x = (index * 137) % 1200;
+    const y = (index * 89) % 800;
+    const radius = 6 + ((index * 11) % 34);
+    const opacity = 0.16 + ((index % 5) * 0.035);
     return `<circle cx="${x}" cy="${y}" r="${radius}" opacity="${opacity}" />`;
   }).join("");
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1200">
-    <rect width="720" height="1200" fill="#000"/>
-    <g fill="none" stroke="#fff" stroke-width="5.2" stroke-linecap="round" opacity=".66" filter="url(#glow)">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+    <rect width="1200" height="800" fill="#000"/>
+    <g fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" opacity=".72" filter="url(#glow)">
       ${causticPaths}
     </g>
-    <g fill="none" stroke="#91fbff" stroke-width="3.2" stroke-linecap="round" opacity=".4" filter="url(#glow)">
+    <g fill="none" stroke="#74f5ff" stroke-width="7" stroke-linecap="round" opacity=".46" filter="url(#glow)">
       ${crossingPaths}
     </g>
-    <g fill="#abfbff" opacity=".46" filter="url(#soft)">
+    <g fill="#8cf8ff" opacity=".5" filter="url(#soft)">
       ${bubbles}
     </g>
     <defs>
       <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="1.8"/>
+        <feGaussianBlur stdDeviation="2.4"/>
       </filter>
       <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="3.2"/>
+        <feGaussianBlur stdDeviation="4"/>
       </filter>
     </defs>
   </svg>`;
@@ -845,6 +845,7 @@ function MermaidLiquidOverlay({ variant = "stage" }: { variant?: "stage" | "hero
           };
         };
       };
+      setRainTime: (timeDelta: number) => void;
     };
 
     let liquidApp: LiquidBackgroundApp | null = null;
@@ -894,10 +895,11 @@ function MermaidLiquidOverlay({ variant = "stage" }: { variant?: "stage" | "hero
       activeCanvas.dataset.liquidTexture = "fine-caustics-water-only";
 
       app.loadImage(createMermaidLiquidTextureUrl());
-      app.liquidPlane.material.metalness = 0.68;
-      app.liquidPlane.material.roughness = 0.34;
-      app.liquidPlane.uniforms.displacementScale.value = 2.8;
-      app.setRain(false);
+      app.liquidPlane.material.metalness = 0.82;
+      app.liquidPlane.material.roughness = 0.18;
+      app.liquidPlane.uniforms.displacementScale.value = 6.2;
+      app.setRain(true);
+      app.setRainTime(0.032);
     })();
     forwardedPointerEvents.forEach((eventName) => {
       window.addEventListener(eventName, forwardPointerEvent, { passive: true });
