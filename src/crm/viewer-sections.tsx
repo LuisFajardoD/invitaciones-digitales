@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import type { BackgroundMediaConfig, GenericSection, InvitationRecord, QuickActionItem } from "./viewer-types";
-import { normalizeKenBurns, resolveHeroBackground, resolveMediaUrl, splitTitle, trimList } from "./viewer-utils";
+import { normalizeKenBurns, resolveHeroBackground, resolveHeroCharacterUrl, resolveMediaUrl, splitTitle, trimList } from "./viewer-utils";
 
 const HERO_TYPEWRITER_STEP_MS = 82;
 const HERO_TYPEWRITER_LINE_GAP_STEPS = 3;
@@ -194,7 +194,7 @@ export function HeroSectionViewer({
   const normalizedAstronautAsset = astronautAsset.includes("/assets/astronaut-luis-arturo.webp")
     ? "/assets/astronauta.webp"
     : astronautAsset;
-  const astronautUrl = resolveMediaUrl(normalizedAstronautAsset, assetOrigin);
+  const astronautUrl = resolveHeroCharacterUrl(invitation.theme_id, normalizedAstronautAsset, assetOrigin);
   const astronautPosition = invitation.sections.hero.astronaut?.position;
   const astronautPositionClassName = getAstronautClass(astronautPosition);
   const telemetryLabel = repairLegacyText(

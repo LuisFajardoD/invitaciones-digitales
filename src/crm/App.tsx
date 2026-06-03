@@ -62,6 +62,7 @@ import {
   getCountdown,
   getViewerRoute,
   resolveHeroBackground,
+  resolveHeroCharacterUrl,
   resolveMediaUrl,
   resolveShellBackground,
   trimList,
@@ -738,7 +739,11 @@ async function warmInvitationEntryMedia(invitation: InvitationRecord, assetOrigi
   registerBackgroundMedia(resolveShellBackground(invitation));
   registerBackgroundMedia(resolveHeroBackground(invitation));
 
-  const heroCharacterUrl = invitation.sections.hero.astronaut?.image_url?.trim();
+  const heroCharacterUrl = resolveHeroCharacterUrl(
+    invitation.theme_id,
+    invitation.sections.hero.astronaut?.image_url?.trim() || "",
+    assetOrigin,
+  );
   if (heroCharacterUrl) {
     if (/\.(webm|mp4|mov)(\?|#|$)/i.test(heroCharacterUrl)) {
       addVideo(heroCharacterUrl);
