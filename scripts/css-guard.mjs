@@ -3,9 +3,12 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const SKIP_DIRS = ["node_modules", ".next", "dist", "build", "out", "coverage"];
+const SKIP_PATHS = [`${path.sep}public${path.sep}assets${path.sep}site-shell${path.sep}`];
 
 const includeCss = (filePath) => filePath.endsWith(".css");
-const shouldSkip = (filePath) => SKIP_DIRS.some((dir) => filePath.includes(`${path.sep}${dir}${path.sep}`));
+const shouldSkip = (filePath) =>
+  SKIP_DIRS.some((dir) => filePath.includes(`${path.sep}${dir}${path.sep}`)) ||
+  SKIP_PATHS.some((skipPath) => filePath.includes(skipPath));
 
 const readFiles = async (dir) => {
   const entries = await fs.readdir(dir, { withFileTypes: true });

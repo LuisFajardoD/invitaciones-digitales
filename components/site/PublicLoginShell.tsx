@@ -13,9 +13,9 @@ export function PublicLoginShell({ children }: { children: ReactNode }) {
         </Link>
 
         <nav className={styles["site-login-nav"]} aria-label="Navegacion publica">
-          <Link href="/examples#demos">Demos</Link>
-          <Link href="/examples#paquetes">Paquetes</Link>
-          <Link href="/examples#contacto">Contacto</Link>
+          <Link href="/invitaciones">Demos</Link>
+          <Link href="/#pricing-sec">Tipos de invitación</Link>
+          <Link href="/contact.html#contacto">Contacto</Link>
         </nav>
 
         <Link href="/" className={styles["site-login-home-link"]}>

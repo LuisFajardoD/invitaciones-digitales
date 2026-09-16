@@ -1,4 +1,15 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  type TouchEvent as ReactTouchEvent,
+} from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   DndContext,
@@ -51,47 +62,98 @@ import {
   getCountdown,
   getViewerRoute,
   resolveHeroBackground,
+  resolveHeroCharacterUrl,
   resolveMediaUrl,
   resolveShellBackground,
   trimList,
 } from "./viewer-utils";
 import { RequireAuth, getSafeAdminRedirectPath, isProtectedAdminMode, type AdminAuthState } from "./RequireAuth";
 import { PublicShell } from "@/components/site/PublicShell";
+import type { SiteContentSection } from "@/types/invitations";
+
+function parseResponseDate(input: string) {
+  const normalized = typeof input === "string" ? input.trim() : "";
+  if (!normalized) {
+    return null;
+  }
+
+  const directDate = new Date(normalized);
+  if (!Number.isNaN(directDate.getTime())) {
+    return directDate;
+  }
+
+  if (!normalized.includes("T")) {
+    const isoLikeDate = new Date(normalized.replace(" ", "T"));
+    if (!Number.isNaN(isoLikeDate.getTime())) {
+      return isoLikeDate;
+    }
+  }
+
+  return null;
+}
+
+function getResponseDateTimestamp(input: string) {
+  const parsedDate = parseResponseDate(input);
+  return parsedDate ? parsedDate.getTime() : 0;
+}
 
 function formatResponseDate(input: string) {
-  return new Intl.DateTimeFormat("es-MX", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(input));
+  const parsedDate = parseResponseDate(input);
+  if (!parsedDate) {
+    const rawValue = typeof input === "string" ? input.trim() : "";
+    return rawValue || "Fecha no disponible";
+  }
+
+  try {
+    return new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(parsedDate);
+  } catch {
+    return parsedDate.toLocaleString("es-MX");
+  }
+}
+
+function formatResponseDateForPdf(input: string) {
+  const parsedDate = parseResponseDate(input);
+  if (!parsedDate) {
+    return "Fecha no\ndisponible";
+  }
+
+  try {
+    const datePart = new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(parsedDate);
+    const timePart = new Intl.DateTimeFormat("es-MX", {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(parsedDate);
+
+    return `${datePart}\n${timePart}`;
+  } catch {
+    return `${parsedDate.toLocaleDateString("es-MX")}\n${parsedDate.toLocaleTimeString("es-MX")}`;
+  }
 }
 
 type ClientRsvpResponseStatus = "confirmed" | "cancelled" | "declined";
 
-function normalizeGuestKey(name: string) {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function resolveClientRsvpStatuses(responses: ClientRsvpView["summary"]["responses"]) {
-  const chronological = [...responses].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-  );
-  const hadPreviousConfirmation = new Set<string>();
   const statusById = new Map<string, ClientRsvpResponseStatus>();
 
-  for (const response of chronological) {
-    const guestKey = normalizeGuestKey(response.name);
+  for (const response of responses) {
     if (response.attending) {
-      hadPreviousConfirmation.add(guestKey);
       statusById.set(response.id, "confirmed");
       continue;
     }
 
-    statusById.set(response.id, hadPreviousConfirmation.has(guestKey) ? "cancelled" : "declined");
+    const cancelledGuestsRaw = Number(response.guests_count);
+    const cancelledGuests = Number.isFinite(cancelledGuestsRaw) ? Math.trunc(cancelledGuestsRaw) : 0;
+    statusById.set(response.id, cancelledGuests > 0 ? "cancelled" : "declined");
   }
 
   return statusById;
@@ -102,7 +164,7 @@ function getClientRsvpStatusMeta(status: ClientRsvpResponseStatus) {
     case "confirmed":
       return { label: "Confirmado", className: "confirmed" };
     case "cancelled":
-      return { label: "Cancelo", className: "cancelled" };
+      return { label: "Cancelado", className: "cancelled" };
     case "declined":
       return { label: "No asiste", className: "declined" };
     default:
@@ -135,7 +197,7 @@ function sortClientRsvpResponses(
       return byStatus;
     }
 
-    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+    return getResponseDateTimestamp(right.created_at) - getResponseDateTimestamp(left.created_at);
   });
 }
 
@@ -182,6 +244,7 @@ const extraSectionKeys = [
   "transport",
   "lodging",
 ] as const;
+const ADMIN_LOGIN_REMEMBER_KEY = "inv_admin_remembered_credentials";
 
 type EditorPanelKey = "base" | "hero" | "event" | "flow" | "content" | "attention" | "extras";
 type EditorPreviewMode = "live" | "screenshot";
@@ -217,6 +280,16 @@ function getEditorSectionLabel(key: SectionKey) {
   }
 
   return sectionDisplayLabels[key];
+}
+
+function getDefaultChecklistTitle(themeId: string) {
+  return themeId === "astronautas" ? "Antes del despegue" : "Antes de la fiesta";
+}
+
+function getDefaultChecklistText(themeId: string) {
+  return themeId === "astronautas"
+    ? "Detalles clave para que la misión salga perfecta."
+    : "Detalles importantes para disfrutar el evento.";
 }
 
 function getOrderedSectionKeys(order: SectionKey[]) {
@@ -443,6 +516,7 @@ function InvitationViewerCanvas({
     transport: invitation.sections.transport,
     lodging: invitation.sections.lodging,
   };
+  const shouldShowLiquidOverlay = false;
 
   const quickActionHandlers = {
     confirm: () => {
@@ -492,12 +566,18 @@ function InvitationViewerCanvas({
           className="viewer-stage__media"
           fallbackClassName="viewer-stage__fallback"
         />
+        {shouldShowLiquidOverlay ? <MermaidWaterBackdrop /> : null}
         <div className="viewer-stage__content">
           {orderedSectionKeys.map((key) => {
             switch (key) {
               case "hero":
                 return invitation.sections.hero.enabled ? (
-                  <HeroSectionViewer key={key} invitation={invitation} assetOrigin={assetOrigin} />
+                  <HeroSectionViewer
+                    key={key}
+                    invitation={invitation}
+                    assetOrigin={assetOrigin}
+                    heroOverlay={shouldShowLiquidOverlay ? <MermaidLiquidOverlay variant="hero" /> : undefined}
+                  />
                 ) : null;
               case "event_info":
                 return invitation.sections.event_info.enabled ? <EventInfoSectionViewer key={key} invitation={invitation} /> : null;
@@ -505,13 +585,19 @@ function InvitationViewerCanvas({
                 return invitation.sections.quick_actions.enabled ? (
                   <QuickActionsSectionViewer
                     key={key}
+                    themeId={invitation.theme_id}
                     items={invitation.sections.quick_actions.items}
                     onAction={(type) => void quickActionHandlers[type]()}
                   />
                 ) : null;
               case "countdown":
                 return invitation.sections.countdown.enabled ? (
-                  <CountdownSectionViewer key={key} label={invitation.sections.countdown.label} countdown={countdown} />
+                  <CountdownSectionViewer
+                    key={key}
+                    themeId={invitation.theme_id}
+                    label={invitation.sections.countdown.label}
+                    countdown={countdown}
+                  />
                 ) : null;
               case "map":
                 return invitation.sections.map.enabled && mapsUrl ? (
@@ -521,6 +607,7 @@ function InvitationViewerCanvas({
                 return invitation.sections.gallery.enabled ? (
                   <GallerySectionViewer
                     key={key}
+                    themeId={invitation.theme_id}
                     images={galleryImages}
                     maxImages={galleryMaxImages}
                     assetOrigin={assetOrigin}
@@ -529,7 +616,13 @@ function InvitationViewerCanvas({
                 ) : null;
               case "notes":
                 return invitation.sections.notes.enabled && noteItems.length ? (
-                  <NotesSectionViewer key={key} items={noteItems} />
+                  <NotesSectionViewer
+                    key={key}
+                    themeId={invitation.theme_id}
+                    title={invitation.sections.notes.title}
+                    text={invitation.sections.notes.text}
+                    items={noteItems}
+                  />
                 ) : null;
               case "rsvp":
                 return invitation.sections.rsvp.enabled ? <RsvpSectionViewer key={key} invitation={invitation} /> : null;
@@ -538,7 +631,7 @@ function InvitationViewerCanvas({
               default: {
                 const section = genericSections[key];
                 return section?.enabled ? (
-                  <GenericBlockViewer key={key} title={sectionDisplayLabels[key]} data={section} />
+                  <GenericBlockViewer key={key} themeId={invitation.theme_id} title={sectionDisplayLabels[key]} data={section} />
                 ) : null;
               }
             }
@@ -581,7 +674,7 @@ function preloadImageResource(url: string) {
   });
 }
 
-function preloadVideoMetadata(url: string) {
+function preloadVideoResource(url: string) {
   return new Promise<void>((resolve) => {
     if (!url) {
       resolve();
@@ -590,17 +683,19 @@ function preloadVideoMetadata(url: string) {
 
     const video = document.createElement("video");
     const finish = () => {
-      video.onloadeddata = null;
+      video.oncanplay = null;
       video.onerror = null;
       video.src = "";
       resolve();
     };
 
-    video.preload = "metadata";
+    video.preload = "auto";
     video.muted = true;
-    video.onloadeddata = finish;
+    video.playsInline = true;
+    video.oncanplay = finish;
     video.onerror = finish;
     video.src = url;
+    void video.load();
   });
 }
 
@@ -645,6 +740,19 @@ async function warmInvitationEntryMedia(invitation: InvitationRecord, assetOrigi
   registerBackgroundMedia(resolveShellBackground(invitation));
   registerBackgroundMedia(resolveHeroBackground(invitation));
 
+  const heroCharacterUrl = resolveHeroCharacterUrl(
+    invitation.theme_id,
+    invitation.sections.hero.astronaut?.image_url?.trim() || "",
+    assetOrigin,
+  );
+  if (heroCharacterUrl) {
+    if (/\.(webm|mp4|mov)(\?|#|$)/i.test(heroCharacterUrl)) {
+      addVideo(heroCharacterUrl);
+    } else {
+      addImage(heroCharacterUrl);
+    }
+  }
+
   const firstGalleryImage = invitation.sections.gallery.image_urls
     .map((item) => item.trim())
     .find(Boolean);
@@ -654,18 +762,193 @@ async function warmInvitationEntryMedia(invitation: InvitationRecord, assetOrigi
 
   const tasks = [
     ...Array.from(imageUrls).map((url) => withTimeout(preloadImageResource(url), 2200)),
-    ...Array.from(videoUrls).map((url) => withTimeout(preloadVideoMetadata(url), 2200)),
+    ...Array.from(videoUrls).map((url) => withTimeout(preloadVideoResource(url), 3400)),
   ];
 
   if (!tasks.length) {
     return;
   }
 
-  await Promise.race([Promise.all(tasks), waitFor(2600)]);
+  await Promise.race([Promise.all(tasks), waitFor(3600)]);
 }
 
-function resolveViewerThemeKey(themeId?: string) {
-  return themeId === "astronautas" ? "watercolor-space" : "default";
+function resolveViewerThemeKey(_themeId?: string) {
+  return "watercolor-space";
+}
+
+function resolveViewerThemeClass(themeId?: string) {
+  return themeId ? ` app-viewer--theme-${themeId}` : "";
+}
+
+function createMermaidLiquidTextureUrl() {
+  const causticPaths = Array.from({ length: 18 }, (_, index) => {
+    const y = 26 + index * 48;
+    const offset = index % 2 === 0 ? -90 : -20;
+    return `<path d="M${offset} ${y} C 96 ${y - 44}, 180 ${y + 44}, 318 ${y} S 520 ${y - 52}, 684 ${y + 8} S 930 ${y + 38}, 1240 ${y - 18}" />`;
+  }).join("");
+
+  const crossingPaths = Array.from({ length: 10 }, (_, index) => {
+    const x = 50 + index * 128;
+    const offset = index % 2 === 0 ? 0 : 70;
+    return `<path d="M${x} -80 C ${x + 84} 92, ${x - 56} 204, ${x + 22} 360 S ${x + 112} 596, ${x + offset} 880" />`;
+  }).join("");
+
+  const bubbles = Array.from({ length: 46 }, (_, index) => {
+    const x = (index * 137) % 1200;
+    const y = (index * 89) % 800;
+    const radius = 6 + ((index * 11) % 34);
+    const opacity = 0.16 + ((index % 5) * 0.035);
+    return `<circle cx="${x}" cy="${y}" r="${radius}" opacity="${opacity}" />`;
+  }).join("");
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+    <rect width="1200" height="800" fill="#000"/>
+    <g fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" opacity=".72" filter="url(#glow)">
+      ${causticPaths}
+    </g>
+    <g fill="none" stroke="#74f5ff" stroke-width="7" stroke-linecap="round" opacity=".46" filter="url(#glow)">
+      ${crossingPaths}
+    </g>
+    <g fill="#8cf8ff" opacity=".5" filter="url(#soft)">
+      ${bubbles}
+    </g>
+    <defs>
+      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="2.4"/>
+      </filter>
+      <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="4"/>
+      </filter>
+    </defs>
+  </svg>`;
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function MermaidWaterBackdrop() {
+  return <div className="viewer-water-backdrop" aria-hidden="true" />;
+}
+
+function MermaidLiquidOverlay({ variant = "hero" }: { variant?: "hero" }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return undefined;
+    }
+    const activeCanvas: HTMLCanvasElement = canvas;
+
+    type LiquidBackgroundApp = {
+      loadImage: (url: string) => void;
+      setRain: (enabled: boolean) => void;
+      destroy?: () => void;
+      dispose?: () => void;
+      liquidPlane: {
+        material: {
+          metalness: number;
+          roughness: number;
+        };
+        uniforms: {
+          displacementScale: {
+            value: number;
+          };
+        };
+        addDrop: (x: number, y: number, radius: number, strength: number) => void;
+      };
+      setRainTime: (timeDelta: number) => void;
+    };
+
+    let liquidApp: LiquidBackgroundApp | null = null;
+    let cancelled = false;
+    let lastMoveAt = 0;
+    let initialDropTimer: number | null = null;
+
+    function addControlledDrop(event: PointerEvent, strength: number) {
+      if (!liquidApp) {
+        return;
+      }
+
+      const bounds = activeCanvas.getBoundingClientRect();
+      if (
+        event.clientX < bounds.left ||
+        event.clientX > bounds.right ||
+        event.clientY < bounds.top ||
+        event.clientY > bounds.bottom
+      ) {
+        return;
+      }
+
+      const x = ((event.clientX - bounds.left) / Math.max(bounds.width, 1)) * 2 - 1;
+      const y = -(((event.clientY - bounds.top) / Math.max(bounds.height, 1)) * 2 - 1);
+      liquidApp.liquidPlane.addDrop(x, y, 0.018, strength);
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      addControlledDrop(event, 0.028);
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      if (event.buttons !== 1 && event.pointerType !== "touch") {
+        return;
+      }
+
+      const now = performance.now();
+      if (now - lastMoveAt < 96) {
+        return;
+      }
+      lastMoveAt = now;
+      addControlledDrop(event, 0.006);
+    }
+
+    void (async () => {
+      const importLiquidBackground = new Function("url", "return import(url)") as (
+        url: string,
+      ) => Promise<{ default: (canvasElement: HTMLCanvasElement) => LiquidBackgroundApp }>;
+      const module = await importLiquidBackground(
+        "https://cdn.jsdelivr.net/npm/threejs-components@0.0.27/build/backgrounds/liquid1.min.js",
+      );
+
+      if (cancelled) {
+        return;
+      }
+
+      const app = module.default(activeCanvas);
+      liquidApp = app;
+      activeCanvas.dataset.liquidReady = "true";
+      activeCanvas.dataset.liquidTexture = "fine-caustics-water-only";
+
+      app.loadImage(createMermaidLiquidTextureUrl());
+      app.liquidPlane.material.metalness = 0.82;
+      app.liquidPlane.material.roughness = 0.18;
+      app.liquidPlane.uniforms.displacementScale.value = 6.2;
+      app.setRain(false);
+      initialDropTimer = window.setTimeout(() => {
+        if (!cancelled) {
+          app.liquidPlane.addDrop(0, 0, 0.034, 0.035);
+        }
+      }, 680);
+     })();
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+
+    return () => {
+      cancelled = true;
+      if (initialDropTimer) {
+        window.clearTimeout(initialDropTimer);
+      }
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("pointermove", handlePointerMove);
+      liquidApp?.destroy?.();
+      liquidApp?.dispose?.();
+    };
+  }, []);
+
+  return (
+    <div className={`viewer-liquid-overlay viewer-liquid-overlay--${variant}`} aria-hidden="true">
+      <canvas ref={canvasRef} />
+    </div>
+  );
 }
 
 type AppProps = {
@@ -696,8 +979,11 @@ export function App({ initialInvitationThemeId }: AppProps) {
   const [adminAuthState, setAdminAuthState] = useState<AdminAuthState>(isProtectedAdminRoute ? "checking" : "unauthenticated");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [loginContent, setLoginContent] = useState<SiteContentSection | null>(null);
+  const [rememberAdminCredentials, setRememberAdminCredentials] = useState(false);
   const [editorPreviewVersion, setEditorPreviewVersion] = useState(0);
   const [countdown, setCountdown] = useState<Array<{ label: string; value: number }>>([]);
   const [draggingSectionKey, setDraggingSectionKey] = useState<SectionKey | null>(null);
@@ -713,6 +999,8 @@ export function App({ initialInvitationThemeId }: AppProps) {
   const [previewScreenshotError, setPreviewScreenshotError] = useState("");
   const [previewScreenshotCached, setPreviewScreenshotCached] = useState(false);
   const [clientRsvpActionStatus, setClientRsvpActionStatus] = useState("");
+  const [clientRsvpDeleteTarget, setClientRsvpDeleteTarget] = useState<ClientRsvpView["summary"]["responses"][number] | null>(null);
+  const [clientRsvpDeleteLoading, setClientRsvpDeleteLoading] = useState(false);
   const [publicInvitationReady, setPublicInvitationReady] = useState(route.mode !== "invitation");
   const livePreviewScrollRef = useRef<HTMLDivElement | null>(null);
   const sectionOrderSensors = useSensors(
@@ -738,6 +1026,8 @@ export function App({ initialInvitationThemeId }: AppProps) {
     invitation?.theme_id || (route.mode === "invitation" || route.mode === "client-rsvp" ? initialInvitationThemeId : undefined);
   const viewerThemeKey = resolveViewerThemeKey(viewerThemeId);
   const previewThemeKey = resolveViewerThemeKey(editorDraft?.theme_id);
+  const viewerThemeClass = resolveViewerThemeClass(viewerThemeId);
+  const previewThemeClass = resolveViewerThemeClass(editorDraft?.theme_id);
 
   function stopLivePreviewDrag() {
     if (!livePreviewDragStateRef.current.active) {
@@ -791,6 +1081,21 @@ export function App({ initialInvitationThemeId }: AppProps) {
     stopLivePreviewDrag();
   }
 
+  async function requestClientRsvpView(slug: string, token: string) {
+    const response = await fetch(
+      `/api/public/invitations/${encodeURIComponent(slug)}/client-rsvp?token=${encodeURIComponent(token)}`,
+      { cache: "no-store" },
+    );
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(payload.error || "No se pudo cargar la vista cliente.");
+    }
+
+    const payload = (await response.json()) as ClientRsvpApiSuccess;
+    return payload.result;
+  }
+
   async function handleClientRsvpCopyLink() {
     if (typeof window === "undefined") {
       return;
@@ -836,6 +1141,71 @@ export function App({ initialInvitationThemeId }: AppProps) {
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
+  async function handleClientRsvpDeleteResponse() {
+    if (!clientRsvpDeleteTarget || route.mode !== "client-rsvp" || !route.token) {
+      return;
+    }
+
+    setClientRsvpDeleteLoading(true);
+    setClientRsvpActionStatus("");
+
+    try {
+      const response = await fetch(
+        `/api/public/invitations/${encodeURIComponent(route.slug)}/client-rsvp?token=${encodeURIComponent(route.token)}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ responseId: clientRsvpDeleteTarget.id }),
+        },
+      );
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || "No se pudo eliminar la respuesta.");
+      }
+
+      const payload = (await response.json()) as ClientRsvpApiSuccess;
+      setClientRsvpView(payload.result);
+      setInvitation(payload.result.invitation);
+      setClientRsvpDeleteTarget(null);
+      setClientRsvpActionStatus("Respuesta eliminada.");
+      window.setTimeout(() => {
+        setClientRsvpActionStatus((current) => (current === "Respuesta eliminada." ? "" : current));
+      }, 2200);
+    } catch (deleteError) {
+      setClientRsvpActionStatus(deleteError instanceof Error ? deleteError.message : "No se pudo eliminar la respuesta.");
+    } finally {
+      setClientRsvpDeleteLoading(false);
+    }
+  }
+
+  function closeClientRsvpDeleteModal() {
+    if (clientRsvpDeleteLoading) {
+      return;
+    }
+
+    setClientRsvpDeleteTarget(null);
+  }
+
+  function handleClientRsvpDeleteBackdropInteraction(
+    event: ReactMouseEvent<HTMLDivElement> | ReactTouchEvent<HTMLDivElement>,
+  ) {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    closeClientRsvpDeleteModal();
+  }
+
+  function handleClientRsvpDeleteCancelInteraction(
+    event: ReactMouseEvent<HTMLButtonElement> | ReactTouchEvent<HTMLButtonElement>,
+  ) {
+    event.preventDefault();
+    closeClientRsvpDeleteModal();
+  }
+
   async function handleClientRsvpExportPdf() {
     if (!clientRsvpView) {
       return;
@@ -849,28 +1219,33 @@ export function App({ initialInvitationThemeId }: AppProps) {
       const autoTable = (jsPdfAutoTableModule as { default: (doc: unknown, options: unknown) => void }).default;
 
       const doc = new jsPDF({
-        orientation: "landscape",
+        orientation: "portrait",
         unit: "pt",
         format: "a4",
       });
 
       const pageWidth = doc.internal.pageSize.getWidth();
-      const marginX = 40;
+      const marginX = 32;
       const contentWidth = pageWidth - marginX * 2;
+      const guestColWidth = Math.round(contentWidth * 0.25);
+      const attendeesColWidth = Math.round(contentWidth * 0.11);
+      const messageColWidth = Math.round(contentWidth * 0.35);
+      const dateColWidth = Math.round(contentWidth * 0.16);
+      const statusColWidth = contentWidth - guestColWidth - attendeesColWidth - messageColWidth - dateColWidth;
       let cursorY = 52;
 
       doc.setFillColor(15, 23, 42);
-      doc.roundedRect(marginX, cursorY, contentWidth, 86, 14, 14, "F");
+      doc.roundedRect(marginX, cursorY, contentWidth, 82, 14, 14, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(21);
+      doc.setFontSize(20);
       doc.text("Panel cliente RSVP", marginX + 18, cursorY + 30);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(11);
       doc.setTextColor(191, 206, 225);
       doc.text(clientRsvpView.invitation.sections.hero.title, marginX + 18, cursorY + 50);
       doc.text(`Generado: ${formatResponseDate(new Date().toISOString())}`, marginX + 18, cursorY + 68);
-      cursorY += 106;
+      cursorY += 100;
 
       const summaryItems = [
         { label: "Asisten", value: clientRsvpView.summary.attendingCount },
@@ -883,17 +1258,17 @@ export function App({ initialInvitationThemeId }: AppProps) {
         const cardX = marginX + index * (summaryWidth + 10);
         doc.setFillColor(248, 250, 252);
         doc.setDrawColor(203, 213, 225);
-        doc.roundedRect(cardX, cursorY, summaryWidth, 74, 10, 10, "FD");
+        doc.roundedRect(cardX, cursorY, summaryWidth, 70, 10, 10, "FD");
         doc.setTextColor(71, 85, 105);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
         doc.text(item.label, cardX + summaryWidth / 2, cursorY + 24, { align: "center" });
         doc.setTextColor(15, 23, 42);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(24);
-        doc.text(String(item.value), cardX + summaryWidth / 2, cursorY + 54, { align: "center" });
+        doc.setFontSize(22);
+        doc.text(String(item.value), cardX + summaryWidth / 2, cursorY + 52, { align: "center" });
       }
-      cursorY += 94;
+      cursorY += 88;
 
       const responseStatuses = resolveClientRsvpStatuses(clientRsvpView.summary.responses);
       const sortedResponses = sortClientRsvpResponses(clientRsvpView.summary.responses, responseStatuses);
@@ -908,7 +1283,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
           response.name,
           String(attendees),
           response.message?.trim() || "Sin mensaje",
-          formatResponseDate(response.created_at),
+          formatResponseDateForPdf(response.created_at),
           statusMeta.label,
         ];
       });
@@ -923,24 +1298,53 @@ export function App({ initialInvitationThemeId }: AppProps) {
           fillColor: [15, 23, 42],
           textColor: [255, 255, 255],
           fontStyle: "bold",
-          halign: "left",
-          fontSize: 10,
-          cellPadding: 8,
+          halign: "center",
+          fontSize: 9,
+          cellPadding: { top: 7, right: 6, bottom: 7, left: 6 },
         },
         styles: {
-          fontSize: 10,
-          cellPadding: 8,
+          fontSize: 9,
+          cellPadding: { top: 7, right: 6, bottom: 7, left: 6 },
           lineColor: [203, 213, 225],
           lineWidth: 0.6,
           textColor: [15, 23, 42],
           valign: "middle",
         },
         columnStyles: {
-          1: { halign: "center", fontStyle: "bold", fontSize: 13 },
-          4: { halign: "center" },
+          0: { cellWidth: guestColWidth },
+          1: { cellWidth: attendeesColWidth, halign: "center", fontStyle: "bold", fontSize: 11 },
+          2: { cellWidth: messageColWidth, overflow: "linebreak" },
+          3: { cellWidth: dateColWidth, overflow: "linebreak" },
+          4: { cellWidth: statusColWidth, halign: "center", overflow: "linebreak" },
         },
         alternateRowStyles: {
           fillColor: [248, 250, 252],
+        },
+        didParseCell: (hookData: any) => {
+          if (hookData.section !== "body" || hookData.column.index !== 4) {
+            return;
+          }
+
+          const statusValue = String(hookData.cell.raw || "")
+            .toLowerCase()
+            .trim();
+
+          if (statusValue === "confirmado") {
+            hookData.cell.styles.textColor = [22, 163, 74];
+            hookData.cell.styles.fontStyle = "bold";
+            return;
+          }
+
+          if (statusValue === "cancelado") {
+            hookData.cell.styles.textColor = [220, 38, 38];
+            hookData.cell.styles.fontStyle = "bold";
+            return;
+          }
+
+          if (statusValue === "no asiste") {
+            hookData.cell.styles.textColor = [217, 119, 6];
+            hookData.cell.styles.fontStyle = "bold";
+          }
         },
       });
 
@@ -954,6 +1358,51 @@ export function App({ initialInvitationThemeId }: AppProps) {
       setClientRsvpActionStatus((current) => (current === "PDF descargado." ? "" : current));
     }, 2200);
   }
+
+  function handleRememberAdminCredentialsChange(checked: boolean) {
+    setRememberAdminCredentials(checked);
+
+    if (!checked && typeof window !== "undefined") {
+      window.localStorage.removeItem(ADMIN_LOGIN_REMEMBER_KEY);
+    }
+  }
+
+  useEffect(() => {
+    if (route.mode !== "admin-login" || typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      const savedCredentials = window.localStorage.getItem(ADMIN_LOGIN_REMEMBER_KEY);
+      if (!savedCredentials) {
+        return;
+      }
+
+      const parsedCredentials = JSON.parse(savedCredentials) as {
+        email?: string;
+        password?: string;
+      };
+
+      setLoginEmail(parsedCredentials.email || "");
+      setLoginPassword(parsedCredentials.password || "");
+      setRememberAdminCredentials(Boolean(parsedCredentials.email || parsedCredentials.password));
+    } catch {
+      window.localStorage.removeItem(ADMIN_LOGIN_REMEMBER_KEY);
+    }
+  }, [route.mode]);
+
+  useEffect(() => {
+    if (route.mode !== "admin-login") return;
+    let active = true;
+    fetch("/api/public/site", { credentials: "same-origin" })
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((payload: { pages?: { crm?: { sections?: SiteContentSection[] } } }) => {
+        const content = payload.pages?.crm?.sections?.find((item) => item.id === "login") || null;
+        if (active) setLoginContent(content);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [route.mode]);
 
   useEffect(() => {
     if (route.mode !== "admin-editor") {
@@ -1111,6 +1560,8 @@ export function App({ initialInvitationThemeId }: AppProps) {
       setInvitation(null);
       setEditorDraft(null);
       setClientRsvpView(null);
+      setClientRsvpDeleteTarget(null);
+      setClientRsvpDeleteLoading(false);
       setAdminInvitations([]);
 
       try {
@@ -1119,18 +1570,10 @@ export function App({ initialInvitationThemeId }: AppProps) {
             throw new Error("El token es obligatorio para la vista cliente.");
           }
 
-          const response = await fetch(
-            `/api/public/invitations/${encodeURIComponent(route.slug)}/client-rsvp?token=${encodeURIComponent(route.token)}`,
-            { cache: "no-store" },
-          );
-          if (!response.ok) {
-            const payload = (await response.json().catch(() => ({}))) as { error?: string };
-            throw new Error(payload.error || "No se pudo cargar la vista cliente.");
-          }
-          const payload = (await response.json()) as ClientRsvpApiSuccess;
+          const clientView = await requestClientRsvpView(route.slug, route.token);
           if (!cancelled) {
-            setClientRsvpView(payload.result);
-            setInvitation(payload.result.invitation);
+            setClientRsvpView(clientView);
+            setInvitation(clientView.invitation);
           }
           return;
         }
@@ -1177,7 +1620,15 @@ export function App({ initialInvitationThemeId }: AppProps) {
           return;
         }
 
-        const response = await fetch(`/api/public/invitations/${encodeURIComponent(route.slug)}`, { cache: "no-store" });
+        const publicInvitationParams = new URLSearchParams(search);
+        const isAdminPreview =
+          publicInvitationParams.has("crm_live") ||
+          publicInvitationParams.has("crm_preview") ||
+          publicInvitationParams.has("preview_device");
+        const publicInvitationUrl = `/api/public/invitations/${encodeURIComponent(route.slug)}${
+          isAdminPreview ? "?admin_preview=1" : ""
+        }`;
+        const response = await fetch(publicInvitationUrl, { cache: "no-store" });
         if (!response.ok) {
           const payload = (await response.json().catch(() => ({}))) as { error?: string };
           throw new Error(payload.error || "No se pudo cargar la invitación.");
@@ -1605,6 +2056,23 @@ export function App({ initialInvitationThemeId }: AppProps) {
     });
   }
 
+  function updateEditorNotesSection(next: Partial<InvitationRecord["sections"]["notes"]>) {
+    if (!editorDraft) {
+      return;
+    }
+
+    updateEditorDraft({
+      ...editorDraft,
+      sections: {
+        ...editorDraft.sections,
+        notes: {
+          ...editorDraft.sections.notes,
+          ...next,
+        },
+      },
+    });
+  }
+
   function updateEditorMap(
     next: Omit<Partial<InvitationRecord["sections"]["map"]>, "embed"> & {
       embed?: Partial<NonNullable<InvitationRecord["sections"]["map"]["embed"]>>;
@@ -1844,6 +2312,18 @@ export function App({ initialInvitationThemeId }: AppProps) {
         throw new Error(payload.error || "No se pudo iniciar sesión.");
       }
 
+      if (rememberAdminCredentials) {
+        window.localStorage.setItem(
+          ADMIN_LOGIN_REMEMBER_KEY,
+          JSON.stringify({
+            email: loginEmail.trim(),
+            password: loginPassword,
+          }),
+        );
+      } else {
+        window.localStorage.removeItem(ADMIN_LOGIN_REMEMBER_KEY);
+      }
+
       const redirectTarget = getSafeAdminRedirectPath(new URLSearchParams(window.location.search).get("redirect"));
       window.location.replace(redirectTarget);
     } catch (submitError) {
@@ -1890,31 +2370,101 @@ export function App({ initialInvitationThemeId }: AppProps) {
   if (route.mode === "admin-login") {
     return (
       <PublicShell showLogout={false} showSiteLink centered>
-        <section className="auth-card viewer-card">
-          <p className="viewer-eyebrow">Acceso administrativo</p>
-          <h1>Login del CRM</h1>
-          <p className="viewer-section__subtitle">Inicia sesión para continuar con el panel administrativo.</p>
-          <form className="viewer-stack-list" onSubmit={handleAdminLoginSubmit}>
-            <label className="viewer-field">
-              <span>Email</span>
-              <input
-                type="email"
-                value={loginEmail}
-                onChange={(event) => setLoginEmail(event.target.value)}
-                required
-              />
+        <div
+          className="viewer-login-ambient"
+          aria-hidden="true"
+          style={loginContent ? {
+            "--viewer-login-bg-dark": `url("${loginContent.background_dark_url || ""}")`,
+            "--viewer-login-bg-light": `url("${loginContent.background_light_url || loginContent.background_dark_url || ""}")`,
+          } as CSSProperties : undefined}
+        >
+          <span />
+          <span />
+          <span />
+        </div>
+        <section className="auth-card viewer-card viewer-login-card">
+          <img
+            className="viewer-login-logo"
+            src={loginContent?.image_url || "/assets/compartidos/marca/logo-gloobi.svg"}
+            alt="Gloobi"
+            width="306"
+            height="118"
+          />
+          <div className="viewer-login-heading">
+            <p className="viewer-eyebrow">{loginContent?.eyebrow || "Acceso administrativo"}</p>
+            <h1>{loginContent?.title || "Inicia sesión"}</h1>
+            <p className="viewer-section__subtitle">{loginContent?.description || "Accede al panel de administración de Gloobi."}</p>
+          </div>
+          <form className="viewer-stack-list viewer-login-form" onSubmit={handleAdminLoginSubmit}>
+            <label className="viewer-field viewer-login-field">
+              <span>Correo</span>
+              <span className="viewer-login-input-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3.5 6.5h17v11h-17zM4 7l8 6 8-6" />
+                </svg>
+                <input
+                  className="viewer-login-control"
+                  type="email"
+                  value={loginEmail}
+                  onChange={(event) => setLoginEmail(event.target.value)}
+                  autoComplete="username"
+                  inputMode="email"
+                  required
+                />
+              </span>
             </label>
-            <label className="viewer-field">
+            <label className="viewer-field viewer-login-field">
               <span>Contraseña</span>
+              <span className="viewer-login-input-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="5" y="10" width="14" height="10" rx="2" />
+                  <path d="M8 10V7.5a4 4 0 0 1 8 0V10" />
+                </svg>
+                <input
+                  className="viewer-login-control"
+                  type={showLoginPassword ? "text" : "password"}
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="viewer-login-password-toggle"
+                  aria-label={showLoginPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-pressed={showLoginPassword}
+                  onClick={() => setShowLoginPassword((current) => !current)}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    {showLoginPassword ? (
+                      <>
+                        <path d="M3 3l18 18" />
+                        <path d="M10.6 10.7a2 2 0 0 0 2.7 2.7M9.9 5.2A10.8 10.8 0 0 1 12 5c5.4 0 8.5 7 8.5 7a16 16 0 0 1-2.1 3.1M6.2 6.2C4.4 7.5 3.5 9.2 3.5 12c0 0 3.1 7 8.5 7 1 0 1.9-.2 2.7-.5" />
+                      </>
+                    ) : (
+                      <>
+                        <path d="M3.5 12s3.1-7 8.5-7 8.5 7 8.5 7-3.1 7-8.5 7-8.5-7-8.5-7Z" />
+                        <circle cx="12" cy="12" r="2.5" />
+                      </>
+                    )}
+                  </svg>
+                </button>
+              </span>
+            </label>
+            <label className="viewer-remember-login">
               <input
-                type="password"
-                value={loginPassword}
-                onChange={(event) => setLoginPassword(event.target.value)}
-                required
+                type="checkbox"
+                checked={rememberAdminCredentials}
+                onChange={(event) => handleRememberAdminCredentialsChange(event.target.checked)}
               />
+              <span>
+                <strong>Recordarme</strong>
+                <small>Úsalo solo en un equipo privado.</small>
+              </span>
             </label>
             <button type="submit" className="button-primary viewer-link viewer-login-submit" disabled={loginLoading}>
-              {loginLoading ? "Entrando..." : "Entrar"}
+              {loginLoading ? <span className="viewer-login-spinner" aria-hidden="true" /> : null}
+              <span>{loginLoading ? "Entrando..." : "Entrar"}</span>
             </button>
             {loginError ? <p className="viewer-error-text">{loginError}</p> : null}
             {null}
@@ -1958,25 +2508,40 @@ export function App({ initialInvitationThemeId }: AppProps) {
 
   const showPublicInvitationLoader =
     route.mode === "invitation" && !error && (loading || (Boolean(invitation) && !publicInvitationReady));
+  const isMermaidLaunchScreen = viewerThemeId === "sirenas";
 
   if (showPublicInvitationLoader) {
     return (
-      <main className="app-viewer app-viewer--launch-screen" data-theme={viewerThemeKey} aria-busy="true">
+      <main
+        className={`app-viewer app-viewer--launch-screen${
+          isMermaidLaunchScreen ? " app-viewer--launch-screen-sirenas" : ""
+        }`}
+        data-theme={viewerThemeKey}
+        aria-busy="true"
+      >
         <section className="viewer-launch-panel" role="status" aria-live="polite">
           <p className="viewer-launch-panel__eyebrow">Cargando</p>
           <h1 className="viewer-launch-panel__title">Preparando invitación...</h1>
-          <div className="viewer-launch-loader" aria-hidden="true">
-            <span className="viewer-launch-loader__stars" />
-            <span className="viewer-launch-loader__smoke" />
-            <span className="viewer-launch-loader__rocket">
-              <span className="viewer-launch-loader__window" />
-              <span className="viewer-launch-loader__fin viewer-launch-loader__fin--left" />
-              <span className="viewer-launch-loader__fin viewer-launch-loader__fin--right" />
-              <span className="viewer-launch-loader__flame" />
-            </span>
-          </div>
+          {isMermaidLaunchScreen ? (
+            <div className="viewer-launch-loader viewer-launch-loader--sirenas" aria-hidden="true">
+              <span className="viewer-launch-loader__sea-bubbles" />
+              <span className="viewer-launch-loader__sea-bubbles viewer-launch-loader__sea-bubbles--two" />
+              <span className="viewer-launch-loader__pearl" />
+            </div>
+          ) : (
+            <div className="viewer-launch-loader" aria-hidden="true">
+              <span className="viewer-launch-loader__stars" />
+              <span className="viewer-launch-loader__smoke" />
+              <span className="viewer-launch-loader__rocket">
+                <span className="viewer-launch-loader__window" />
+                <span className="viewer-launch-loader__fin viewer-launch-loader__fin--left" />
+                <span className="viewer-launch-loader__fin viewer-launch-loader__fin--right" />
+                <span className="viewer-launch-loader__flame" />
+              </span>
+            </div>
+          )}
           <p className="viewer-launch-panel__caption">
-            Sincronizando contenido...
+            {isMermaidLaunchScreen ? "Preparando burbujas y detalles..." : "Sincronizando contenido..."}
           </p>
         </section>
       </main>
@@ -2358,7 +2923,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
               </div>
             </div>
             <div className="viewer-field viewer-field--wide">
-              <span>Astronauta</span>
+              <span>Personaje flotante</span>
               <div className="viewer-stack-list">
                 <div className="viewer-stack-item">
                   <div className="cover-card__controls-row cover-card__controls-row--astronaut">
@@ -2412,7 +2977,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                     </label>
                   </div>
                   <label className="viewer-field">
-                    <span>URL del astronauta</span>
+                    <span>URL del personaje</span>
                     <input
                       value={editorDraft.sections.hero.astronaut?.image_url || ""}
                       onChange={(event) =>
@@ -2721,7 +3286,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
               </div>
             </div>
             <div className="viewer-field viewer-field--wide">
-              <span>Archivo visual</span>
+              <span>Galería de fotos</span>
               <div className="viewer-stack-list">
                 {editorDraft.sections.gallery.image_urls.map((item, index) => (
                   <div key={`gallery-${index}`} className="viewer-stack-item">
@@ -2749,6 +3314,22 @@ export function App({ initialInvitationThemeId }: AppProps) {
             </div>
             <div className="viewer-field viewer-field--wide">
               <span>Checklist</span>
+              <div className="viewer-stack-item">
+                <label className="viewer-field">
+                  <span>Título visible</span>
+                  <input
+                    value={editorDraft.sections.notes.title ?? getDefaultChecklistTitle(editorDraft.theme_id)}
+                    onChange={(event) => updateEditorNotesSection({ title: event.target.value })}
+                  />
+                </label>
+                <label className="viewer-field">
+                  <span>Descripción</span>
+                  <textarea
+                    value={editorDraft.sections.notes.text ?? getDefaultChecklistText(editorDraft.theme_id)}
+                    onChange={(event) => updateEditorNotesSection({ text: event.target.value })}
+                  />
+                </label>
+              </div>
               <div className="viewer-stack-list">
                 {editorDraft.sections.notes.items.map((item, index) => (
                   <div key={`note-${index}`} className="viewer-stack-item">
@@ -3165,7 +3746,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                       onLostPointerCapture={stopLivePreviewDrag}
                     >
                       <div className="viewer-phone-device__canvas-scale">
-                        <div className="app-viewer" data-theme={previewThemeKey}>
+                        <div className={`app-viewer${previewThemeClass}`} data-theme={previewThemeKey}>
                           <div className="theme-viewer">
                             <div className="viewer-shell viewer-shell--embedded">
                               <InvitationViewerCanvas
@@ -3323,12 +3904,20 @@ export function App({ initialInvitationThemeId }: AppProps) {
             {sortedResponses.length ? (
               <div className="client-rsvp-table-wrap">
                 <table className="client-rsvp-table">
+                  <colgroup>
+                    <col className="client-rsvp-table__col client-rsvp-table__col--guest" />
+                    <col className="client-rsvp-table__col client-rsvp-table__col--attendees" />
+                    <col className="client-rsvp-table__col client-rsvp-table__col--message" />
+                    <col className="client-rsvp-table__col client-rsvp-table__col--date" />
+                    <col className="client-rsvp-table__col client-rsvp-table__col--actions" />
+                  </colgroup>
                   <thead>
                     <tr>
                       <th>Invitado / Familia</th>
                       <th>Asistentes</th>
                       <th>Mensaje</th>
                       <th>Fecha y hora</th>
+                      <th>Acción</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -3352,17 +3941,114 @@ export function App({ initialInvitationThemeId }: AppProps) {
                           </td>
                           <td data-label="Mensaje">{response.message?.trim() || "Sin mensaje"}</td>
                           <td data-label="Fecha y hora">{formatResponseDate(response.created_at)}</td>
+                          <td data-label="Acción" className="client-rsvp-actions">
+                            <button
+                              type="button"
+                              className="client-rsvp-delete-button"
+                              aria-label={`Eliminar respuesta de ${response.name}`}
+                              title="Eliminar respuesta"
+                              disabled={clientRsvpDeleteLoading}
+                              onClick={() => setClientRsvpDeleteTarget(response)}
+                            >
+                              ✕
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
+                <div className="client-rsvp-mobile-list">
+                  {sortedResponses.map((response) => {
+                    const responseStatus = responseStatuses.get(response.id) || "declined";
+                    const statusMeta = getClientRsvpStatusMeta(responseStatus);
+                    const attendees = response.attending
+                      ? Math.max(1, Number(response.guests_count) || 1)
+                      : Math.max(0, Number(response.guests_count) || 0);
+
+                    return (
+                      <article key={`mobile-${response.id}`} className="client-rsvp-mobile-card">
+                        <header className="client-rsvp-mobile-card__head">
+                          <div>
+                            <p className="eyebrow">Invitado / Familia</p>
+                            <strong className="client-rsvp-mobile-card__name">{response.name}</strong>
+                          </div>
+                          <span className={`status-pill ${statusMeta.className}`}>{statusMeta.label}</span>
+                        </header>
+
+                        <div className="client-rsvp-mobile-card__row">
+                          <div className="client-rsvp-mobile-card__chip">
+                            <span>Asistentes</span>
+                            <strong>{attendees}</strong>
+                          </div>
+                          <button
+                            type="button"
+                            className="client-rsvp-delete-button"
+                            aria-label={`Eliminar respuesta de ${response.name}`}
+                            title="Eliminar respuesta"
+                            disabled={clientRsvpDeleteLoading}
+                            onClick={() => setClientRsvpDeleteTarget(response)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        <div className="client-rsvp-mobile-card__block">
+                          <span>Mensaje</span>
+                          <p>{response.message?.trim() || "Sin mensaje"}</p>
+                        </div>
+
+                        <div className="client-rsvp-mobile-card__block">
+                          <span>Fecha y hora</span>
+                          <p>{formatResponseDate(response.created_at)}</p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
               <p className="viewer-empty-copy">Todavía no hay respuestas registradas.</p>
             )}
           </section>
         </div>
+        {clientRsvpDeleteTarget ? (
+          <div
+            className="client-rsvp-delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="client-rsvp-delete-title"
+            onClick={handleClientRsvpDeleteBackdropInteraction}
+            onTouchEnd={handleClientRsvpDeleteBackdropInteraction}
+          >
+            <div className="client-rsvp-delete-modal__card" role="document">
+              <h3 id="client-rsvp-delete-title">Eliminar respuesta RSVP</h3>
+              <p>
+                Esta acción borrará el registro de <strong>{clientRsvpDeleteTarget.name}</strong> y actualizará el resumen
+                de asistentes. ¿Deseas continuar?
+              </p>
+              <div className="client-rsvp-delete-modal__actions">
+                <button
+                  type="button"
+                  className="button-secondary client-rsvp-delete-modal__button"
+                  onClick={handleClientRsvpDeleteCancelInteraction}
+                  onTouchEnd={handleClientRsvpDeleteCancelInteraction}
+                  disabled={clientRsvpDeleteLoading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="button-primary client-rsvp-delete-modal__button client-rsvp-delete-modal__button--danger"
+                  onClick={() => void handleClientRsvpDeleteResponse()}
+                  disabled={clientRsvpDeleteLoading}
+                >
+                  {clientRsvpDeleteLoading ? "Eliminando..." : "Sí, eliminar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </PublicShell>
     );
   }
@@ -3372,7 +4058,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
   }
 
   return (
-    <main className="app-viewer viewer-shell viewer-shell--public" data-theme={viewerThemeKey}>
+    <main className={`app-viewer viewer-shell viewer-shell--public${viewerThemeClass}`} data-theme={viewerThemeKey}>
       <div className="theme-viewer">
         <div className="viewer-public-frame">
           <InvitationViewerCanvas invitation={invitation} assetOrigin={assetOrigin} countdown={countdown} />

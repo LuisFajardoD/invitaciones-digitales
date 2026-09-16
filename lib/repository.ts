@@ -1,7 +1,14 @@
 import { randomUUID } from "crypto";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
-import { demoInvitation, demoResponses, demoSiteSettings, demoTheme } from "@/lib/demo-data";
+import {
+  demoCategoryInvitations,
+  demoInvitation,
+  demoJulietaInvitation,
+  demoResponses,
+  demoSiteSettings,
+  demoTheme,
+} from "@/lib/demo-data";
 import { normalizeInvitationRecord, toDatabaseInvitationRecord } from "@/lib/invitation-defaults";
 import { normalizeSiteSettingsData } from "@/lib/site-settings-defaults";
 import { hasConfiguredSupabase } from "@/lib/supabase/env";
@@ -17,6 +24,9 @@ import type {
   SiteSettingsRecord,
   ThemeRecord,
 } from "@/types/invitations";
+import type { EventIntakeFormRecord, EventIntakeStatus } from "@/types/intake";
+import { normalizeEventIntakeData, normalizeEventIntakeRecord } from "@/lib/intake-defaults";
+import { syncMediaUsages } from "@/lib/media-repository";
 
 type CreateInvitationInput = {
   slug: string;
@@ -46,6 +56,7 @@ type MockStore = {
   rsvpResponses: RsvpResponse[];
   siteSettings: SiteSettingsRecord;
   themes: ThemeRecord[];
+  event_intake_forms?: EventIntakeFormRecord[];
 };
 
 const MOCK_STORE_DIR = path.join(process.cwd(), ".mock-data");
@@ -94,7 +105,11 @@ function cloneValue<T>(value: T): T {
 
 function createDefaultMockStore(): MockStore {
   return {
-    invitations: [normalizeInvitationRecord(cloneValue(demoInvitation))],
+    invitations: [
+      ...demoCategoryInvitations.map((invitation) => normalizeInvitationRecord(cloneValue(invitation))),
+      normalizeInvitationRecord(cloneValue(demoInvitation)),
+      normalizeInvitationRecord(cloneValue(demoJulietaInvitation)),
+    ],
     rsvpResponses: cloneValue(demoResponses),
     siteSettings: cloneValue(demoSiteSettings),
     themes: [cloneValue(demoTheme)],
@@ -227,6 +242,7 @@ export async function saveSiteSettings(data: SiteSettingsData) {
     const store = await readMockStore();
     store.siteSettings = record;
     await writeMockStore(store);
+    await syncMediaUsages("site", "main", data);
     return record;
   }
 
@@ -242,6 +258,8 @@ export async function saveSiteSettings(data: SiteSettingsData) {
   if (error) {
     throw new Error(error.message);
   }
+
+  await syncMediaUsages("site", "main", data);
 
   return record;
 }
@@ -490,6 +508,7 @@ export async function updateInvitation(invitation: InvitationRecord) {
       item.id === updated.id ? updated : item,
     );
     await writeMockStore(store);
+    await syncMediaUsages("invitation", updated.id, updated);
     return updated;
   }
 
@@ -501,6 +520,8 @@ export async function updateInvitation(invitation: InvitationRecord) {
   if (error) {
     throw new Error(error.message);
   }
+
+  await syncMediaUsages("invitation", updated.id, updated);
 
   return updated;
 }
@@ -643,4 +664,97 @@ export async function getClientRsvpView(slug: string, token: string): Promise<Cl
     invitation,
     summary,
   };
+}
+
+export async function listEventIntakeForms(): Promise<EventIntakeFormRecord[]> {
+  const store = await readMockStore();
+  const records = store.event_intake_forms || [];
+  return records.map(normalizeEventIntakeRecord);
+}
+
+export async function getEventIntakeFormById(id: string): Promise<EventIntakeFormRecord | null> {
+  const store = await readMockStore();
+  const record = (store.event_intake_forms || []).find((item) => item.id === id);
+  return record ? normalizeEventIntakeRecord(record) : null;
+}
+
+export async function getEventIntakeFormByToken(token: string): Promise<EventIntakeFormRecord | null> {
+  const store = await readMockStore();
+  const record = (store.event_intake_forms || []).find((item) => item.token === token);
+  return record ? normalizeEventIntakeRecord(record) : null;
+}
+
+export async function createEventIntakeForm(input?: {
+  client_name?: string;
+  client_whatsapp?: string;
+}): Promise<EventIntakeFormRecord> {
+  const store = await readMockStore();
+  if (!store.event_intake_forms) {
+    store.event_intake_forms = [];
+  }
+  const id = `intake_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const token = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+  const now = new Date().toISOString();
+  const newRecord = normalizeEventIntakeRecord({
+    id,
+    token,
+    status: "new",
+    client_name: input?.client_name || "",
+    client_whatsapp: input?.client_whatsapp || "",
+    submitted_at: null,
+    created_at: now,
+    updated_at: now,
+    ...normalizeEventIntakeData(),
+  });
+  store.event_intake_forms.push(newRecord);
+  await writeMockStore(store);
+  return newRecord;
+}
+
+export async function saveEventIntakeFormByToken(
+  token: string,
+  data: Partial<EventIntakeFormRecord>,
+): Promise<EventIntakeFormRecord | null> {
+  const store = await readMockStore();
+  if (!store.event_intake_forms) {
+    return null;
+  }
+  const index = store.event_intake_forms.findIndex((item) => item.token === token);
+  if (index === -1) {
+    return null;
+  }
+  const current = store.event_intake_forms[index];
+  const now = new Date().toISOString();
+  const updated = normalizeEventIntakeRecord({
+    ...current,
+    ...data,
+    updated_at: now,
+    submitted_at: current.submitted_at || now,
+  });
+  store.event_intake_forms[index] = updated;
+  await writeMockStore(store);
+  return updated;
+}
+
+export async function updateEventIntakeStatus(
+  id: string,
+  status: EventIntakeStatus,
+): Promise<EventIntakeFormRecord | null> {
+  const store = await readMockStore();
+  if (!store.event_intake_forms) {
+    return null;
+  }
+  const index = store.event_intake_forms.findIndex((item) => item.id === id);
+  if (index === -1) {
+    return null;
+  }
+  const current = store.event_intake_forms[index];
+  const updated = normalizeEventIntakeRecord({
+    ...current,
+    status,
+    updated_at: new Date().toISOString(),
+  });
+  store.event_intake_forms[index] = updated;
+  await writeMockStore(store);
+  return updated;
 }

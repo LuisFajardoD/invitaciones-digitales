@@ -62,7 +62,7 @@ cmd /c npm.cmd run dev
 ## Rutas utiles
 
 - `http://localhost:3000/`
-- `http://localhost:3000/examples`
+- `http://localhost:3000/invitaciones`
 - `http://localhost:3000/admin/login`
 - `http://localhost:3000/admin/invitations`
 - `http://localhost:3000/admin/invitations/11111111-1111-4111-8111-111111111111`

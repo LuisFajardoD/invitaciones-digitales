@@ -1,0 +1,7 @@
+{
+  "name": "Gloobi",
+  "short_name": "Gloobi",
+  "start_url": "/",
+  "display": "standalone",
+  "icons": [{"src": "/favicon-gloobi.svg", "sizes": "any", "type": "image/svg+xml"}]
+}

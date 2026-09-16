@@ -1,0 +1,197 @@
+.gloobi-about-page {
+  --about-bg: #06050b;
+  --about-text: #f8f5ff;
+  --about-muted: #b8afc8;
+  --about-panel: rgba(26, 18, 43, 0.72);
+  --about-border: rgba(185, 158, 255, 0.2);
+  --about-accent: #ccff00;
+  background: var(--about-bg) !important;
+  color: var(--about-text);
+  font-family: "Urbanist", sans-serif;
+  overflow-x: hidden;
+}
+
+.gloobi-about-page.light-mode {
+  --about-bg: #eef0f8;
+  --about-text: #211833;
+  --about-muted: #675d75;
+  --about-panel: rgba(255, 255, 255, 0.72);
+  --about-border: rgba(98, 69, 146, 0.16);
+  --about-accent: #6d48c7;
+}
+
+.gloobi-about-page .gloobi-global-bg { z-index: 0; }
+.gloobi-about,
+.gloobi-contact-page,
+.gloobi-about-footer { position: relative; z-index: 3; }
+.gloobi-about-page h1, .gloobi-about-page h2, .gloobi-about-page h3 { color: var(--about-text); font-family: "Urbanist", sans-serif; }
+.gloobi-about-page p { color: var(--about-muted); }
+.gloobi-about-loader img { position: relative; z-index: 2; width: 100px; }
+.gloobi-about-loader .loader { margin-top: 18px; }
+.gloobi-about-brand { position: absolute; z-index: 3; top: 30px; left: max(7vw, 90px); }
+.gloobi-about-brand img { width: 118px; height: 50px; object-fit: contain; }
+.light-mode .gloobi-about-brand img { filter: brightness(0) saturate(100%) invert(17%) sepia(25%) saturate(1379%) hue-rotate(230deg); }
+.gloobi-about-theme { position: absolute; z-index: 3; top: 34px; right: max(5vw, 30px); display: flex; gap: 6px; }
+.gloobi-about-theme button { width: 42px; height: 42px; border: 1px solid var(--about-border); border-radius: 50%; color: var(--about-text); background: var(--about-panel); box-shadow: inset 0 1px 0 rgba(255,255,255,.15); transition: .2s; }
+.gloobi-about-theme button.is-active { color: #1d1429; background: #ccff00; }
+.gloobi-about-hero { min-height: 680px; display: grid; place-items: center; padding: 150px 24px 100px; text-align: center; }
+.gloobi-about-hero .container { max-width: 940px; }
+.gloobi-about-breadcrumb { display: flex; justify-content: center; gap: 10px; margin-bottom: 52px; color: var(--about-muted); font-size: 14px; }
+.gloobi-about-breadcrumb a { color: inherit; }
+.gloobi-about-kicker { color: var(--about-accent) !important; font-size: 12px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; }
+.gloobi-about-hero h1 { margin: 22px 0 28px; font-size: clamp(54px, 8vw, 112px); line-height: .95; letter-spacing: -5px; }
+.gloobi-about-lead { max-width: 720px; margin: auto; font-size: clamp(18px, 2vw, 25px); line-height: 1.55; }
+.gloobi-about-purpose, .gloobi-about-principles, .gloobi-about-behind, .gloobi-about-gallery, .gloobi-about-cta { background: transparent !important; }
+.gloobi-about-purpose-media { position: relative; min-height: 570px; }
+.gloobi-about-purpose-media img { position: absolute; border: 1px solid var(--about-border); border-radius: 30px; object-fit: cover; box-shadow: 0 30px 80px rgba(0,0,0,.25); }
+.gloobi-about-purpose-media img:first-child { inset: 0 22% 8% 0; width: 78%; height: 92%; }
+.gloobi-about-purpose-media img:last-child { right: 0; bottom: 0; width: 48%; height: 54%; }
+.gloobi-about-purpose h2, .gloobi-behind-copy h2, .gloobi-about-section-heading h2, .gloobi-about-cta h2 { margin: 18px 0 26px; font-size: clamp(35px, 4vw, 58px); line-height: 1.1; letter-spacing: -2px; }
+.gloobi-about-purpose p:not(.gloobi-about-kicker), .gloobi-behind-copy p { font-size: 17px; line-height: 1.75; }
+.gloobi-about-section-heading { max-width: 820px; margin: 0 auto 58px; text-align: center; }
+.gloobi-about-section-heading > p:last-child { font-size: 18px; }
+.gloobi-principles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.gloobi-principles-grid article, .gloobi-behind-card, .gloobi-about-cta-card { border: 1px solid var(--about-border); background: var(--about-panel); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); box-shadow: inset 0 1px 0 rgba(255,255,255,.13), 0 22px 60px rgba(18,9,35,.16); }
+.gloobi-principles-grid article { min-height: 260px; padding: 38px; border-radius: 28px; transition: transform .35s ease, border-color .35s ease; }
+.gloobi-principles-grid article:hover { transform: translateY(-7px); border-color: rgba(204,255,0,.45); }
+.gloobi-principles-grid article span { display: block; color: var(--about-accent); font-size: 13px; font-weight: 800; letter-spacing: 2px; }
+.gloobi-principles-grid h3 { margin: 38px 0 13px; font-size: 26px; }
+.gloobi-principles-grid p { font-size: 16px; line-height: 1.65; }
+.gloobi-behind-card { display: grid; grid-template-columns: 1fr 1.15fr; overflow: hidden; border-radius: 36px; }
+.gloobi-behind-image img { width: 100%; height: 100%; min-height: 600px; object-fit: cover; }
+.gloobi-behind-copy { align-self: center; padding: clamp(42px, 6vw, 86px); }
+.gloobi-behind-subtitle { color: var(--about-text) !important; font-size: 21px !important; }
+.gloobi-about-gallery { overflow: hidden; }
+.gloobi-about-gallery-swiper { padding: 0 5vw 40px; }
+.gloobi-about-gallery-swiper .swiper-wrapper { transition-timing-function: linear; }
+.gloobi-about-gallery-swiper .swiper-slide { width: 360px; height: 470px; overflow: hidden; border: 1px solid var(--about-border); border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.18); }
+.gloobi-about-gallery-swiper img { width:100%; height:100%; object-fit:cover; }
+.gloobi-about-cta-card { display: flex; justify-content: space-between; align-items: center; gap: 50px; padding: clamp(38px, 6vw, 80px); border-radius: 34px; }
+.gloobi-about-cta-card > div:first-child { max-width: 690px; }
+.gloobi-about-cta-card h2 { margin-bottom: 16px; }
+.gloobi-about-cta-card p:not(.gloobi-about-kicker) { font-size: 18px; }
+.gloobi-about-actions { display: flex; flex-shrink: 0; gap: 15px; }
+.gloobi-about-actions .th-btn { white-space: nowrap; }
+.gloobi-about-footer { background-position: center !important; background-size: cover !important; }
+.gloobi-about-footer .footer-top { display: flex; justify-content: space-between; align-items: center; gap: 30px; }
+.gloobi-about-footer .about-logo img { width: 115px; }
+.gloobi-about-footer .widget_title, .gloobi-about-footer .box-title, .gloobi-about-footer h2, .gloobi-about-footer h3 { color: #fff !important; }
+.gloobi-about-footer p, .gloobi-about-footer li, .gloobi-about-footer a { color: #fff; }
+.light-mode .gloobi-about-footer { color: #fff; }
+.gloobi-about-page .gloobi-rail-svg { width: 20px; height: 20px; }
+.gloobi-about-page .gloobi-rail-avatar.is-active { box-shadow: 0 0 0 2px #ccff00, 0 10px 25px rgba(0,0,0,.35); }
+
+@media (max-width: 991px) {
+  .gloobi-about-brand { left: 28px; }
+  .gloobi-about-hero { min-height: 560px; }
+  .gloobi-about-purpose-media { min-height: 470px; }
+  .gloobi-behind-card { grid-template-columns: 1fr; }
+  .gloobi-behind-image img { min-height: 0; height: 430px; }
+  .gloobi-about-cta-card { display: block; }
+  .gloobi-about-actions { margin-top: 30px; }
+}
+
+@media (max-width: 767px) {
+  .gloobi-about-brand { top: 18px; left: 18px; }
+  .gloobi-about-brand img { width: 92px; }
+  .gloobi-about-theme { top: 18px; right: 18px; }
+  .gloobi-about-theme button { width: 38px; height: 38px; }
+  .gloobi-about-hero { min-height: 520px; padding: 120px 18px 70px; }
+  .gloobi-about-hero h1 { font-size: 54px; letter-spacing: -2.5px; }
+  .gloobi-about-breadcrumb { margin-bottom: 35px; }
+  .gloobi-about-purpose-media { min-height: 390px; margin-bottom: 22px; }
+  .gloobi-principles-grid { grid-template-columns: 1fr; }
+  .gloobi-principles-grid article { min-height: 220px; }
+  .gloobi-behind-image img { height: 330px; }
+  .gloobi-behind-copy { padding: 34px 24px; }
+  .gloobi-about-gallery-swiper .swiper-slide { width: 270px; height: 360px; }
+  .gloobi-about-actions { flex-direction: column; align-items: stretch; }
+  .gloobi-about-actions .th-btn { width: 100%; justify-content: center; }
+  .gloobi-about-footer .footer-top { display: block; }
+  .gloobi-about-footer .footer-top .th-btn { margin-top: 20px; }
+  .gloobi-about-page { padding-bottom: 74px; }
+
+  /* Secondary pages use the same compact, app-like rhythm as the mobile home. */
+  .gloobi-about-hero {
+    min-height: 390px;
+    padding: 96px 18px 38px;
+  }
+  .gloobi-about-breadcrumb { margin-bottom: 18px; font-size: 11px; }
+  .gloobi-about-kicker { font-size: 9px; letter-spacing: 2.2px; }
+  .gloobi-about-hero h1 { margin: 14px 0 16px; font-size: clamp(40px, 11vw, 50px); line-height: .98; }
+  .gloobi-about-lead { max-width: 350px; font-size: 14px; line-height: 1.45; }
+  .gloobi-about-purpose,
+  .gloobi-about-principles,
+  .gloobi-about-behind,
+  .gloobi-about-gallery,
+  .gloobi-about-cta { padding-top: 38px !important; padding-bottom: 38px !important; }
+  .gloobi-about-purpose-media { min-height: 280px; margin-bottom: 4px; }
+  .gloobi-about-purpose-media img { border-radius: 22px; }
+  .gloobi-about-purpose h2,
+  .gloobi-behind-copy h2,
+  .gloobi-about-section-heading h2,
+  .gloobi-about-cta h2 { margin: 11px 0 14px; font-size: 29px; line-height: 1.05; letter-spacing: -1px; }
+  .gloobi-about-purpose p:not(.gloobi-about-kicker),
+  .gloobi-behind-copy p { margin-bottom: 11px; font-size: 13px; line-height: 1.5; }
+  .gloobi-about-section-heading { margin-bottom: 22px; }
+  .gloobi-about-section-heading > p:last-child { font-size: 13px; line-height: 1.45; }
+  .gloobi-principles-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .gloobi-principles-grid article { min-height: 168px; padding: 17px 14px; border-radius: 20px; }
+  .gloobi-principles-grid article span { font-size: 9px; }
+  .gloobi-principles-grid h3 { margin: 18px 0 7px; font-size: 16px; line-height: 1.08; }
+  .gloobi-principles-grid p { margin: 0; font-size: 10.5px; line-height: 1.4; }
+  .gloobi-behind-card { border-radius: 24px; }
+  .gloobi-behind-image img { height: 220px; }
+  .gloobi-behind-copy { padding: 24px 20px; }
+  .gloobi-behind-subtitle { font-size: 15px !important; line-height: 1.35 !important; }
+  .gloobi-about-gallery-swiper { padding: 0 16px 18px; }
+  .gloobi-about-gallery-swiper .swiper-slide { width: 205px; height: 260px; border-radius: 20px; }
+  .gloobi-about-cta-card { padding: 24px 20px; border-radius: 24px; }
+  .gloobi-about-cta-card p:not(.gloobi-about-kicker) { font-size: 13px; line-height: 1.45; }
+  .gloobi-about-actions { margin-top: 18px; gap: 9px; }
+  .gloobi-about-actions .th-btn { min-height: 48px; padding: 0 18px; font-size: 12px; }
+
+  .gloobi-contact-page { padding-bottom: 0; }
+  .gloobi-contact-hero { min-height: 360px; padding: 94px 18px 34px; }
+  .gloobi-contact-options { padding: 22px 0 30px !important; overflow: hidden; }
+  .gloobi-contact-options .container { max-width: none; padding: 0; }
+  .gloobi-contact-options-grid { display: flex; gap: 10px; padding: 0 14px 8px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .gloobi-contact-options-grid::-webkit-scrollbar { display: none; }
+  .gloobi-contact-options-grid article { flex: 0 0 min(78vw, 310px); min-height: 190px; padding: 20px; border-radius: 22px; scroll-snap-align: center; }
+  .gloobi-contact-option-icon { width: 39px; height: 39px; font-size: 17px; }
+  .gloobi-contact-options-grid h2 { margin: 12px 0 7px; font-size: 20px; }
+  .gloobi-contact-options-grid p { margin-bottom: 9px; font-size: 12px; line-height: 1.45; }
+  .gloobi-contact-options-grid a { font-size: 12px; }
+  .gloobi-contact-sec,
+  body.light-mode .gloobi-contact-sec,
+  html[data-theme="light"] .gloobi-contact-sec,
+  body.dark-mode .gloobi-contact-sec,
+  html[data-theme="dark"] .gloobi-contact-sec { width: calc(100% - 20px) !important; padding: 28px 14px !important; border-radius: 26px 26px 0 0 !important; }
+  .gloobi-contact-sec .contact-area { padding: 22px 16px !important; border-radius: 22px; }
+  .gloobi-contact-form .title { margin-bottom: 14px !important; font-size: 23px !important; line-height: 1.1; }
+  .gloobi-contact-form .title { color: #171020 !important; }
+  .gloobi-contact-form .form-group { margin-bottom: 10px; }
+  .gloobi-contact-form .form-control,
+  .gloobi-contact-form .nice-select { height: 44px !important; font-size: 12px !important; }
+  .gloobi-contact-form textarea.form-control,
+  .gloobi-contact-form textarea { min-height: 82px !important; }
+  .gloobi-contact-form .form-btn { gap: 10px; }
+  .gloobi-contact-form .form-btn .box-text { color: #51495d !important; font-size: 10px; line-height: 1.35; }
+  .gloobi-contact-form .th-btn { width: 100%; height: 48px !important; padding: 0 20px !important; font-size: 12px !important; }
+  .gloobi-contact-review { padding: 18px !important; margin-top: 12px !important; border-radius: 20px; }
+}
+
+@media (max-width: 420px) {
+  .gloobi-about-theme .gloobi-btn-dark { display: none; }
+  .gloobi-about-purpose-media { min-height: 330px; }
+  .gloobi-about-purpose-media img:first-child { right: 15%; width: 85%; }
+  .gloobi-about-purpose-media img:last-child { width: 52%; height: 49%; }
+  .gloobi-about-purpose h2, .gloobi-behind-copy h2, .gloobi-about-section-heading h2, .gloobi-about-cta h2 { font-size: 34px; letter-spacing: -1px; }
+  .gloobi-principles-grid article { padding: 28px; }
+  .gloobi-about-cta-card { padding: 30px 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gloobi-about-page * { scroll-behavior: auto !important; }
+  .gloobi-principles-grid article { transition: none; }
+}

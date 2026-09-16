@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensaje Gloobi</title>
+    <link href="https://fonts.googleapis.com/css?family=Indie+Flower" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Amatic+SC" rel="stylesheet">
+    <script>
+      window.addEventListener('wheel', function(e) {
+        if (!window.parent || window.parent === window) {
+          return;
+        }
+
+        e.preventDefault();
+
+        try {
+          if (typeof window.parent.gloobiHandleMemoryFrameWheel === 'function') {
+            window.parent.gloobiHandleMemoryFrameWheel(e.deltaY);
+          } else if (typeof window.parent.gloobiSmoothScrollBy === 'function') {
+            window.parent.gloobiSmoothScrollBy(e.deltaY);
+          } else {
+            window.parent.scrollBy({ top: e.deltaY, left: 0, behavior: 'auto' });
+          }
+        } catch (error) {
+          window.parent.scrollBy(0, e.deltaY);
+        }
+      }, { passive: false });
+    </script>
+    <style>
+      body {
+        font-family: 'Indie Flower', cursive !important;
+        background: transparent;
+        margin: 0px;
+        padding: 0px;
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      ::selection {
+        background: transparent;
+      }
+
+      h4 {
+        font-size: 26px;
+        line-height: 1px;
+        font-family: 'Amatic SC', cursive !important;
+      }
+
+      .color1 {
+        color: #000000;
+      }
+
+      .color2 {
+        color: #000000;
+      }
+
+      .card {
+        --paper-face: #ead7ad;
+        --paper-face-light: #f3e2bb;
+        --paper-edge: #c39a62;
+        --paper-edge-dark: #a97842;
+        --paper-shadow: rgba(87, 48, 25, .42);
+        color: #000000;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 380px;
+        height: 500px;
+        background: var(--paper-face);
+        transform-style: preserve-3d;
+        transform: translate(-50%, -50%) perspective(2000px);
+        box-shadow: inset 300px 0 50px var(--paper-shadow), 20px 0 60px rgba(0, 0, 0, .5);
+        transition: 1s;
+      }
+
+      .card.is-open {
+        transform: translate(-50%, -50%) perspective(2000px) rotate(15deg) scale(1.2);
+        box-shadow: inset 20px 0 50px rgba(0, 0, 0, .5), 0 10px 100px rgba(0, 0, 0, .5);
+      }
+
+      .card:before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: var(--paper-edge);
+        transform-origin: bottom;
+        transform: skewX(-45deg);
+      }
+
+      .card:after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: -5px;
+        width: 5px;
+        height: 100%;
+        background: var(--paper-edge-dark);
+        transform-origin: left;
+        transform: skewY(-45deg);
+      }
+
+      .card .imgBox {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-origin: left;
+        transition: .7s;
+      }
+
+      .card .bark {
+        position: absolute;
+        background: linear-gradient(90deg, var(--paper-edge) 0%, var(--paper-face) 18%, var(--paper-face-light) 100%);
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: .7s;
+      }
+
+      .card .imgBox img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .card.is-open .imgBox {
+        transform: rotateY(-135deg);
+      }
+
+      .card.is-open .bark {
+        opacity: 1;
+        transition: .6s;
+        box-shadow: 300px 200px 100px rgba(100, 57, 28, .34) inset;
+      }
+
+      .card .details {
+        position: absolute;
+        top: 0;
+        left: 0;
+        box-sizing: border-box;
+        padding: 0;
+        z-index: -1;
+        margin-top: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .message-copy {
+        width: 320px;
+        margin: 72px 0 0 42px;
+        transform: rotate(1.5deg);
+        transform-origin: top left;
+      }
+
+      .card .details p {
+        color: #000000;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.15;
+        margin: 0 0 12px;
+        padding: 0;
+      }
+
+      .card .details h4 {
+        color: #000000;
+        text-align: center;
+        font-size: 50px;
+        line-height: .85;
+        margin: 17px 0 0;
+        letter-spacing: 1px;
+      }
+
+      .message-highlight {
+        border-left: 2px solid #1BBC9B;
+        margin: 14px 0 14px 7px;
+        padding-left: 14px;
+      }
+
+      .message-highlight p {
+        margin: 0 0 4px;
+      }
+
+      .text-right {
+        text-align: right;
+      }
+
+      @media (max-width: 640px) {
+        .card {
+          transform: translate(-50%, -50%) perspective(2000px) scale(.68);
+        }
+
+        .card.is-open {
+          transform: translate(-50%, -50%) perspective(2000px) rotate(15deg) scale(.68);
+        }
+      }
+    </style>
+  
+
+
+
+<link rel="icon" href="/favicon-gloobi.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.json">
+</head>
+  <body>
+    <div class="card" tabindex="0" role="button" aria-expanded="false" aria-label="Abrir mensaje">
+      <div class="imgBox">
+        <div class="bark"></div>
+        <img src="/assets/gloobi-home/tarjeta/portada-tarjeta.avif" alt="Portada tarjeta mensaje Gloobi">
+      </div>
+      <div class="details">
+        <div class="message-copy">
+          <p>Cumplir un año más, ver crecer a tus hijos,<br>celebrar un logro o reunir a toda la familia<br>puede parecer solo una fecha en el<br>calendario.</p>
+          <p>Pero esa edad, esas personas y ese<br>momento nunca volverán a ser exactamente<br>iguales.</p>
+          <div class="message-highlight">
+            <p class="color1">Hoy tienen esta edad,</p>
+            <p class="color1">Hoy están todos aquí,</p>
+            <p class="color1">Hoy existe este momento.</p>
+          </div>
+          <p>Haz que este momento se convierta en un<br>recuerdo que dure para siempre.</p>
+          <p>Porque las fechas pueden repetirse, pero los<br>momentos no.</p>
+          <h4 class="color2">Celébralo.</h4>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var card = document.querySelector('.card');
+        if (!card) return;
+
+        function setOpen(open) {
+          card.classList.toggle('is-open', open);
+          card.setAttribute('aria-expanded', open ? 'true' : 'false');
+          card.setAttribute('aria-label', open ? 'Cerrar mensaje' : 'Abrir mensaje');
+        }
+
+        function toggleCard() {
+          setOpen(!card.classList.contains('is-open'));
+        }
+
+        card.addEventListener('click', toggleCard);
+        card.addEventListener('keydown', function (event) {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          toggleCard();
+        });
+      })();
+    </script>
+  </body>
+</html>

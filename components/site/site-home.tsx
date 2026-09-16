@@ -145,7 +145,7 @@ function renderBlock(key: SiteBlockKey, settings: SiteSettingsData, now: Date) {
       return (
         <section key={key} className="content-panel">
           <div className="section-head">
-            <p className="eyebrow">Paquetes</p>
+            <p className="eyebrow">Tipos de invitación</p>
             <h2>{block.title}</h2>
           </div>
           <p className="lede">{serviceNote}</p>

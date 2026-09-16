@@ -1,8 +1,10 @@
 import { DEFAULT_BLOCK_ORDER, DEFAULT_SECTION_ORDER } from "@/lib/constants";
 import { DEFAULT_PACKAGES_SERVICE_NOTE, RECOMMENDED_SITE_PACKAGES } from "@/lib/site-packages";
+import { createDefaultSiteSettings } from "@/lib/site-settings-defaults";
 import { createWhatsAppUrl } from "@/lib/utils";
 import type {
   InvitationRecord,
+  InvitationTemplateRecord,
   RsvpResponse,
   SiteSettingsRecord,
   ThemeRecord,
@@ -36,9 +38,9 @@ export const demoInvitation: InvitationRecord = {
   layout_id: "layout_v1_unico",
   animation_profile: "max",
   timezone: "America/Mexico_City",
-  event_start_at: "2026-04-18T17:00:00.000Z",
-  rsvp_until: "2026-04-19T04:59:59.000Z",
-  active_until: "2026-04-20T05:59:59.000Z",
+  event_start_at: "2027-04-18T17:00:00.000Z",
+  rsvp_until: "2027-04-19T04:59:59.000Z",
+  active_until: "2035-12-31T23:59:59.000Z",
   background: {
     mode: "inherit_hero",
     custom: {
@@ -52,9 +54,9 @@ export const demoInvitation: InvitationRecord = {
   sections: {
     hero: {
       enabled: true,
-      title: "Cumple 7 de Luis Arturo",
-      subtitle: "La misión es que nos acompañes a celebrar.",
-      badge: "Misión espacial premium",
+      title: "Cumple 7 de Mateo",
+      subtitle: "La misión es que nos acompañes a celebrar una aventura espacial.",
+      badge: "Misión espacial demo",
       accent: "Despegue 11:00 am",
       background_image_url:
         "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1400&q=80",
@@ -75,11 +77,11 @@ export const demoInvitation: InvitationRecord = {
     event_info: {
       enabled: true,
       weekday_text: "Sábado",
-      date_text: "18 de abril de 2026",
+      date_text: "24 de octubre de 2026",
       time_text: "A partir de las 11:00 am",
-      venue_name: "Jardín del Valle",
+      venue_name: "Salón Galáctico Mágico",
       address_text:
-        "Cda. Tlalimaya 25, San Andres Ahuayucan, Xochimilco, 16880, CDMX",
+        "Av. de la Galaxia 123, Col. Astral, CDMX",
     },
     quick_actions: {
       enabled: true,
@@ -93,19 +95,19 @@ export const demoInvitation: InvitationRecord = {
     countdown: {
       enabled: true,
       label: "Faltan para el despegue",
-      target_at: "2026-04-18T17:00:00.000Z",
+      target_at: "2026-10-24T17:00:00.000Z",
     },
     map: {
       enabled: true,
       embed: {
-        lat: 19.220703435663584,
-        lng: -99.10241678480557,
+        lat: 19.4326,
+        lng: -99.1332,
         zoom: 16,
       },
       address_text:
-        "Cda. Tlalimaya 25, San Andres Ahuayucan, Xochimilco, 16880, CDMX",
+        "Av. de la Galaxia 123, Col. Astral, CDMX",
       maps_url:
-        "https://www.google.com/maps/search/?api=1&query=19.220703435663584,-99.10241678480557",
+        "https://www.google.com/maps/search/?api=1&query=19.4326,-99.1332",
       dark: true,
     },
     gallery: {
@@ -137,9 +139,9 @@ export const demoInvitation: InvitationRecord = {
     },
     contact: {
       enabled: true,
-      name: "Adry Rodríguez",
-      whatsapp_number: "5527225459",
-      whatsapp_url: createWhatsAppUrl("5527225459", "Hola, quiero detalles del cumple de Luis Arturo."),
+      name: "Contacto Demo",
+      whatsapp_number: "5500000000",
+      whatsapp_url: createWhatsAppUrl("5500000000", "Hola, quiero detalles del cumple de Mateo."),
       label: "Contacto por WhatsApp",
     },
     itinerary: {
@@ -148,7 +150,7 @@ export const demoInvitation: InvitationRecord = {
       items: [
         "11:00 am | Bienvenida y fotos de aterrizaje",
         "11:30 am | Juegos y misiones espaciales",
-        "1:00 pm | Pastel y canción para Luis Arturo",
+        "1:00 pm | Pastel y canción para Mateo",
         "2:00 pm | Piñata, regalos y despedida",
       ],
       text: "Así se vivirá la celebración de principio a fin.",
@@ -163,19 +165,18 @@ export const demoInvitation: InvitationRecord = {
       title: "Mesa de regalos",
       text: "Tu presencia es lo más importante. Si quieres llevar un detalle, puede ser un libro, un juego creativo o una sorpresa espacial.",
       url: createWhatsAppUrl(
-        "5527225459",
-        "Hola, quiero preguntar sobre la mesa de regalos de Luis Arturo.",
+        "5500000000",
+        "Hola, quiero preguntar sobre los regalos demo.",
       ),
     },
     faq: {
       enabled: true,
       title: "Preguntas frecuentes",
       items: [
-        "Hay estacionamiento limitado dentro del salón.",
-        "Si confirmas con acompañantes, incluye el total en tu RSVP.",
-        "Puedes llegar desde las 10:45 am para entrar con calma.",
+        "Estacionamiento disponible dentro del lugar.",
+        "Por favor confirma el total de asistentes en tu RSVP.",
       ],
-      text: "Lo más importante antes del despegue.",
+      text: "Información importante antes del despegue.",
     },
     livestream: {
       enabled: true,
@@ -191,12 +192,12 @@ export const demoInvitation: InvitationRecord = {
     lodging: {
       enabled: true,
       title: "Hospedaje",
-      text: "Si vienes de fuera de CDMX, te recomendamos hospedarte cerca de Xochimilco o Coapa para llegar más rápido el día del evento.",
+      text: "Recomendamos hospedarse cerca de la zona en caso de venir de fuera.",
     },
   },
   share: {
-    og_title: "Cumple 7 de Luis Arturo | Invitación Premium Astronautas",
-    og_description: "La misión es que nos acompañes a celebrar en Jardín del Valle.",
+    og_title: "Cumple 7 de Mateo | Demo Misión Espacial",
+    og_description: "Acompáñanos a celebrar una misión espacial inolvidable en Salón Galáctico Mágico.",
     og_image_url:
       "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1200&q=80",
     og_type: "website",
@@ -218,10 +219,560 @@ export const demoInvitation: InvitationRecord = {
   updated_at: now,
 };
 
+export const demoJulietaInvitation: InvitationRecord = {
+  id: "97346bce-9963-4b0e-8b17-601d84810957",
+  slug: "cumple-5-julieta-mabell",
+  status: "published",
+  theme_id: "sirenita",
+  layout_id: "layout_v1_unico",
+  animation_profile: "max",
+  timezone: "America/Mexico_City",
+  event_start_at: "2027-07-04T12:00:00.000Z",
+  rsvp_until: "2027-07-05T04:59:59.000Z",
+  active_until: "2035-12-31T23:59:59.000Z",
+  background: {
+    mode: "inherit_hero",
+    custom: {
+      type: "image",
+      image_url: "",
+      video_url: "",
+      poster_url: "",
+    },
+  },
+  sections_order: DEFAULT_SECTION_ORDER,
+  sections: {
+    hero: {
+      enabled: true,
+      title: "Cumple 5 de Sofía",
+      subtitle: "Acompáñanos a celebrar una aventura mágica bajo el mar.",
+      badge: "Cumple 5 Bajo el Mar 🧜‍♀️",
+      accent: "Gran fiesta de Sirenas",
+      background_image_url:
+        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1400&q=80",
+      background: {
+        type: "image",
+        image_url:
+          "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1400&q=80",
+        video_url: "",
+        poster_url: "",
+      },
+    },
+    event_info: {
+      enabled: true,
+      weekday_text: "Sábado",
+      date_text: "14 de noviembre de 2026",
+      time_text: "A partir de las 12:00 pm",
+      venue_name: "Salón Arrecife Mágico",
+      address_text: "Av. Marina Azul 456, Col. Del Mar, CDMX",
+    },
+    quick_actions: {
+      enabled: true,
+      items: [
+        { type: "confirm", label: "Confirmar" },
+        { type: "location", label: "Ubicación" },
+        { type: "calendar", label: "Agregar al calendario" },
+        { type: "share", label: "Compartir" },
+      ],
+    },
+    countdown: {
+      enabled: true,
+      label: "Faltan para la gran fiesta",
+      target_at: "2026-11-14T12:00:00.000Z",
+    },
+    map: {
+      enabled: true,
+      embed: {
+        lat: 19.352,
+        lng: -99.162,
+        zoom: 16,
+      },
+      address_text: "Av. Marina Azul 456, Col. Del Mar, CDMX",
+      maps_url: "https://www.google.com/maps/search/?api=1&query=19.352,-99.162",
+      dark: false,
+    },
+    gallery: {
+      enabled: true,
+      max_images: 6,
+      image_urls: [
+        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80",
+      ],
+    },
+    notes: {
+      enabled: true,
+      items: [
+        "Trae mucha alegría para celebrar con Sofía.",
+        "Habrá mesa de dulces temáticos y show en vivo.",
+      ],
+    },
+    rsvp: {
+      enabled: true,
+      fields: {
+        guests_count: true,
+        message: true,
+      },
+      closed_message: "RSVP cerrado. Gracias por tu interés.",
+    },
+    contact: {
+      enabled: true,
+      name: "Contacto Demo",
+      whatsapp_number: "5500000000",
+      whatsapp_url:
+        createWhatsAppUrl("5500000000", "Hola, quiero detalles del cumple de Sofía."),
+      label: "Contacto por WhatsApp",
+    },
+    itinerary: {
+      enabled: true,
+      title: "Itinerario de la aventura",
+      items: [
+        "12:00 pm | Bienvenida y recepción en el reino marino",
+        "1:00 pm | Show acuático y juegos mágicos",
+        "3:00 pm | Pastel y piñata con Sofía",
+      ],
+      text: "Momentos mágicos de principio a fin.",
+    },
+    dress_code: {
+      enabled: true,
+      title: "Código de vestimenta",
+      text: "Estilo acuático o libre en tonos turquesa, lila, rosa o blanco.",
+    },
+    gifts: {
+      enabled: true,
+      title: "Mesa de regalos",
+      text: "Tu presencia es nuestro mejor regalo.",
+      url: createWhatsAppUrl("5500000000", "Hola, información de regalos demo."),
+    },
+    faq: {
+      enabled: true,
+      title: "Preguntas frecuentes",
+      items: [
+        "Contamos con valet parking en el lugar.",
+        "Por favor confirma el total de asistentes en tu mensaje de RSVP.",
+      ],
+      text: "Información importante para los invitados.",
+    },
+    livestream: {
+      enabled: false,
+      title: "Transmisión en vivo",
+      text: "Transmisión privada para familiares lejanos.",
+      url: "",
+    },
+    transport: {
+      enabled: false,
+      title: "Transporte",
+      text: "Estacionamiento disponible en la entrada del salón.",
+    },
+    lodging: {
+      enabled: false,
+      title: "Hospedaje",
+      text: "Recomendamos hospedarse cerca de la zona en caso de venir de fuera.",
+    },
+  },
+  share: {
+    og_title: "Cumple 5 de Sofía | Demo Mágica Bajo el Mar",
+    og_description: "Acompáñanos a celebrar una aventura mágica bajo el mar en Salón Arrecife Mágico.",
+    og_image_url:
+      "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80",
+    og_type: "website",
+  },
+  expired_page: {
+    title: "Este evento ya pasó",
+    message: "Gracias por acompañarnos en esta aventura bajo el mar.",
+    primary_cta: {
+      text: "Ver invitaciones y precios",
+      href: "/",
+    },
+    secondary_cta: {
+      text: "Cotizar por WhatsApp",
+      href: "https://wa.me/5527225459?text=Hola%2C%20quiero%20cotizar%20una%20invitaci%C3%B3n%20como%20la%20de%20sirenita.",
+    },
+  },
+  client_view_token: "julieta-token-demo",
+  created_at: now,
+  updated_at: now,
+};
+
+type CategoryDemoSpec = {
+  id: string;
+  slug: string;
+  category: string;
+  cardTitle: string;
+  description: string;
+  base: "space" | "princess";
+  themeId: string;
+  coverUrl: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  heroBadge: string;
+  heroAccent: string;
+  venueName: string;
+  countdownLabel: string;
+  itineraryTitle: string;
+  itineraryItems: string[];
+  dressCode: string;
+  mapDark: boolean;
+  preserveBase?: boolean;
+};
+
+const categoryDemoSpecs: CategoryDemoSpec[] = [
+  {
+    id: "10000000-0000-4000-8000-000000000001",
+    slug: "demo-espacio",
+    category: "Espacio",
+    cardTitle: "Mision espacial",
+    description: "Astronautas, planetas y una invitacion lista para cumpleanos galactico.",
+    base: "space",
+    themeId: "astronautas",
+    coverUrl: "/assets/gloobi-home/tematicas-infantiles/espacio.avif",
+    heroTitle: "Cumple espacial de Mateo",
+    heroSubtitle: "Prepara tu casco para una fiesta fuera de este mundo.",
+    heroBadge: "Mision espacial",
+    heroAccent: "Despegue de cumpleanos",
+    venueName: "Base Galactica Gloobi",
+    countdownLabel: "Faltan para el despegue",
+    itineraryTitle: "Itinerario de vuelo",
+    itineraryItems: [
+      "12:00 pm | Registro de astronautas",
+      "1:00 pm | Misiones y juegos espaciales",
+      "3:00 pm | Pastel galactico",
+    ],
+    dressCode: "Look comodo en azul, plata o blanco.",
+    mapDark: true,
+    preserveBase: true,
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000002",
+    slug: "demo-dinosaurios",
+    category: "Dinosaurios",
+    cardTitle: "Aventura jurasica",
+    description: "Base editable para fiesta de dinos, exploradores y selva divertida.",
+    base: "space",
+    themeId: "astronautas",
+    coverUrl: "/assets/gloobi-home/tematicas-infantiles/dinosaurios.avif",
+    heroTitle: "Cumple jurásico de Leo",
+    heroSubtitle: "Una expedicion llena de dinosaurios, pistas y mucha diversion.",
+    heroBadge: "Aventura jurásica",
+    heroAccent: "Exploradores invitados",
+    venueName: "Parque Dino Gloobi",
+    countdownLabel: "Faltan para la expedicion",
+    itineraryTitle: "Ruta de exploradores",
+    itineraryItems: [
+      "12:00 pm | Entrada al campamento",
+      "1:00 pm | Busqueda de fosiles",
+      "3:00 pm | Pastel jurásico",
+    ],
+    dressCode: "Outfit comodo de explorador o tonos verdes.",
+    mapDark: true,
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000003",
+    slug: "demo-futbol",
+    category: "Fútbol",
+    cardTitle: "Final de campeones",
+    description: "Invitacion tipo estadio para fans, equipos y fiesta deportiva.",
+    base: "space",
+    themeId: "astronautas",
+    coverUrl: "/assets/gloobi-home/tematicas-infantiles/futbol.avif",
+    heroTitle: "Cumple de campeones",
+    heroSubtitle: "La cancha esta lista para celebrar con goles, juegos y pastel.",
+    heroBadge: "Final de cumpleanos",
+    heroAccent: "Equipo invitado",
+    venueName: "Cancha Campeones Gloobi",
+    countdownLabel: "Faltan para el partido",
+    itineraryTitle: "Marcador del evento",
+    itineraryItems: [
+      "12:00 pm | Bienvenida de equipos",
+      "1:00 pm | Retas y juegos",
+      "3:00 pm | Trofeo, pastel y fotos",
+    ],
+    dressCode: "Playera de tu equipo favorito o ropa deportiva.",
+    mapDark: true,
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000004",
+    slug: "demo-carreras",
+    category: "Carreras",
+    cardTitle: "Pista veloz",
+    description: "Base para autos, velocidad, neon y celebracion con mucha energia.",
+    base: "space",
+    themeId: "astronautas",
+    coverUrl: "/assets/gloobi-home/tematicas-infantiles/carreras.avif",
+    heroTitle: "Cumple a toda velocidad",
+    heroSubtitle: "Enciende motores para una fiesta llena de pistas, luces y adrenalina.",
+    heroBadge: "Gran premio infantil",
+    heroAccent: "Motores listos",
+    venueName: "Pista Neon Gloobi",
+    countdownLabel: "Faltan para arrancar",
+    itineraryTitle: "Vueltas de la fiesta",
+    itineraryItems: [
+      "12:00 pm | Entrada a pits",
+      "1:00 pm | Carrera de retos",
+      "3:00 pm | Podio y pastel",
+    ],
+    dressCode: "Ropa comoda con detalles rojos, negros o neon.",
+    mapDark: true,
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000005",
+    slug: "demo-fantasia",
+    category: "Fantasía",
+    cardTitle: "Reino encantado",
+    description: "Unicornios, castillos y un estilo magico para editar desde CRM.",
+    base: "princess",
+    themeId: "sirenas",
+    coverUrl: "/assets/gloobi-home/tematicas-infantiles/fantasia.avif",
+    heroTitle: "Cumple en el reino encantado",
+    heroSubtitle: "Una celebracion con magia, brillos y momentos de cuento.",
+    heroBadge: "Fiesta de fantasía",
+    heroAccent: "Magia en vivo",
+    venueName: "Castillo Encantado Gloobi",
+    countdownLabel: "Faltan para abrir el portal",
+    itineraryTitle: "Agenda encantada",
+    itineraryItems: [
+      "12:00 pm | Bienvenida al reino",
+      "1:00 pm | Juegos magicos",
+      "3:00 pm | Pastel de cuento",
+    ],
+    dressCode: "Tonos pastel, brillos o tu personaje favorito.",
+    mapDark: false,
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000006",
+    slug: "demo-animales",
+    category: "Animales",
+    cardTitle: "Safari party",
+    description: "Celebracion de selva, animalitos y colores calidos para cumpleanos.",
+    base: "space",
+    themeId: "astronautas",
+    coverUrl: "/assets/gloobi-home/tematicas-infantiles/animales.avif",
+    heroTitle: "Safari de cumpleanos",
+    heroSubtitle: "Una aventura entre animalitos, juegos y mucha alegria.",
+    heroBadge: "Safari party",
+    heroAccent: "Exploradores de la selva",
+    venueName: "Jardin Safari Gloobi",
+    countdownLabel: "Faltan para el safari",
+    itineraryTitle: "Expedicion del dia",
+    itineraryItems: [
+      "12:00 pm | Bienvenida safari",
+      "1:00 pm | Juegos de exploracion",
+      "3:00 pm | Pastel y fotos salvajes",
+    ],
+    dressCode: "Tonos tierra, verde o estampado divertido.",
+    mapDark: true,
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000007",
+    slug: "demo-videojuegos",
+    category: "Videojuegos",
+    cardTitle: "Nivel legendario",
+    description: "Demo gamer con lenguaje de niveles, logros y fiesta interactiva.",
+    base: "space",
+    themeId: "astronautas",
+    coverUrl: "/assets/gloobi-home/tematicas-infantiles/videojuegos.avif",
+    heroTitle: "Cumple nivel legendario",
+    heroSubtitle: "Presiona start y acompananos a desbloquear una fiesta epica.",
+    heroBadge: "Level up party",
+    heroAccent: "Partida multijugador",
+    venueName: "Arcade Gloobi",
+    countdownLabel: "Faltan para iniciar partida",
+    itineraryTitle: "Misiones del nivel",
+    itineraryItems: [
+      "12:00 pm | Login de invitados",
+      "1:00 pm | Retos gamer",
+      "3:00 pm | Boss final: pastel",
+    ],
+    dressCode: "Playera gamer, colores neon o ropa comoda.",
+    mapDark: true,
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000008",
+    slug: "demo-princesas",
+    category: "Princesas",
+    cardTitle: "Cuento magico",
+    description: "Base de sirena/princesa para adaptar a castillo, corona o cuento.",
+    base: "princess",
+    themeId: "sirenas",
+    coverUrl: "/assets/gloobi-home/tematicas-infantiles/princesas.avif",
+    heroTitle: "Cumple de cuento mágico",
+    heroSubtitle: "Una fiesta dulce con coronas, brillos y momentos inolvidables.",
+    heroBadge: "Princesas y magia",
+    heroAccent: "Baile real",
+    venueName: "Palacio Magico Gloobi",
+    countdownLabel: "Faltan para el cuento",
+    itineraryTitle: "Momentos reales",
+    itineraryItems: [
+      "12:00 pm | Recepcion real",
+      "1:00 pm | Juegos y baile",
+      "3:00 pm | Pastel de princesa",
+    ],
+    dressCode: "Vestido, corona, tonos rosa, lila o libre.",
+    mapDark: false,
+    preserveBase: true,
+  },
+];
+
+function cloneSections(source: InvitationRecord["sections"]) {
+  return JSON.parse(JSON.stringify(source)) as InvitationRecord["sections"];
+}
+
+function createCategoryDemoInvitation(spec: CategoryDemoSpec): InvitationRecord {
+  const base = spec.base === "princess" ? demoJulietaInvitation : demoInvitation;
+
+  if (spec.preserveBase) {
+    return {
+      ...JSON.parse(JSON.stringify(base)),
+      id: spec.id,
+      slug: spec.slug,
+      status: "published",
+      client_view_token: `${spec.slug}-token-demo`,
+      created_at: now,
+      updated_at: now,
+    } as InvitationRecord;
+  }
+
+  const sections = cloneSections(base.sections);
+
+  return {
+    ...base,
+    id: spec.id,
+    slug: spec.slug,
+    status: "published",
+    theme_id: spec.themeId,
+    event_start_at: "2026-10-24T18:00:00.000Z",
+    rsvp_until: "2035-12-31T23:59:59.000Z",
+    active_until: "2035-12-31T23:59:59.000Z",
+    client_view_token: `${spec.slug}-token-demo`,
+    sections: {
+      ...sections,
+      hero: {
+        ...sections.hero,
+        title: spec.heroTitle,
+        subtitle: spec.heroSubtitle,
+        badge: spec.heroBadge,
+        accent: spec.heroAccent,
+        background_image_url: spec.coverUrl,
+        background: {
+          ...(sections.hero.background || {}),
+          type: "image",
+          image_url: spec.coverUrl,
+          video_url: "",
+          poster_url: "",
+        },
+        astronaut: sections.hero.astronaut
+          ? {
+              ...sections.hero.astronaut,
+              enabled: spec.slug === "demo-espacio",
+            }
+          : undefined,
+      },
+      event_info: {
+        ...sections.event_info,
+        weekday_text: "Sábado",
+        date_text: "24 de octubre de 2026",
+        time_text: "A partir de las 12:00 pm",
+        venue_name: spec.venueName,
+        address_text: "Salón Demo Gloobi, CDMX",
+      },
+      countdown: {
+        ...sections.countdown,
+        label: spec.countdownLabel,
+        target_at: "2026-10-24T18:00:00.000Z",
+      },
+      map: {
+        ...sections.map,
+        embed: {
+          lat: 19.4326,
+          lng: -99.1332,
+          zoom: 16,
+        },
+        address_text: "Salón Demo Gloobi, CDMX",
+        maps_url: "https://www.google.com/maps/search/?api=1&query=19.4326,-99.1332",
+        dark: spec.mapDark,
+      },
+      gallery: {
+        ...sections.gallery,
+        image_urls: [spec.coverUrl, ...sections.gallery.image_urls].slice(0, 6),
+      },
+      notes: {
+        ...sections.notes,
+        items: [
+          "Demo editable desde el CRM.",
+          "Puedes cambiar textos, fotos, colores y secciones cuando adaptes la categoria.",
+        ],
+      },
+      contact: {
+        ...sections.contact,
+        whatsapp_url: createWhatsAppUrl("5500000000", `Hola, quiero detalles del demo ${spec.category}.`),
+      },
+      itinerary: {
+        ...sections.itinerary,
+        title: spec.itineraryTitle,
+        items: spec.itineraryItems,
+        text: "Una guia base para mostrar como se ve la invitacion.",
+      },
+      dress_code: {
+        ...sections.dress_code,
+        title: "Código de vestimenta",
+        text: spec.dressCode,
+      },
+      gifts: {
+        ...sections.gifts,
+        title: "Mesa de regalos",
+        text: "Tu presencia es nuestro mejor regalo.",
+      },
+      faq: {
+        ...sections.faq,
+        title: "Preguntas frecuentes",
+        text: "Detalles listos para personalizar desde el CRM.",
+      },
+    },
+    share: {
+      og_title: `${spec.category} | Demo Gloobi`,
+      og_description: spec.heroSubtitle,
+      og_image_url: spec.coverUrl,
+      og_type: "website",
+    },
+    expired_page: {
+      ...base.expired_page,
+      primary_cta: {
+        text: "Ver categorías",
+        href: "/",
+      },
+      secondary_cta: {
+        text: "Cotizar por WhatsApp",
+        href: createWhatsAppUrl("5527225459", `Hola, quiero cotizar una invitacion de ${spec.category}.`),
+      },
+    },
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+export const demoCategoryInvitations: InvitationRecord[] = categoryDemoSpecs.map(createCategoryDemoInvitation);
+
+export const demoCategoryExampleItems: SiteSettingsRecord["data"]["blocks"]["examples"]["items"] =
+  categoryDemoSpecs.map((spec) => ({
+    title: spec.category,
+    description: spec.description,
+    slug: spec.slug,
+    cover_url: spec.coverUrl,
+  }));
+
+export const demoCategoryTemplates: InvitationTemplateRecord[] = categoryDemoSpecs.map((spec) => ({
+  id: `template-${spec.slug}`,
+  name: `Demo ${spec.category}`,
+  description: spec.description,
+  source_invitation_id: spec.id,
+  created_at: now,
+  updated_at: now,
+}));
+
 export const demoSiteSettings: SiteSettingsRecord = {
   id: "main",
   data: {
     blocks_order: DEFAULT_BLOCK_ORDER,
+    pages: createDefaultSiteSettings().pages,
     blocks: {
       hero: {
         enabled: true,
@@ -240,21 +791,12 @@ export const demoSiteSettings: SiteSettingsRecord = {
       examples: {
         enabled: true,
         title: "Ejemplos destacados",
-        items: [
-          {
-            title: "Cumple 7 de Luis Arturo",
-            description: "Tema astronautas con animación premium, mapa y RSVP.",
-            slug: "cumple-7-luis-arturo-astronautas",
-            cover_url:
-              "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
-          },
-        ],
+        items: demoCategoryExampleItems,
       },
       promo: {
         enabled: true,
         title: "Promo de lanzamiento",
         text: "Incluye configuración inicial del CRM y landing editable en cada paquete premium.",
-        valid_from: "2026-02-01T00:00:00.000Z",
         valid_to: "2026-12-31T23:59:59.000Z",
       },
       packages: {
@@ -307,6 +849,7 @@ export const demoSiteSettings: SiteSettingsRecord = {
       },
     },
     invitation_templates: [
+      ...demoCategoryTemplates,
       {
         id: "template-astronautas-base",
         name: "Astronautas base",

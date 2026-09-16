@@ -114,6 +114,14 @@ export function resolveMediaUrl(url: string, assetOrigin: string) {
   return url;
 }
 
+export function resolveHeroCharacterUrl(themeId: string, url: string, assetOrigin: string) {
+  if (themeId === "sirenas") {
+    return resolveMediaUrl("/assets/sirenas/sirena_alpha.gif", assetOrigin);
+  }
+
+  return resolveMediaUrl(url, assetOrigin);
+}
+
 export function splitTitle(title: string) {
   const words = title.trim().split(/\s+/).filter(Boolean);
   if (words.length <= 2) {

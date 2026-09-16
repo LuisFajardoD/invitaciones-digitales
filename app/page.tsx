@@ -1,9 +1,7 @@
-import { Landing } from "@/components/site/Landing";
-import { getSiteSettings } from "@/lib/repository";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
-  const siteSettings = await getSiteSettings();
-  return <Landing settings={siteSettings.data} />;
+export default function HomePage() {
+  redirect("/index.html");
 }

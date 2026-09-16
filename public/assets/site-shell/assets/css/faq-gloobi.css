@@ -1,0 +1,27 @@
+.gloobi-faq-page{background:transparent;min-height:100vh;color:var(--about-text)}
+.gloobi-faq-hero{min-height:540px;display:grid;place-items:center;padding:145px 20px 90px;text-align:center}
+.gloobi-faq-hero .container{max-width:900px}.gloobi-faq-hero h1{margin:20px 0;font:800 clamp(44px,7vw,88px)/1 var(--font-body,"Urbanist",sans-serif);letter-spacing:-4px;color:var(--about-text)}
+.gloobi-faq-layout{display:grid;grid-template-columns:minmax(260px,.78fr) minmax(0,1.22fr);gap:70px;align-items:start}.gloobi-faq-intro{position:sticky;top:100px}.gloobi-faq-intro h2,.gloobi-faq-contact h2{margin:18px 0 22px;color:var(--about-text);font:800 clamp(34px,4vw,56px)/1.1 var(--font-body,"Urbanist",sans-serif);letter-spacing:-2px}.gloobi-faq-intro p:not(.gloobi-about-kicker),.gloobi-faq-contact p:not(.gloobi-about-kicker){color:var(--about-muted);font-size:17px;line-height:1.7}.gloobi-faq-intro .th-btn{margin-top:26px}
+.gloobi-faq-list{display:grid;gap:12px}.gloobi-faq-item{border:1px solid var(--about-border);border-radius:20px;background:var(--about-panel);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 12px 38px rgba(12,5,28,.13);overflow:hidden}.gloobi-faq-item h3{margin:0}.gloobi-faq-item button{display:flex;align-items:center;justify-content:space-between;width:100%;gap:20px;padding:22px 24px;border:0;background:transparent;color:var(--about-text);font:700 17px/1.35 var(--font-body,"Urbanist",sans-serif);text-align:left;cursor:pointer}.gloobi-faq-item button span{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border:1px solid var(--about-border);border-radius:50%;color:var(--about-accent);font-size:22px;font-weight:400}.gloobi-faq-item>div{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease}.gloobi-faq-item.is-open>div{max-height:460px;padding:0 24px 22px}.gloobi-faq-item p{margin:0;color:var(--about-muted);font-size:15px;line-height:1.75}.gloobi-faq-item a{color:var(--about-accent);font-weight:700}.gloobi-faq-contact{padding-top:20px}.gloobi-faq-contact-card{display:flex;justify-content:space-between;align-items:center;gap:30px;padding:42px 50px;border:1px solid var(--about-border);border-radius:30px;background:var(--about-panel);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}.gloobi-faq-contact-card h2{font-size:36px;margin-bottom:10px}.gloobi-faq-contact-card p{margin:0}.gloobi-faq-contact-card .th-btn{flex-shrink:0}
+@media(max-width:900px){.gloobi-faq-layout{grid-template-columns:1fr;gap:36px}.gloobi-faq-intro{position:static;max-width:680px}.gloobi-faq-contact-card{display:block;padding:34px 28px}.gloobi-faq-contact-card .th-btn{margin-top:24px}}
+@media(max-width:600px){
+  .gloobi-faq-page{padding-bottom:70px}
+  .gloobi-faq-hero{min-height:360px;padding:94px 18px 34px}
+  .gloobi-faq-hero h1{margin:13px 0 15px;font-size:40px;line-height:.95;letter-spacing:-1.6px}
+  .gloobi-faq-main{padding-top:22px!important;padding-bottom:30px!important}
+  .gloobi-faq-layout{gap:18px}
+  .gloobi-faq-intro{padding:20px;border:1px solid var(--about-border);border-radius:22px;background:var(--about-panel);backdrop-filter:blur(18px)}
+  .gloobi-faq-intro h2,.gloobi-faq-contact h2{margin:10px 0 10px;font-size:25px;line-height:1.05;letter-spacing:-.8px}
+  .gloobi-faq-intro p:not(.gloobi-about-kicker),.gloobi-faq-contact p:not(.gloobi-about-kicker){margin:0;font-size:12px;line-height:1.45}
+  .gloobi-faq-intro .th-btn{min-height:44px;margin-top:14px;padding:0 18px;font-size:11px}
+  .gloobi-faq-list{gap:8px}
+  .gloobi-faq-item{border-radius:16px}
+  .gloobi-faq-item button{gap:10px;padding:14px;font-size:13px;line-height:1.25}
+  .gloobi-faq-item button span{flex-basis:25px;width:25px;height:25px;font-size:18px}
+  .gloobi-faq-item.is-open>div{padding:0 14px 14px}
+  .gloobi-faq-item p{font-size:11px;line-height:1.5}
+  .gloobi-faq-contact{padding-top:10px!important;padding-bottom:34px!important}
+  .gloobi-faq-contact-card{padding:21px 19px;border-radius:22px}
+  .gloobi-faq-contact-card h2{font-size:25px}
+  .gloobi-faq-contact-card .th-btn{min-height:44px;margin-top:14px;padding:0 18px;font-size:11px}
+}

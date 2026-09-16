@@ -32,7 +32,7 @@ function getInitialThemeMode(): SiteThemeMode {
 }
 
 export function ViewerReactApp({ initialInvitationThemeId }: ViewerReactAppProps) {
-  const [themeMode, setThemeMode] = useState<SiteThemeMode>(() => getInitialThemeMode());
+  const [themeMode, setThemeMode] = useState<SiteThemeMode>("dark");
 
   useEffect(() => {
     setThemeMode(getInitialThemeMode());

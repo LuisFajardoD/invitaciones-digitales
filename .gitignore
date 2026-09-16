@@ -13,3 +13,5 @@ frontend/dist
 *.out.log
 *.err.log
 artifacts/
+.codex-artifacts/
+desktop.ini

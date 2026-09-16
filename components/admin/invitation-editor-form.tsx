@@ -50,6 +50,7 @@ import type {
   SectionKey,
 } from "@/types/invitations";
 import styles from "./invitation-editor-form.module.css";
+import { MediaField } from "@/components/admin/media-field";
 
 type InvitationEditorFormProps = {
   invitation: InvitationRecord;
@@ -1198,21 +1199,12 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 </select>
               </label>
               {heroBackground.type === "image" ? (
-                <label className="field-wide">
-                  <span>URL de imagen</span>
-                  <input value={heroBackground.image_url} onChange={(event) => updateHeroBackground({ image_url: event.target.value })} />
-                </label>
+                <MediaField label="Imagen de portada" accept="image/jpeg,image/png,image/webp,image/avif,image/svg+xml" value={heroBackground.image_url} onChange={(value) => updateHeroBackground({ image_url: value })} />
               ) : null}
               {heroBackground.type === "video" ? (
                 <>
-                  <label className="field">
-                    <span>URL de video</span>
-                    <input value={heroBackground.video_url} onChange={(event) => updateHeroBackground({ video_url: event.target.value })} />
-                  </label>
-                  <label className="field">
-                    <span>Poster opcional</span>
-                    <input value={heroBackground.poster_url} onChange={(event) => updateHeroBackground({ poster_url: event.target.value })} />
-                  </label>
+                  <MediaField label="Video de portada" accept="video/mp4,video/webm" value={heroBackground.video_url} onChange={(value) => updateHeroBackground({ video_url: value })} />
+                  <MediaField label="Poster opcional" accept="image/jpeg,image/png,image/webp,image/avif" value={heroBackground.poster_url} onChange={(value) => updateHeroBackground({ poster_url: value })} />
                 </>
               ) : null}
             </div>
@@ -1284,41 +1276,11 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                     </select>
                   </label>
                   {invitationBackground.custom.type === "image" ? (
-                    <label className="field-wide">
-                      <span>URL de imagen</span>
-                      <input
-                        value={invitationBackground.custom.image_url}
-                        onChange={(event) =>
-                          updateInvitationBackground({
-                            custom: { ...invitationBackground.custom, image_url: event.target.value },
-                          })
-                        }
-                      />
-                    </label>
+                    <MediaField label="Imagen de fondo" accept="image/jpeg,image/png,image/webp,image/avif,image/svg+xml" value={invitationBackground.custom.image_url} onChange={(value) => updateInvitationBackground({ custom: { ...invitationBackground.custom, image_url: value } })} />
                   ) : (
                     <>
-                      <label className="field">
-                        <span>URL de video</span>
-                        <input
-                          value={invitationBackground.custom.video_url}
-                          onChange={(event) =>
-                            updateInvitationBackground({
-                              custom: { ...invitationBackground.custom, video_url: event.target.value },
-                            })
-                          }
-                        />
-                      </label>
-                      <label className="field">
-                        <span>Poster opcional</span>
-                        <input
-                          value={invitationBackground.custom.poster_url}
-                          onChange={(event) =>
-                            updateInvitationBackground({
-                              custom: { ...invitationBackground.custom, poster_url: event.target.value },
-                            })
-                          }
-                        />
-                      </label>
+                      <MediaField label="Video de fondo" accept="video/mp4,video/webm" value={invitationBackground.custom.video_url} onChange={(value) => updateInvitationBackground({ custom: { ...invitationBackground.custom, video_url: value } })} />
+                      <MediaField label="Poster opcional" accept="image/jpeg,image/png,image/webp,image/avif" value={invitationBackground.custom.poster_url} onChange={(value) => updateInvitationBackground({ custom: { ...invitationBackground.custom, poster_url: value } })} />
                     </>
                   )}
                 </>
@@ -1333,10 +1295,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 <input type="checkbox" checked={heroAstronaut.enabled} onChange={(event) => updateHeroAstronaut({ enabled: event.target.checked })} />
                 <span>Mostrar astronauta</span>
               </label>
-              <label className="field">
-                <span>URL del astronauta</span>
-                <input value={heroAstronaut.image_url} onChange={(event) => updateHeroAstronaut({ image_url: event.target.value })} />
-              </label>
+              <MediaField label="Imagen del astronauta" accept="image/jpeg,image/png,image/webp,image/avif,image/svg+xml" value={heroAstronaut.image_url} onChange={(value) => updateHeroAstronaut({ image_url: value })} />
               <label className="field">
                 <span>Posicion</span>
                 <select
@@ -1646,15 +1605,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 {draft.sections.gallery.image_urls.map((item, index) => (
                   <EditorGridRow key={`gallery-${index}`} columnsTemplate="minmax(0, 1fr) auto">
                     <div className={styles["inv-editor-grid-cell"]}>
-                      <label className="field" htmlFor={`gallery-url-${index}`}>
-                        <span className={styles["inv-editor-sr-only"]}>URL de imagen</span>
-                        <input
-                          id={`gallery-url-${index}`}
-                          value={item}
-                          onChange={(event) => updateGalleryItem(index, event.target.value)}
-                          placeholder="https://..."
-                        />
-                      </label>
+                      <MediaField label={`Imagen ${index + 1}`} accept="image/jpeg,image/png,image/webp,image/avif,image/svg+xml" value={item} onChange={(value) => updateGalleryItem(index, value)} />
                     </div>
                     <div className={styles["inv-editor-grid-row-actions"]}>
                       <button
@@ -1896,25 +1847,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                     }
                   />
                 </label>
-                <label className="field">
-                  <span>URL foto de contacto (opcional)</span>
-                  <input
-                    value={draft.sections.contact.avatar_image_url || ""}
-                    onChange={(event) =>
-                      updateDraft({
-                        ...draft,
-                        sections: {
-                          ...draft.sections,
-                          contact: {
-                            ...draft.sections.contact,
-                            avatar_image_url: event.target.value,
-                          },
-                        },
-                      })
-                    }
-                    placeholder="/assets/... o https://..."
-                  />
-                </label>
+                <MediaField label="Foto de contacto (opcional)" accept="image/jpeg,image/png,image/webp,image/avif" value={draft.sections.contact.avatar_image_url || ""} onChange={(value) => updateDraft({ ...draft, sections: { ...draft.sections, contact: { ...draft.sections.contact, avatar_image_url: value } } })} />
                 <label className="field">
                   <span>WhatsApp</span>
                   <input
@@ -1986,10 +1919,7 @@ export function InvitationEditorForm({ invitation }: InvitationEditorFormProps) 
                 <span>Descripción OG</span>
                 <input value={draft.share.og_description} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_description: event.target.value } })} />
               </label>
-              <label className="field">
-                <span>URL de imagen OG</span>
-                <input value={draft.share.og_image_url} onChange={(event) => updateDraft({ ...draft, share: { ...draft.share, og_image_url: event.target.value } })} />
-              </label>
+              <MediaField label="Imagen OG" accept="image/jpeg,image/png,image/webp,image/avif" value={draft.share.og_image_url} onChange={(value) => updateDraft({ ...draft, share: { ...draft.share, og_image_url: value } })} />
               <label className="field">
                 <span>Titulo al expirar</span>
                 <input value={draft.expired_page.title} onChange={(event) => updateDraft({ ...draft, expired_page: { ...draft.expired_page, title: event.target.value } })} />

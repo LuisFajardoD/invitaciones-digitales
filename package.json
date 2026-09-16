@@ -13,7 +13,8 @@
     "serve": "next start -p 3000",
     "preview": "next build && next start -p 3000",
     "test:smoke": "node scripts/smoke-e2e.mjs",
-    "qa:security": "node scripts/qa-security-checks.mjs"
+    "qa:security": "node scripts/qa-security-checks.mjs",
+    "media:check": "node scripts/media-storage-check.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -23,6 +24,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@supabase/supabase-js": "^2.49.8",
+    "basic-ftp": "^6.2.1",
     "framer-motion": "^12.5.0",
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",

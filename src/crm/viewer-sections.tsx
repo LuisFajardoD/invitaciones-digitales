@@ -1,10 +1,92 @@
-import { type CSSProperties, type FormEvent, type MouseEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  type FormEvent,
+  type MouseEvent,
+  type ReactNode,
+  type TouchEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { BackgroundMediaConfig, GenericSection, InvitationRecord, QuickActionItem } from "./viewer-types";
-import { normalizeKenBurns, resolveHeroBackground, resolveMediaUrl, splitTitle, trimList } from "./viewer-utils";
+import { normalizeKenBurns, resolveHeroBackground, resolveHeroCharacterUrl, resolveMediaUrl, splitTitle, trimList } from "./viewer-utils";
 
 const HERO_TYPEWRITER_STEP_MS = 82;
 const HERO_TYPEWRITER_LINE_GAP_STEPS = 3;
+const HERO_BUBBLE_COUNT = 28;
 let hasPlayedAstronautTypewriter = false;
+
+function isAstronautTheme(themeId: string) {
+  return themeId === "astronautas";
+}
+
+function isMermaidTheme(themeId: string) {
+  return themeId === "sirenas";
+}
+
+const MERMAID_SECTION_DECOR_ICONS: Record<string, string> = {
+  event_info: "🐚",
+  quick_actions: "🐠",
+  countdown: "🫧",
+  map: "🌊",
+  gallery: "🪸",
+  notes: "⭐",
+  rsvp: "🦀",
+  contact: "🐬",
+  itinerary: "🐙",
+  dress_code: "🐡",
+  gifts: "🦪",
+  faq: "🐢",
+  live_stream: "🧜‍♀️",
+  transport: "🐟",
+  lodging: "🪼",
+};
+
+function getSectionDecorIcon(themeId: string, sectionKey: string) {
+  if (!isMermaidTheme(themeId)) {
+    return "⭐";
+  }
+
+  return MERMAID_SECTION_DECOR_ICONS[sectionKey] || "🫧";
+}
+
+function getGenericSectionDecorKey(title: string) {
+  const normalizedTitle = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+  if (normalizedTitle.includes("itinerario") || normalizedTitle.includes("agenda")) {
+    return "itinerary";
+  }
+
+  if (normalizedTitle.includes("vestimenta") || normalizedTitle.includes("dress code")) {
+    return "dress_code";
+  }
+
+  if (normalizedTitle.includes("regal")) {
+    return "gifts";
+  }
+
+  if (normalizedTitle.includes("preguntas") || normalizedTitle.includes("avisos")) {
+    return "faq";
+  }
+
+  if (normalizedTitle.includes("transmision") || normalizedTitle.includes("vivo")) {
+    return "live_stream";
+  }
+
+  if (normalizedTitle.includes("transporte")) {
+    return "transport";
+  }
+
+  if (normalizedTitle.includes("hospedaje") || normalizedTitle.includes("alojamiento")) {
+    return "lodging";
+  }
+
+  return "generic";
+}
 
 function getKenBurnsClassName(config?: BackgroundMediaConfig) {
   const kenburns = normalizeKenBurns(config?.kenburns);
@@ -30,6 +112,10 @@ function getAstronautClass(
     default:
       return "";
   }
+}
+
+function isVideoAsset(url: string) {
+  return /\.(?:mp4|webm|mov|m4v)(?:[?#].*)?$/i.test(url.trim());
 }
 
 export function BackgroundMediaViewer({
@@ -87,16 +173,18 @@ export function BackgroundMediaViewer({
 export function HeroSectionViewer({
   invitation,
   assetOrigin,
+  heroOverlay,
 }: {
   invitation: InvitationRecord;
   assetOrigin: string;
+  heroOverlay?: ReactNode;
 }) {
-  const usesAstronautTheme = invitation.theme_id === "astronautas";
+  const usesAstronautTheme = isAstronautTheme(invitation.theme_id);
+  const usesMermaidTheme = isMermaidTheme(invitation.theme_id);
+  const heroTitle = repairLegacyText(invitation.sections.hero.title).trim();
   const titleLines = usesAstronautTheme
-    ? buildAstronautTitleLines(invitation.sections.hero.title)
-    : splitTitle(repairLegacyText(invitation.sections.hero.title));
-  const moonUrl = `${assetOrigin}/assets/luna.webp`;
-  const earthUrl = `${assetOrigin}/assets/tierra.webp`;
+    ? buildAstronautTitleLines(heroTitle).filter(Boolean)
+    : splitTitle(heroTitle).filter(Boolean);
   const cloudOneUrl = `${assetOrigin}/assets/nube%201-01.webp`;
   const cloudTwoUrl = `${assetOrigin}/assets/nube2.webp`;
   const cloudThreeUrl = `${assetOrigin}/assets/nube3.webp`;
@@ -106,12 +194,17 @@ export function HeroSectionViewer({
   const normalizedAstronautAsset = astronautAsset.includes("/assets/astronaut-luis-arturo.webp")
     ? "/assets/astronauta.webp"
     : astronautAsset;
-  const astronautUrl = resolveMediaUrl(normalizedAstronautAsset, assetOrigin);
+  const astronautUrl = resolveHeroCharacterUrl(invitation.theme_id, normalizedAstronautAsset, assetOrigin);
   const astronautPosition = invitation.sections.hero.astronaut?.position;
   const astronautPositionClassName = getAstronautClass(astronautPosition);
-  const telemetryLabel = repairLegacyText(invitation.sections.hero.badge?.trim() || "PROTOCOLO DE DESPEGUE");
-  const telemetryDetail = repairLegacyText(invitation.sections.hero.accent?.trim() || "ID: LA-07");
-  const subtitle = repairLegacyText(invitation.sections.hero.subtitle);
+  const telemetryLabel = repairLegacyText(
+    invitation.sections.hero.badge?.trim() || (usesAstronautTheme ? "PROTOCOLO DE DESPEGUE" : ""),
+  );
+  const telemetryDetail = repairLegacyText(
+    invitation.sections.hero.accent?.trim() || (usesAstronautTheme ? "ID: LA-07" : ""),
+  );
+  const subtitle = repairLegacyText(invitation.sections.hero.subtitle).trim();
+  const hasHeroCopy = Boolean(telemetryLabel || telemetryDetail || titleLines.length || subtitle);
   const animatedTitleLines = useMemo(() => {
     let cursor = 0;
 
@@ -168,17 +261,21 @@ export function HeroSectionViewer({
   }
 
   return (
-    <section className={`hero-cinematic${usesAstronautTheme ? " hero-cinematic--astronautas" : ""}`}>
+    <section
+      className={`hero-cinematic${usesAstronautTheme ? " hero-cinematic--astronautas" : ""}${
+        usesMermaidTheme ? " hero-cinematic--sirenas" : ""
+      }`}
+    >
       <BackgroundMediaViewer
         config={heroBackground}
         assetOrigin={assetOrigin}
         className="hero-cinematic__media"
         fallbackClassName="hero-cinematic__media--default"
       />
-      <div className="hero-cinematic__drift hero-cinematic__drift--one" aria-hidden="true" />
-      <div className="hero-cinematic__drift hero-cinematic__drift--two" aria-hidden="true" />
       {usesAstronautTheme ? (
         <>
+          <div className="hero-cinematic__drift hero-cinematic__drift--one" aria-hidden="true" />
+          <div className="hero-cinematic__drift hero-cinematic__drift--two" aria-hidden="true" />
           <div className="hero-cinematic__cloud hero-cinematic__cloud--three" aria-hidden="true">
             <img src={cloudThreeUrl} alt="" aria-hidden="true" />
           </div>
@@ -188,129 +285,147 @@ export function HeroSectionViewer({
           <div className="hero-cinematic__cloud hero-cinematic__cloud--one" aria-hidden="true">
             <img src={cloudOneUrl} alt="" aria-hidden="true" />
           </div>
+          <div className="hero-cinematic__comet hero-cinematic__comet--one" aria-hidden="true" />
+          <div className="hero-cinematic__comet hero-cinematic__comet--two" aria-hidden="true" />
+          <div className="hero-cinematic__comet hero-cinematic__comet--three" aria-hidden="true" />
+          <div className="watercolor-hero-decor" aria-hidden="true">
+            <div className="watercolor-hero-decor__rocket">
+              <MissionRocket />
+            </div>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--star">⭐</span>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--planet">🪐</span>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--moon">🌙</span>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--satellite">🛰️</span>
+            <span className="watercolor-hero-decor__item watercolor-hero-decor__item--cloud">☁️</span>
+          </div>
         </>
       ) : (
-        <>
-          <div className="hero-cinematic__orb hero-cinematic__orb--moon" aria-hidden="true">
-            <img src={moonUrl} alt="" aria-hidden="true" />
-          </div>
-          <div className="hero-cinematic__orb hero-cinematic__orb--earth" aria-hidden="true">
-            <img src={earthUrl} alt="" aria-hidden="true" />
-          </div>
-        </>
-      )}
-      <div className="hero-cinematic__comet hero-cinematic__comet--one" aria-hidden="true" />
-      <div className="hero-cinematic__comet hero-cinematic__comet--two" aria-hidden="true" />
-      {usesAstronautTheme ? <div className="hero-cinematic__comet hero-cinematic__comet--three" aria-hidden="true" /> : null}
-      {usesAstronautTheme ? (
-        <div className="watercolor-hero-decor" aria-hidden="true">
-          <div className="watercolor-hero-decor__rocket">
-            <MissionRocket />
-          </div>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--star">⭐</span>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--planet">🪐</span>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--moon">🌙</span>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--satellite">🛰️</span>
-          <span className="watercolor-hero-decor__item watercolor-hero-decor__item--cloud">☁️</span>
+        <div className="hero-cinematic__bubbles" aria-hidden="true">
+          {Array.from({ length: HERO_BUBBLE_COUNT }, (_, index) => (
+            <span key={`hero-bubble-${index}`} className="hero-cinematic__bubble" />
+          ))}
         </div>
-      ) : null}
+      )}
+      {usesMermaidTheme ? (
+        <div className="hero-cinematic__mermaid-copy">
+          {heroTitle ? <h1 className="hero-cinematic__mermaid-name">{heroTitle}</h1> : null}
+          {telemetryDetail ? <p className="hero-cinematic__mermaid-age">{telemetryDetail}</p> : null}
+          {subtitle ? (
+            <div className="hero-cinematic__mermaid-shell">
+              <p>{subtitle}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : hasHeroCopy ? (
       <div className="hero-cinematic__content">
         <div className="hero-cinematic__copy">
-          <div className="hero-cinematic__telemetry-wrap">
-            <p className="hero-cinematic__telemetry">{telemetryLabel}</p>
-            <div className="hero-cinematic__telemetry-detail">
-              <span>{telemetryDetail}</span>
+          {telemetryLabel || telemetryDetail ? (
+            <div className="hero-cinematic__telemetry-wrap">
+              {telemetryLabel ? <p className="hero-cinematic__telemetry">{telemetryLabel}</p> : null}
+              {telemetryDetail ? (
+                <div className="hero-cinematic__telemetry-detail">
+                  <span>{telemetryDetail}</span>
+                </div>
+              ) : null}
+              <div className="hero-cinematic__telemetry-line" aria-hidden="true" />
             </div>
-            <div className="hero-cinematic__telemetry-line" aria-hidden="true" />
-          </div>
-          <div className="hero-typewriter" aria-label={repairLegacyText(invitation.sections.hero.title)}>
-            {animatedTitleLines.map((lineData, index) => (
-              <div key={`${lineData.line}-${index}`} className="hero-typewriter__row">
-                <span className={`hero-typewriter__line ${index === 0 ? "hero-typewriter__line--lead" : "hero-typewriter__line--main"}`}>
-                  {usesAstronautTheme ? (
-                    <>
-                      {isTypewriterComplete ? (
-                        <span className="hero-typewriter__line-text hero-typewriter__line-text--complete" aria-hidden="true">
-                          {lineData.line}
-                          {index === animatedTitleLines.length - 1 ? (
-                            <span className="hero-typewriter__caret hero-typewriter__caret--steady" aria-hidden="true" />
-                          ) : null}
-                        </span>
-                      ) : (
-                        <>
-                          <span
-                            className="hero-typewriter__line-text"
-                            aria-hidden="true"
-                            style={
-                              {
-                                "--line-delay": `${lineData.startDelayIndex * HERO_TYPEWRITER_STEP_MS}ms`,
-                                "--line-duration": `${Math.max(lineData.chars.length, 1) * HERO_TYPEWRITER_STEP_MS}ms`,
-                                "--line-active-duration": `${(Math.max(lineData.chars.length, 1) + 1) * HERO_TYPEWRITER_STEP_MS}ms`,
-                                "--line-steps": String(Math.max(lineData.chars.length, 1)),
-                              } as CSSProperties
-                            }
-                          >
-                            {lineData.chars.map((char, charIndex) => {
-                              const delayMs = (lineData.startDelayIndex + charIndex) * HERO_TYPEWRITER_STEP_MS;
-                              return (
-                                <span
-                                  key={`${lineData.line}-${charIndex}-${char}`}
-                                  className="hero-typewriter__glyph"
-                                  style={{ "--char-delay": `${delayMs}ms` } as CSSProperties}
-                                >
-                                  {char === " " ? "\u00A0" : char}
-                                </span>
-                              );
-                            })}
-                            <span
-                              className={`hero-typewriter__caret ${
-                                index === animatedTitleLines.length - 1 ? "hero-typewriter__caret--persist" : ""
-                              }`}
-                              aria-hidden="true"
-                            />
+          ) : null}
+          {animatedTitleLines.length ? (
+            <div className="hero-typewriter" aria-label={heroTitle}>
+              {animatedTitleLines.map((lineData, index) => (
+                <div key={`${lineData.line}-${index}`} className="hero-typewriter__row">
+                  <span className={`hero-typewriter__line ${index === 0 ? "hero-typewriter__line--lead" : "hero-typewriter__line--main"}`}>
+                    {usesAstronautTheme ? (
+                      <>
+                        {isTypewriterComplete ? (
+                          <span className="hero-typewriter__line-text hero-typewriter__line-text--complete" aria-hidden="true">
+                            {lineData.line}
+                            {index === animatedTitleLines.length - 1 ? (
+                              <span className="hero-typewriter__caret hero-typewriter__caret--steady" aria-hidden="true" />
+                            ) : null}
                           </span>
-                          <span className="hero-typewriter__sr-only">{lineData.line}</span>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    lineData.line
-                  )}
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="hero-cinematic__subtitle">{subtitle}</p>
+                        ) : (
+                          <>
+                            <span
+                              className="hero-typewriter__line-text"
+                              aria-hidden="true"
+                              style={
+                                {
+                                  "--line-delay": `${lineData.startDelayIndex * HERO_TYPEWRITER_STEP_MS}ms`,
+                                  "--line-duration": `${Math.max(lineData.chars.length, 1) * HERO_TYPEWRITER_STEP_MS}ms`,
+                                  "--line-active-duration": `${(Math.max(lineData.chars.length, 1) + 1) * HERO_TYPEWRITER_STEP_MS}ms`,
+                                  "--line-steps": String(Math.max(lineData.chars.length, 1)),
+                                } as CSSProperties
+                              }
+                            >
+                              {lineData.chars.map((char, charIndex) => {
+                                const delayMs = (lineData.startDelayIndex + charIndex) * HERO_TYPEWRITER_STEP_MS;
+                                return (
+                                  <span
+                                    key={`${lineData.line}-${charIndex}-${char}`}
+                                    className="hero-typewriter__glyph"
+                                    style={{ "--char-delay": `${delayMs}ms` } as CSSProperties}
+                                  >
+                                    {char === " " ? "\u00A0" : char}
+                                  </span>
+                                );
+                              })}
+                              <span
+                                className={`hero-typewriter__caret ${
+                                  index === animatedTitleLines.length - 1 ? "hero-typewriter__caret--persist" : ""
+                                }`}
+                                aria-hidden="true"
+                              />
+                            </span>
+                            <span className="hero-typewriter__sr-only">{lineData.line}</span>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      lineData.line
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {subtitle ? <p className="hero-cinematic__subtitle">{subtitle}</p> : null}
         </div>
       </div>
-      {usesAstronautTheme ? (
-        <button
-          type="button"
-          className="hero-cinematic__scroll-hint"
-          aria-label="Sigue bajando para ver más información"
-          onClick={handleScrollHintClick}
-        >
-          <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--left" aria-hidden="true">
-            🪐
-          </span>
-          <span className="hero-cinematic__scroll-hint-text">Sigue bajando</span>
-          <span className="hero-cinematic__scroll-hint-icon" aria-hidden="true">
-            ↓
-          </span>
-          <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--right" aria-hidden="true">
-            ⭐
-          </span>
-        </button>
       ) : null}
+      <button
+        type="button"
+        className="hero-cinematic__scroll-hint"
+        aria-label="Sigue bajando para ver más información"
+        onClick={handleScrollHintClick}
+      >
+        <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--left" aria-hidden="true">
+          {usesAstronautTheme ? "🪐" : "✦"}
+        </span>
+        <span className="hero-cinematic__scroll-hint-text">Sigue bajando</span>
+        <span className="hero-cinematic__scroll-hint-icon" aria-hidden="true">
+          ↓
+        </span>
+        <span className="hero-cinematic__scroll-hint-decor hero-cinematic__scroll-hint-decor--right" aria-hidden="true">
+          {usesAstronautTheme ? "⭐" : "✧"}
+        </span>
+      </button>
       {invitation.sections.hero.astronaut?.enabled && astronautUrl ? (
         <div
           className={`hero-cinematic__astronaut-art${astronautPositionClassName}`}
           style={{ opacity: invitation.sections.hero.astronaut?.opacity ?? 1 }}
           aria-hidden="true"
         >
-          <img src={astronautUrl} alt="" aria-hidden="true" loading="eager" />
+          {isVideoAsset(astronautUrl) ? (
+            <video className="hero-cinematic__astronaut-media" autoPlay loop muted playsInline preload="auto">
+              <source src={astronautUrl} />
+            </video>
+          ) : (
+            <img className="hero-cinematic__astronaut-media" src={astronautUrl} alt="" aria-hidden="true" loading="eager" />
+          )}
         </div>
       ) : null}
+      {heroOverlay}
     </section>
   );
 }
@@ -364,6 +479,7 @@ function InvitationSectionFrameViewer({
   tone = "default",
   surface = "default",
   sectionClassName = "",
+  decorIcon = "⭐",
   children,
 }: {
   id?: string;
@@ -373,6 +489,7 @@ function InvitationSectionFrameViewer({
   tone?: "default" | "aurora" | "gold";
   surface?: "default" | "bare";
   sectionClassName?: string;
+  decorIcon?: string;
   children: ReactNode;
 }) {
   return (
@@ -389,10 +506,15 @@ function InvitationSectionFrameViewer({
         </>
       )}
       <div className={`invitation-section__inner${surface === "bare" ? " invitation-section__inner--bare" : ""}`}>
-        <div className="watercolor-section-decor" aria-hidden="true">
-          <span className="watercolor-section-decor__item watercolor-section-decor__item--one">⭐</span>
-          <span className="watercolor-section-decor__item watercolor-section-decor__item--two">🪐</span>
-          <span className="watercolor-section-decor__item watercolor-section-decor__item--three">🚀</span>
+        <div
+          className={`watercolor-section-decor${
+            decorIcon === "⭐" ? "" : " watercolor-section-decor--mermaid"
+          }`}
+          aria-hidden="true"
+        >
+          <span className="watercolor-section-decor__item watercolor-section-decor__item--one">{decorIcon}</span>
+          <span className="watercolor-section-decor__item watercolor-section-decor__item--two">✦</span>
+          <span className="watercolor-section-decor__item watercolor-section-decor__item--three">✧</span>
         </div>
         <p className="mission-eyebrow">{eyebrow}</p>
         <h2 className="mission-title">{title}</h2>
@@ -407,20 +529,23 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
   const eventDateLabel = buildEventDateLabel(invitation);
   const arrivalTimeLabel = buildArrivalTimeLabel(invitation);
   const addressLines = splitAddressLines(invitation.sections.event_info.address_text);
+  const usesAstronautCopy = isAstronautTheme(invitation.theme_id);
+  const usesMermaidTheme = isMermaidTheme(invitation.theme_id);
 
   return (
     <InvitationSectionFrameViewer
-      eyebrow="Bitácora de misión"
+      eyebrow={usesAstronautCopy ? "Bitácora de misión" : "Datos del evento"}
       title={invitation.sections.event_info.venue_name}
-      subtitle="Todo listo para el punto de encuentro."
+      subtitle={usesMermaidTheme ? undefined : "Todo listo para el punto de encuentro."}
       tone="aurora"
       surface="bare"
+      decorIcon={getSectionDecorIcon(invitation.theme_id, "event_info")}
     >
       <div className="mission-log mission-log--hud">
         <div className="mission-log__frame">
           <div className="mission-log__status" aria-label="Estado de enlace">
             <span className="mission-log__status-dot" />
-            <span className="mission-log__status-label">SYNC OK</span>
+            <span className="mission-log__status-label">{usesAstronautCopy ? "SYNC OK" : "LISTO"}</span>
           </div>
           <div className="mission-log__rows">
             <div className="mission-log__row">
@@ -428,8 +553,8 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
                 <CalendarGlyph />
               </span>
               <div className="mission-log__content">
+                <span className="mission-log__label">{usesAstronautCopy ? "Fecha de despegue" : "Fecha del evento"}</span>
                 <strong className="mission-log__value">{eventDateLabel}</strong>
-                <span className="mission-log__label">Fecha de despegue</span>
               </div>
             </div>
             <div className="mission-log__row">
@@ -437,8 +562,8 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
                 <ClockGlyph />
               </span>
               <div className="mission-log__content">
-                <strong className="mission-log__value">{arrivalTimeLabel}</strong>
                 <span className="mission-log__label">Hora de llegada</span>
+                <strong className="mission-log__value">{arrivalTimeLabel}</strong>
               </div>
             </div>
             <div className="mission-log__row mission-log__row--address">
@@ -446,11 +571,11 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
                 <PinGlyph />
               </span>
               <div className="mission-log__content">
+                <span className="mission-log__label">Punto de encuentro</span>
                 <strong className="mission-log__value mission-log__value--address">
                   {addressLines[0]}
                   {addressLines[1] ? <span className="mission-log__value-line">{addressLines[1]}</span> : null}
                 </strong>
-                <span className="mission-log__label">Punto de encuentro</span>
               </div>
             </div>
           </div>
@@ -461,12 +586,15 @@ export function EventInfoSectionViewer({ invitation }: { invitation: InvitationR
 }
 
 export function QuickActionsSectionViewer({
+  themeId,
   items,
   onAction,
 }: {
+  themeId: string;
   items: QuickActionItem[];
   onAction: (type: QuickActionItem["type"]) => void;
 }) {
+  const usesAstronautCopy = isAstronautTheme(themeId);
   const primaryItems = useMemo(
     () =>
       items.filter((item) => {
@@ -482,11 +610,12 @@ export function QuickActionsSectionViewer({
 
   return (
     <InvitationSectionFrameViewer
-      eyebrow="Control de misión"
+      eyebrow={usesAstronautCopy ? "Control de misión" : "Accesos del evento"}
       title="Acciones rápidas"
-      subtitle="Selecciona un comando y continúa la secuencia."
+      subtitle={usesAstronautCopy ? "Selecciona un comando y continúa la secuencia." : "Elige una acción para continuar."}
       tone="gold"
       surface="bare"
+      decorIcon={getSectionDecorIcon(themeId, "quick_actions")}
     >
       {primaryDockItems.length ? (
         <div className="command-dock" role="group" aria-label="Comandos principales">
@@ -496,6 +625,7 @@ export function QuickActionsSectionViewer({
               key: `${item.type}-${index}-primary`,
               onAction,
               emphasis: "primary",
+              usesAstronautCopy,
             }),
           )}
         </div>
@@ -507,6 +637,7 @@ export function QuickActionsSectionViewer({
             key: `${item.type}-${index}-secondary`,
             onAction,
             emphasis: "secondary",
+            usesAstronautCopy,
           }),
         )}
       </div>
@@ -519,11 +650,13 @@ function renderActionChip({
   key,
   onAction,
   emphasis,
+  usesAstronautCopy,
 }: {
   item: QuickActionItem;
   key: string;
   onAction: (type: QuickActionItem["type"]) => void;
   emphasis: "primary" | "secondary";
+  usesAstronautCopy: boolean;
 }) {
   return (
     <button type="button" key={key} className={`command-chip command-chip--${emphasis}`} onClick={() => onAction(item.type)}>
@@ -532,21 +665,29 @@ function renderActionChip({
       </span>
       <span className="command-chip__body">
         <span className="command-chip__label">{item.label}</span>
-        <span className="command-chip__code">{getActionCode(String(item.type))}</span>
+        <span className="command-chip__code">{getActionCode(String(item.type), usesAstronautCopy)}</span>
       </span>
     </button>
   );
 }
 
 export function CountdownSectionViewer({
+  themeId,
   label,
   countdown,
 }: {
+  themeId: string;
   label: string;
   countdown: Array<{ label: string; value: number }>;
 }) {
+  const usesAstronautCopy = isAstronautTheme(themeId);
   return (
-    <InvitationSectionFrameViewer eyebrow="Cuenta regresiva" title={label} tone="default">
+    <InvitationSectionFrameViewer
+      eyebrow="Cuenta regresiva"
+      title={label}
+      tone="default"
+      decorIcon={getSectionDecorIcon(themeId, "countdown")}
+    >
       <div className="countdown-grid-shell">
         <div className="countdown-grid countdown-grid--mission">
           {countdown.map((item) => (
@@ -557,7 +698,9 @@ export function CountdownSectionViewer({
           ))}
         </div>
       </div>
-      <p className="mission-caption">Cada segundo nos acerca al despegue.</p>
+      <p className="mission-caption">
+        {usesAstronautCopy ? "Cada segundo nos acerca al despegue." : "Cada segundo nos acerca a la celebración."}
+      </p>
     </InvitationSectionFrameViewer>
   );
 }
@@ -580,10 +723,11 @@ export function MapSectionViewer({
   return (
     <InvitationSectionFrameViewer
       id="viewer-map-section"
-      eyebrow="Ruta estelar"
+      eyebrow={isAstronautTheme(invitation.theme_id) ? "Ruta estelar" : "Cómo llegar"}
       title="Ubicación"
       subtitle={invitation.sections.map.address_text}
       tone="aurora"
+      decorIcon={getSectionDecorIcon(invitation.theme_id, "map")}
     >
       {mapEmbedUrl ? (
         <div className="mission-map-shell">
@@ -603,11 +747,13 @@ export function MapSectionViewer({
 }
 
 export function GallerySectionViewer({
+  themeId,
   images,
   maxImages,
   assetOrigin,
   onOpen,
 }: {
+  themeId: string;
   images: string[];
   maxImages: number;
   assetOrigin: string;
@@ -619,17 +765,21 @@ export function GallerySectionViewer({
     <InvitationSectionFrameViewer
       eyebrow="Archivo visual"
       title="Momentos especiales"
-      subtitle="Espacio reservado para tus fotos favoritas."
       tone="gold"
+      decorIcon={getSectionDecorIcon(themeId, "gallery")}
     >
       <div className="gallery-grid gallery-grid--mission">
         {Array.from({ length: totalSlots }).map((_, index) => {
           const imageUrl = images[index] || "";
           const src = resolveMediaUrl(imageUrl, assetOrigin);
+          const shouldSpanFull = images.length % 2 === 1 && index === images.length - 1 && images.length > 1;
 
           if (!src) {
             return (
-              <div key={`placeholder-${index}`} className="gallery-tile gallery-tile--placeholder">
+              <div
+                key={`placeholder-${index}`}
+                className={`gallery-tile gallery-tile--placeholder${shouldSpanFull ? " gallery-tile--wide" : ""}`}
+              >
                 <span>Espacio {index + 1}</span>
               </div>
             );
@@ -640,6 +790,7 @@ export function GallerySectionViewer({
               key={`${src}-${index}`}
               imageUrl={src}
               index={index}
+              spanFull={shouldSpanFull}
               onOpen={() => onOpen(src)}
             />
           );
@@ -657,17 +808,19 @@ export function GallerySectionViewer({
 function GalleryTileViewer({
   imageUrl,
   index,
+  spanFull,
   onOpen,
 }: {
   imageUrl: string;
   index: number;
+  spanFull?: boolean;
   onOpen: () => void;
 }) {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
     return (
-      <div className="gallery-tile gallery-tile--placeholder">
+      <div className={`gallery-tile gallery-tile--placeholder${spanFull ? " gallery-tile--wide" : ""}`}>
         <span>Imagen {index + 1} no disponible</span>
       </div>
     );
@@ -676,7 +829,7 @@ function GalleryTileViewer({
   return (
     <button
       type="button"
-      className="gallery-tile gallery-tile--mission gallery-tile-button"
+      className={`gallery-tile gallery-tile--mission gallery-tile-button${spanFull ? " gallery-tile--wide" : ""}`}
       onClick={onOpen}
       aria-label={`Abrir imagen ${index + 1}`}
     >
@@ -691,13 +844,29 @@ function GalleryTileViewer({
   );
 }
 
-export function NotesSectionViewer({ items }: { items: string[] }) {
+export function NotesSectionViewer({
+  themeId,
+  title,
+  text,
+  items,
+}: {
+  themeId: string;
+  title?: string;
+  text?: string;
+  items: string[];
+}) {
+  const usesAstronautCopy = isAstronautTheme(themeId);
+  const visibleTitle = title?.trim() || (usesAstronautCopy ? "Antes del despegue" : "Antes de la fiesta");
+  const visibleText =
+    text?.trim() || (usesAstronautCopy ? "Detalles clave para que la misión salga perfecta." : "Detalles importantes para disfrutar el evento.");
+
   return (
     <InvitationSectionFrameViewer
       eyebrow="Checklist"
-      title="Antes del despegue"
-      subtitle="Detalles clave para que la misión salga perfecta."
+      title={visibleTitle}
+      subtitle={visibleText}
       tone="default"
+      decorIcon={getSectionDecorIcon(themeId, "notes")}
     >
       <div className="notes-list notes-list--mission">
         {items.map((item, index) => (
@@ -713,13 +882,19 @@ export function NotesSectionViewer({ items }: { items: string[] }) {
 
 export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord }) {
   const [name, setName] = useState("");
-  const [attending, setAttending] = useState("yes");
-  const [guestsCount, setGuestsCount] = useState("1");
+  const [attending, setAttending] = useState("");
+  const [guestsCount, setGuestsCount] = useState("");
   const [message, setMessage] = useState("");
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelName, setCancelName] = useState("");
+  const [cancelGuestsCount, setCancelGuestsCount] = useState("");
+  const [cancelMessage, setCancelMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
-  const [savedMessage, setSavedMessage] = useState("Tu RSVP fue enviado y ya quedó registrado.");
+  const [feedbackModal, setFeedbackModal] = useState<{
+    variant: "error" | "success";
+    title: string;
+    message: string;
+  } | null>(null);
   const fields = invitation.sections.rsvp.fields || {};
   const allowGuestsCount = Boolean(fields.guests_count ?? fields.allow_guests_count);
   const allowMessage = Boolean(fields.message ?? fields.allow_message);
@@ -728,24 +903,95 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
     [invitation.rsvp_until],
   );
 
-  async function submitRsvp({ forceCancel = false }: { forceCancel?: boolean } = {}) {
-    setError("");
-    setSaved(false);
+  function closeFeedbackModal() {
+    setFeedbackModal(null);
+  }
 
-    if (!name.trim()) {
-      setError("El nombre es obligatorio.");
+  function isBackdropInteraction(event: MouseEvent<HTMLElement> | TouchEvent<HTMLElement>) {
+    return event.target === event.currentTarget;
+  }
+
+  function openCancelModal() {
+    if (submitting) {
       return;
     }
 
-    if (!forceCancel && !attending) {
-      setError("Selecciona si asistes o no.");
+    setFeedbackModal(null);
+    setCancelName((current) => current || name.trim());
+    setCancelGuestsCount((current) => current || guestsCount.trim());
+    setCancelMessage((current) => current || message.trim());
+    setCancelModalOpen(true);
+  }
+
+  function closeCancelModal() {
+    if (submitting) {
       return;
     }
 
-    const attendingValue = forceCancel ? false : attending === "yes";
-    const normalizedGuestsCount = allowGuestsCount
-      ? Math.max(1, Math.trunc(Number(guestsCount || "1") || 1))
-      : null;
+    setCancelModalOpen(false);
+  }
+
+  function handleCancelModalBackdropInteraction(event: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) {
+    if (!isBackdropInteraction(event)) {
+      return;
+    }
+
+    closeCancelModal();
+  }
+
+  function handleFeedbackModalBackdropInteraction(event: MouseEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) {
+    if (!isBackdropInteraction(event)) {
+      return;
+    }
+
+    closeFeedbackModal();
+  }
+
+  function handleCancelModalCloseInteraction(event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    closeCancelModal();
+  }
+
+  function handleFeedbackModalCloseInteraction(event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    closeFeedbackModal();
+  }
+
+  async function submitRsvp() {
+    setFeedbackModal(null);
+    const trimmedName = name.trim();
+    const mustSelectGuests = allowGuestsCount && attending === "yes";
+    const normalizedGuestNumber = Math.trunc(Number(guestsCount || "0"));
+    const isGuestsCountValid = !mustSelectGuests || (Number.isFinite(normalizedGuestNumber) && normalizedGuestNumber >= 1);
+    const missingFields: string[] = [];
+
+    if (!trimmedName) {
+      missingFields.push("ingresa tu nombre");
+    }
+
+    if (!attending) {
+      missingFields.push("selecciona si asistes");
+    }
+
+    if (!isGuestsCountValid) {
+      missingFields.push("elige el número de asistentes");
+    }
+
+    if (missingFields.length > 0) {
+      const details =
+        missingFields.length === 1
+          ? missingFields[0]
+          : `${missingFields.slice(0, -1).join(", ")} y ${missingFields[missingFields.length - 1]}`;
+      setFeedbackModal({
+        variant: "error",
+        title: "Faltan datos por completar",
+        message: `Por favor ${details} para continuar.`,
+      });
+      return;
+    }
+
+    const attendingValue = attending === "yes";
+    const normalizedGuestsCount = mustSelectGuests ? Math.max(1, normalizedGuestNumber) : null;
 
     setSubmitting(true);
 
@@ -760,6 +1006,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
           attending: attendingValue,
           guestsCount: normalizedGuestsCount,
           message: allowMessage ? message : null,
+          mode: "submit",
         }),
       });
 
@@ -768,19 +1015,90 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
         throw new Error(payload.error || "No se pudo enviar tu confirmación.");
       }
 
-      setSaved(true);
-      setSavedMessage(
-        forceCancel
-          ? "Se registró la cancelación de asistencia. Si cambian de plan, puedes reenviar el formulario."
-          : "Tu RSVP fue enviado y ya quedó registrado.",
-      );
+      setFeedbackModal({
+        variant: "success",
+        title: "Datos enviados con éxito",
+        message: "Tu confirmación fue enviada y quedó registrada.",
+      });
       setName("");
-      setAttending("yes");
-      setGuestsCount("1");
+      setAttending("");
+      setGuestsCount("");
       setMessage("");
-      window.setTimeout(() => setSaved(false), 2400);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "No se pudo enviar tu confirmación.");
+      setFeedbackModal({
+        variant: "error",
+        title: "No se pudo enviar",
+        message: submitError instanceof Error ? submitError.message : "No se pudo enviar tu confirmación.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function submitCancelAttendance() {
+    setFeedbackModal(null);
+    const trimmedName = cancelName.trim();
+    const normalizedGuestNumber = Math.trunc(Number(cancelGuestsCount || "0"));
+    const missingFields: string[] = [];
+
+    if (!trimmedName) {
+      missingFields.push("ingresa un nombre de referencia");
+    }
+
+    if (!Number.isFinite(normalizedGuestNumber) || normalizedGuestNumber < 1) {
+      missingFields.push("elige cuántos asistentes vas a cancelar");
+    }
+
+    if (missingFields.length > 0) {
+      const details =
+        missingFields.length === 1
+          ? missingFields[0]
+          : `${missingFields.slice(0, -1).join(", ")} y ${missingFields[missingFields.length - 1]}`;
+      setFeedbackModal({
+        variant: "error",
+        title: "Faltan datos de cancelación",
+        message: `Por favor ${details} para continuar.`,
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/public/invitations/${encodeURIComponent(invitation.slug)}/rsvp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          attending: false,
+          guestsCount: Math.max(1, normalizedGuestNumber),
+          message: allowMessage ? cancelMessage : null,
+          mode: "cancel",
+        }),
+      });
+
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo registrar la cancelación.");
+      }
+
+      setFeedbackModal({
+        variant: "success",
+        title: "Cancelación registrada",
+        message: `Se registró la cancelación para ${Math.max(1, normalizedGuestNumber)} asistente(s).`,
+      });
+      setCancelModalOpen(false);
+      setCancelName("");
+      setCancelGuestsCount("");
+      setCancelMessage("");
+    } catch (submitError) {
+      setFeedbackModal({
+        variant: "error",
+        title: "No se pudo cancelar",
+        message: submitError instanceof Error ? submitError.message : "No se pudo registrar la cancelación.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -791,6 +1109,11 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
     await submitRsvp();
   }
 
+  async function handleCancelAttendanceSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await submitCancelAttendance();
+  }
+
   return (
     <InvitationSectionFrameViewer
       id="viewer-rsvp-section"
@@ -798,6 +1121,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
       title="Confirma tu asistencia"
       subtitle="Envíanos tu respuesta para cerrar la bitácora."
       tone="aurora"
+      decorIcon={getSectionDecorIcon(invitation.theme_id, "rsvp")}
     >
       {isClosed ? (
         <div className="mission-closed-state">
@@ -814,18 +1138,24 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
               ¿Asistes?<span aria-hidden="true">&nbsp;*</span>
             </span>
             <select className="mission-input" value={attending} onChange={(event) => setAttending(event.target.value)}>
+              <option value="">Selecciona</option>
               <option value="yes">Sí</option>
               <option value="no">No</option>
             </select>
           </label>
           {allowGuestsCount ? (
             <label className="mission-field rsvp-form__field rsvp-form__field--guests">
-              <span className="mission-label">Asistentes (total)</span>
+              <span className="mission-label">
+                Asistentes (total)
+                {attending === "yes" ? <span aria-hidden="true">&nbsp;*</span> : null}
+              </span>
               <input
                 className="mission-input"
                 type="number"
                 min={1}
                 value={guestsCount}
+                placeholder={attending === "yes" ? "Ej. 1" : "No aplica"}
+                disabled={attending !== "yes"}
                 onChange={(event) => setGuestsCount(event.target.value)}
               />
             </label>
@@ -842,9 +1172,9 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
             </button>
             <button
               type="button"
-              className="mission-button mission-button--ghost quick-button"
+              className="mission-button mission-button--ghost quick-button rsvp-form__cancel-button"
               disabled={submitting}
-              onClick={() => void submitRsvp({ forceCancel: true })}
+              onClick={() => openCancelModal()}
             >
               {submitting ? "Transmitiendo..." : "Cancelar asistencia"}
             </button>
@@ -852,19 +1182,97 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
               Si ya habías confirmado y ahora no podrás asistir, usa "Cancelar asistencia".
             </p>
           </div>
-          {error ? <p className="viewer-error-text">{error}</p> : null}
         </form>
       )}
-      {saved ? (
-        <div className="rsvp-success rsvp-success--mission" aria-live="polite">
-          <div className="mission-launch" aria-hidden="true">
-            <div className="mission-launch__trail" />
-            <div className="mission-launch__rocket">
-              <MissionRocket />
-            </div>
+      {cancelModalOpen ? (
+        <div
+          className="rsvp-feedback-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rsvp-cancel-modal-title"
+          onClick={handleCancelModalBackdropInteraction}
+          onTouchEnd={handleCancelModalBackdropInteraction}
+        >
+          <div
+            className="rsvp-feedback-modal__card rsvp-feedback-modal__card--cancel"
+            role="document"
+            aria-live="polite"
+          >
+            <h3 id="rsvp-cancel-modal-title">Cancelar asistencia</h3>
+            <p>Ingresa un nombre de referencia y cuántos asistentes deseas cancelar.</p>
+            <form className="rsvp-cancel-form" onSubmit={handleCancelAttendanceSubmit}>
+              <label className="mission-field rsvp-cancel-form__field">
+                <span className="mission-label">Nombre de referencia *</span>
+                <input
+                  className="mission-input"
+                  value={cancelName}
+                  onChange={(event) => setCancelName(event.target.value)}
+                />
+              </label>
+              <label className="mission-field rsvp-cancel-form__field">
+                <span className="mission-label">Asistentes a cancelar *</span>
+                <input
+                  className="mission-input"
+                  type="number"
+                  min={1}
+                  value={cancelGuestsCount}
+                  placeholder="Ej. 1"
+                  onChange={(event) => setCancelGuestsCount(event.target.value)}
+                />
+              </label>
+              {allowMessage ? (
+                <label className="mission-field rsvp-cancel-form__field">
+                  <span className="mission-label">Mensaje de cancelación (opcional)</span>
+                  <textarea
+                    className="mission-input"
+                    value={cancelMessage}
+                    onChange={(event) => setCancelMessage(event.target.value)}
+                  />
+                </label>
+              ) : null}
+              <div className="rsvp-cancel-form__actions">
+                <button type="submit" className="mission-button" disabled={submitting}>
+                  {submitting ? "Procesando..." : "Confirmar cancelación"}
+                </button>
+                <button
+                  type="button"
+                  className="mission-button mission-button--ghost rsvp-cancel-form__secondary"
+                  disabled={submitting}
+                  onClick={handleCancelModalCloseInteraction}
+                  onTouchEnd={handleCancelModalCloseInteraction}
+                >
+                  Cerrar
+                </button>
+              </div>
+            </form>
           </div>
-          <strong>Misión completada</strong>
-          <p className="mission-caption">{savedMessage}</p>
+        </div>
+      ) : null}
+      {feedbackModal ? (
+        <div
+          className="rsvp-feedback-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rsvp-feedback-modal-title"
+          onClick={handleFeedbackModalBackdropInteraction}
+          onTouchEnd={handleFeedbackModalBackdropInteraction}
+        >
+          <div
+            className={`rsvp-feedback-modal__card rsvp-feedback-modal__card--${feedbackModal.variant}`}
+            role="document"
+            aria-live="polite"
+          >
+            <h3 id="rsvp-feedback-modal-title">{feedbackModal.title}</h3>
+            <p>{feedbackModal.message}</p>
+            <button
+              type="button"
+              className="mission-button rsvp-feedback-modal__close"
+              onClick={handleFeedbackModalCloseInteraction}
+              onTouchEnd={handleFeedbackModalCloseInteraction}
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
       ) : null}
     </InvitationSectionFrameViewer>
@@ -880,6 +1288,8 @@ export function ContactSectionViewer({ invitation }: { invitation: InvitationRec
       title={invitation.sections.contact.name}
       subtitle={invitation.sections.contact.label}
       tone="gold"
+      sectionClassName="invitation-section--contact"
+      decorIcon={getSectionDecorIcon(invitation.theme_id, "contact")}
     >
       <div className="contact-command">
         {avatarImageUrl ? (
@@ -889,7 +1299,7 @@ export function ContactSectionViewer({ invitation }: { invitation: InvitationRec
         )}
         <div>
           <strong>{invitation.sections.contact.whatsapp_number}</strong>
-          <p className="mission-caption">Si necesitas ayuda antes del evento, escríbenos aquí.</p>
+          <p className="mission-caption">Si necesitas ayuda antes del evento, escríbeme aquí.</p>
         </div>
       </div>
       <a className="mission-button" href={invitation.sections.contact.whatsapp_url} target="_blank" rel="noreferrer">
@@ -900,14 +1310,16 @@ export function ContactSectionViewer({ invitation }: { invitation: InvitationRec
 }
 
 export function GenericBlockViewer({
+  themeId,
   title,
   data,
 }: {
+  themeId: string;
   title: string;
   data: GenericSection;
 }) {
   const items = trimList(data.items);
-  const text = data.text?.trim() || "Información adicional para la misión.";
+  const text = data.text?.trim();
   const visibleTitle = data.title?.trim() || title;
   const normalizedTitle = visibleTitle
     .toLowerCase()
@@ -935,9 +1347,10 @@ export function GenericBlockViewer({
     <InvitationSectionFrameViewer
       eyebrow={eyebrow}
       title={visibleTitle}
-      subtitle={text}
+      subtitle={text || undefined}
       tone="default"
       sectionClassName="invitation-section--generic-block"
+      decorIcon={getSectionDecorIcon(themeId, getGenericSectionDecorKey(visibleTitle))}
     >
       {items.length ? (
         <div className="notes-list notes-list--mission">
@@ -975,6 +1388,11 @@ function buildEventDateLabel(invitation: InvitationRecord) {
 }
 
 function buildArrivalTimeLabel(invitation: InvitationRecord) {
+  const explicitTimeText = (invitation.sections.event_info.time_text || "").trim();
+  if (explicitTimeText) {
+    return explicitTimeText;
+  }
+
   try {
     return new Intl.DateTimeFormat("en-US", {
       timeZone: invitation.timezone || "America/Mexico_City",
@@ -998,20 +1416,20 @@ function splitAddressLines(address: string) {
   return [clean.slice(0, splitIndex + 1).trim(), clean.slice(splitIndex + 1).trim()];
 }
 
-function getActionCode(type: string) {
+function getActionCode(type: string, usesAstronautCopy: boolean) {
   switch (type) {
     case "confirm":
     case "rsvp":
-      return "CMD-RSVP";
+      return usesAstronautCopy ? "CMD-RSVP" : "RSVP";
     case "location":
     case "map":
-      return "CMD-MAP";
+      return usesAstronautCopy ? "CMD-MAP" : "MAPA";
     case "calendar":
-      return "CMD-ICAL";
+      return usesAstronautCopy ? "CMD-ICAL" : "FECHA";
     case "share":
-      return "CMD-LINK";
+      return usesAstronautCopy ? "CMD-LINK" : "LINK";
     default:
-      return "CMD-ALT";
+      return usesAstronautCopy ? "CMD-ALT" : "INFO";
   }
 }
 

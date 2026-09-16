@@ -128,6 +128,8 @@ export interface GallerySectionData extends SectionBase {
 }
 
 export interface NotesSectionData extends SectionBase {
+  title?: string;
+  text?: string;
   items: string[];
 }
 
@@ -241,6 +243,7 @@ export interface SiteExamplesBlock {
     description: string;
     slug: string;
     cover_url: string;
+    demo_url?: string;
   }>;
 }
 
@@ -298,11 +301,48 @@ export interface SiteBlocks {
   contact: SiteContactBlock;
 }
 
+export interface SiteContentItem {
+  title: string;
+  slug?: string;
+  description?: string;
+  image_url?: string;
+  video_url?: string;
+  href?: string;
+  price?: string;
+  features?: string[];
+}
+
+export interface SiteContentSection {
+  id: string;
+  label: string;
+  enabled: boolean;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  image_url?: string;
+  video_url?: string;
+  background_dark_url?: string;
+  background_light_url?: string;
+  cta_text?: string;
+  cta_href?: string;
+  items?: SiteContentItem[];
+}
+
+export type SitePageKey = "home" | "catalog" | "faq" | "contact" | "about" | "crm";
+
+export interface SiteContentPage {
+  label: string;
+  path: string;
+  description: string;
+  sections: SiteContentSection[];
+}
+
 export type SiteBlockKey = keyof SiteBlocks;
 
 export interface SiteSettingsData {
   blocks_order: SiteBlockKey[];
   blocks: SiteBlocks;
+  pages: Record<SitePageKey, SiteContentPage>;
   invitation_templates?: InvitationTemplateRecord[];
 }
 

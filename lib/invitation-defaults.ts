@@ -12,7 +12,7 @@ import type {
 } from "@/types/invitations";
 
 export const INVITATION_BACKGROUND_STORAGE_KEY = "__invitation_background";
-export const DEFAULT_ASTRONAUT_ASSET = "/assets/astronauta.webp";
+export const DEFAULT_ASTRONAUT_ASSET = "/assets/gloobi-home/tematicas-infantiles/espacio.avif";
 
 export const DEFAULT_HERO_BACKGROUND: BackgroundMediaConfig = {
   type: "default",
@@ -330,12 +330,76 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
     ? invitation.sections_order.filter((value): value is InvitationRecord["sections_order"][number] => typeof value === "string")
     : DEFAULT_SECTION_ORDER;
 
+  const isDemoSlug =
+    invitation.slug === "cumple-7-luis-arturo-astronautas" ||
+    invitation.slug === "cumple-5-julieta-mabell" ||
+    invitation.slug?.startsWith("demo-");
+
+  const activeUntil = isDemoSlug
+    ? "2035-12-31T23:59:59.000Z"
+    : invitation.active_until || fallbackRecord.active_until;
+
+  const rsvpUntil = isDemoSlug
+    ? "2035-12-31T23:59:59.000Z"
+    : invitation.rsvp_until || fallbackRecord.rsvp_until;
+
+  let finalSections = normalizedSections;
+
+  if (isDemoSlug) {
+    const sanitizeStr = (str?: string | null) => {
+      if (!str) return str || "";
+      return str
+        .replace(/Luis\s+Arturo/gi, "Mateo")
+        .replace(/Julieta\s+Mabell/gi, "Sofía")
+        .replace(/Julieta/gi, "Sofía")
+        .replace(/LA\s*-\s*07/gi, "MA - 07")
+        .replace(/Adry\s+Rodríguez/gi, "Contacto Demo")
+        .replace(/5527225459/g, "5500000000")
+        .replace(/Xochimilco/gi, "San Ángel");
+    };
+
+    finalSections = {
+      ...finalSections,
+      hero: {
+        ...finalSections.hero,
+        title: sanitizeStr(finalSections.hero.title) || "",
+        subtitle: sanitizeStr(finalSections.hero.subtitle) || "",
+        accent: sanitizeStr(finalSections.hero.accent) || "",
+        badge: sanitizeStr(finalSections.hero.badge) || "",
+      },
+      event_info: {
+        ...finalSections.event_info,
+        venue_name: sanitizeStr(finalSections.event_info.venue_name) || "",
+        address_text: sanitizeStr(finalSections.event_info.address_text) || "",
+      },
+      contact: {
+        ...finalSections.contact,
+        name: sanitizeStr(finalSections.contact.name) || "",
+        whatsapp_number: "5500000000",
+      },
+      itinerary: {
+        ...finalSections.itinerary,
+        items: (finalSections.itinerary.items || []).map((item) => sanitizeStr(item) || ""),
+      },
+      notes: {
+        ...finalSections.notes,
+        items: (finalSections.notes.items || []).map((item) => sanitizeStr(item) || ""),
+      },
+      faq: {
+        ...finalSections.faq,
+        items: (finalSections.faq.items || []).map((item) => sanitizeStr(item) || ""),
+      },
+    };
+  }
+
   return {
     ...fallbackRecord,
     ...invitation,
+    active_until: activeUntil,
+    rsvp_until: rsvpUntil,
     background: nextBackground,
     sections_order: normalizedSectionOrder,
-    sections: normalizedSections,
+    sections: finalSections,
   };
 }
 

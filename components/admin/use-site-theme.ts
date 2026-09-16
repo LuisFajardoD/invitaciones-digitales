@@ -6,6 +6,8 @@ export type SiteThemeMode = "dark" | "light";
 
 export const SITE_THEME_STORAGE_KEY = "site-theme-mode";
 export const SITE_THEME_EVENT = "site-theme-change";
+export const SITE_THEME_VERSION_KEY = "site-theme-version";
+export const SITE_THEME_VERSION = "1";
 
 function getSystemThemeMode(): SiteThemeMode {
   if (typeof window === "undefined") {
@@ -20,26 +22,29 @@ function getStoredThemeMode(): SiteThemeMode | null {
     return null;
   }
 
-  const value = window.localStorage.getItem(SITE_THEME_STORAGE_KEY);
+  let value: string | null = null;
+  try { value = window.localStorage.getItem(SITE_THEME_STORAGE_KEY); } catch { return null; }
   return value === "dark" || value === "light" ? value : null;
 }
 
 export function useSiteTheme() {
   const [themeMode, setThemeMode] = useState<SiteThemeMode>("dark");
+  const [themeReady, setThemeReady] = useState(false);
 
   useEffect(() => {
     setThemeMode(getStoredThemeMode() || getSystemThemeMode());
+    setThemeReady(true);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !themeReady) {
       return;
     }
 
-    window.localStorage.setItem(SITE_THEME_STORAGE_KEY, themeMode);
+    try { window.localStorage.setItem(SITE_THEME_STORAGE_KEY, themeMode); } catch {}
     document.documentElement.dataset.siteTheme = themeMode;
     window.dispatchEvent(new CustomEvent<SiteThemeMode>(SITE_THEME_EVENT, { detail: themeMode }));
-  }, [themeMode]);
+  }, [themeMode, themeReady]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
