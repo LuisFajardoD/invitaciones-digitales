@@ -2,12 +2,14 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { ViewerReactApp } from "@/app/i/viewer-react-app";
-import { getPublicInvitationBySlug } from "@/lib/repository";
+import { getInvitationBySlug, getPublicInvitationBySlug } from "@/lib/repository";
+import { getAdminSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 type InvitationPageProps = {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ crm_live?: string; crm_preview?: string }>;
 };
 
 async function resolveRequestOrigin() {
@@ -120,12 +122,16 @@ export async function generateMetadata({ params }: InvitationPageProps): Promise
   };
 }
 
-export default async function InvitationPage({ params }: InvitationPageProps) {
+export default async function InvitationPage({ params, searchParams }: InvitationPageProps) {
   const { slug } = await params;
   let invitation = null;
+  let liveEditorPreview = false;
 
   try {
-    invitation = await getPublicInvitationBySlug(slug);
+    const query = await searchParams;
+    const adminPreview = Boolean(query && ("crm_live" in query || "crm_preview" in query) && await getAdminSession());
+    liveEditorPreview = adminPreview && Boolean(query && "crm_live" in query);
+    invitation = adminPreview ? await getInvitationBySlug(slug) : await getPublicInvitationBySlug(slug);
   } catch {
     invitation = null;
   }
@@ -174,5 +180,5 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
     );
   }
 
-  return <ViewerReactApp initialInvitationThemeId={invitation.theme_id} />;
+  return <ViewerReactApp initialInvitationThemeId={invitation.theme_id} liveEditorPreview={liveEditorPreview} />;
 }

@@ -1,0 +1,589 @@
+/* Studio Editor Layout */
+.editorShell {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 60px;
+}
+
+/* Top Sticky Toolbar (Page Tabs + Header Actions) */
+.topToolbar {
+  position: sticky;
+  top: 16px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  background: rgba(18, 16, 36, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.pageTabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tabButtonActive {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.35), rgba(99, 102, 241, 0.25)) !important;
+  border-color: rgba(167, 139, 250, 0.4) !important;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);
+}
+
+.tabButtonActive svg {
+  color: #c4b5fd;
+}
+
+/* Page Intro Header */
+.pageMetaHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(28, 25, 56, 0.7), rgba(16, 14, 34, 0.85));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pageMetaTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 4px 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.pageMetaDesc {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.btnOpenPage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btnOpenPage:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Studio Main Workspace (Split Grid: Left Nav, Right Content) */
+.workspaceLayout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* Left Sidebar: Section Navigation List */
+.sectionsSidebar {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(18, 16, 36, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+}
+
+.sidebarHeading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 4px;
+  padding: 0 4px;
+}
+
+.sidebarNavList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebarNavItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.sidebarNavItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.sidebarNavItemActive {
+  background: rgba(124, 58, 237, 0.2) !important;
+  border-color: rgba(167, 139, 250, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.sectionStatusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+}
+
+.sectionStatusDotActive {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+/* Right Content Area: Active Section Cards */
+.contentArea {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Section Editor Card */
+.sectionCard {
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, rgba(26, 23, 52, 0.85), rgba(15, 13, 32, 0.95));
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sectionTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionIconBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  color: #c4b5fd;
+  flex-shrink: 0;
+}
+
+.sectionLabel {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.sectionSubtitle {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 2px 0 0;
+}
+
+.sectionToggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.sectionToggleLabel:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sectionToggleInput {
+  accent-color: #7c3aed;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.sectionBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Grid Layout for Fields */
+.fieldsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fieldInput,
+.fieldSelect,
+.fieldTextarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 8, 24, 0.6);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.fieldSelect option {
+  background: #141228;
+  color: #ffffff;
+}
+
+.fieldTextarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.fieldInput:focus,
+.fieldSelect:focus,
+.fieldTextarea:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  background: rgba(10, 8, 24, 0.9);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+}
+
+/* Special Featured Demos Selector Grid */
+.featuredDemosBox {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
+.featuredDemosTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ddd6fe;
+  margin: 0;
+}
+
+.featuredDemosDesc {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 4px 0 0;
+}
+
+.featuredDemosGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.featuredDemoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(15, 13, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.featuredDemoCardTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.demoThumbnail {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Special Packages / Pricing Grid */
+.packagesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.packageCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(18, 16, 38, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.packageCardHeader {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 10px;
+}
+
+/* Repeatable Items Cards Grid (2 per row) */
+.itemsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.itemCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(15, 13, 32, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.itemCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.itemIndexBadge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #a78bfa;
+}
+
+.btnRemoveItem {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnRemoveItem:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.btnAddItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnAddItem:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 200;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 12px 16px;
+  border: 1px solid;
+  border-radius: 12px;
+  background: #1b1929;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.toastSuccess {
+  border-color: rgba(74, 222, 128, 0.45);
+  color: #86efac;
+}
+
+.toastError {
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+}
+
+.btnSave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  transition: all 0.22s ease;
+  white-space: nowrap;
+}
+
+.btnSaveActive {
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  color: #ffffff;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(124, 58, 237, 0.45);
+}
+
+.btnSaveActive:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.6);
+}
+
+.btnSaveDisabled {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.35);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 1024px) {
+  .workspaceLayout {
+    grid-template-columns: 1fr;
+  }
+  .sectionsSidebar {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .sidebarNavList {
+    flex-direction: row;
+  }
+  .fieldsGrid {
+    grid-template-columns: 1fr;
+  }
+  .packagesGrid {
+    grid-template-columns: 1fr;
+  }
+  .featuredDemosGrid {
+    grid-template-columns: 1fr;
+  }
+  .itemsGrid {
+    grid-template-columns: 1fr;
+  }
+}

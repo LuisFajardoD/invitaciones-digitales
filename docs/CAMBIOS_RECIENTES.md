@@ -1,5 +1,108 @@
 # Cambios recientes
 
+## 2026-09-18 - Disposición en 2 columnas para Archivo Visual en el Editor
+
+- **Reordenamiento en 2 columnas simétricas**: Las fichas de imágenes en la sección **Archivo visual** (`Textos y Galería`) se organizan en 2 columnas paralelas: `Imagen 1` a la izquierda, `Imagen 2` a la derecha; `Imagen 3` a la izquierda, `Imagen 4` a la derecha, etc.
+- **Correspondencia visual con el teléfono**: Refleja el orden exacto en que se disponen las fotos en la grilla del bloque *"Momentos especiales"* del teléfono en tiempo real.
+- **Tarjetas profesionales e independientes**: Cada tarjeta de imagen cuenta con cabecera limpia (título `Imagen X` y botón `Quitar` a la derecha), visor de miniatura, campo de URL y botones de subida y biblioteca multimedia.
+- **Preservación de elementos fijos e interfaz**: Se mantuvieron 100% intactos la barra de menú superior, el menú lateral de categorías (`General y Compartir`, `Portada Hero`, `Fecha y Lugar`, etc.) y la columna de vista previa del celular.
+- **Encabezados limpios**: Se respetó la ausencia de subtítulos y descripciones secundarias debajo de los títulos de las tarjetas.
+- **Validaciones**: `npm run css:guard` y `npm run build` ejecutados y aprobados con éxito.
+
+## 2026-09-18 - Nombre del demo separado del título de portada
+
+- Se retiró la sustitución de «Luis Arturo» por «Mateo» del título principal al normalizar un demo.
+- El encabezado, las tarjetas y los selectores de demos del CRM usan el nombre guardado para el catálogo; registros antiguos usan su título para compartir como respaldo.
+- El campo de la ficha se identifica como «Nombre del demo en CRM y catálogo». Editar la portada no altera ese nombre.
+- En invitaciones de cliente, el encabezado continúa siguiendo el título principal.
+
+## 2026-09-18 - Desbordamiento y fondo del editor CRM
+
+- El input invisible de subida queda posicionado dentro de su botón; ya no ensancha la página.
+- El panel de vista previa respeta el ancho de su columna y el marco se adapta al espacio disponible.
+- El cuerpo de las rutas admin usa un solo fondo negro; se mantiene el fondo público fuera del CRM.
+- Se conserva la distribución de menú, dos columnas de campos y vista previa.
+
+## 2026-09-18 - Simetría y Estructura de Tarjetas en la Sección General y Compartir del Editor
+
+- **Simetría y subtarjetas simétricas en la categoría Base**:
+  - Columna izquierda (`General`): Contiene subtarjetas independientes para **Configuración Base** (slug, estado, perfil animación, zona horaria) y **Clasificación del catálogo** (tipo, títulos, categorías, y selector de 14 estilos visuales en 3 filas).
+  - Columna derecha (`Compartir & Vigencia`): Se reestructuró con el mismo formato visual de subtarjetas (`inv-editor-catalog-card`):
+    - Subtarjeta 1: **Tarjeta para Compartir** (Open Graph WhatsApp/Redes y botón de checklist).
+    - Subtarjeta 2: **Fechas del Evento y Límites de Acceso** (Inicio de evento, RSVP y caducidad).
+    - Subtarjeta 3: **Pantalla al Expirar** (Textos y botones CTA cuando la invitación vence).
+- **Selector de estilos visuales en 3 filas exactas**: Organizado en 3 filas con 14 etiquetas (`Moderno`, `Elegante`, `Colorido`, `Neón`, `Boho` / `Temático`, `Floral`, `Clásico`, `Tierno`, `Glamour` / `Minimalista`, `Divertido`, `Fantasía`, `Rústico`).
+- **Distribución de campos en filas pareadas**:
+  - En **Tarjeta para Compartir**: `Título al compartir (WhatsApp/Social)` y `Descripción al compartir` quedan juntos en la primera fila.
+  - En **Fechas del Evento y Límites de Acceso**: `Inicio del evento` y `Activa hasta (Caducidad)` se ubican lado a lado en la primera fila.
+  - En **Pantalla al Expirar**: `Título al expirar` y `Mensaje al expirar` se presentan lado a lado en la primera fila.
+- **Acciones del panel de publicación**: Los botones `Guardar cambios` y `Abrir demo` se ubicaron juntos en la misma fila (cuadrícula de 2 columnas al 50% de ancho), y el segundo botón se renombró a `"Abrir demo"` (`"Abrir invitación"` en invitaciones regulares).
+- **Disposición en 2 columnas lado a lado para la categoría Base**: Se mantuvo la estructura de 2 columnas (`General` a la izquierda y `Compartir & Vigencia` a la derecha), ajustando el ancho flex del campo multimedia `MediaField` para evitar desbordamientos.
+- **Prevención de desbordamiento horizontal y scrollbar**: Se añadieron reglas de `min-width: 0`, `max-width: 100vw` y `overflow-x: hidden` a la raíz `.app-admin` y a los contenedores e inputs del editor.
+- **Alineación superior de columnas**: La cabecera resumen del demo/invitación se ubicó a nivel global en la parte superior del módulo de edición, permitiendo que el menú lateral de categorías, las tarjetas del formulario y la vista previa del dispositivo inicien en perfecta alineación horizontal superior.
+- **Encabezados limpios**: Se retiraron títulos y descripciones redundantes de los contenedores exteriores para evitar duplicidades.
+- Validación aprobada: `npm run css:guard` y `npm run build`.
+
+## 2026-09-18 - Rediseño de Navegación y Disposición del Editor de Demos e Invitaciones
+
+- **Menú de categorías corregido**: Los botones de la barra lateral izquierda `.inv-editor-nav-button` ahora usan `flexbox` con alineación vertical centrada (`align-items: center`), espacio de 10px entre ícono y texto y bordes redondeados limpios, solucionando el amontonamiento de íconos.
+- **Aprovechamiento de ancho de pantalla**: El contenedor general `.inv-editor-page` amplió su ancho máximo a 1840px (`98vw`) y las columnas principales a `230px minmax(640px, 1fr) minmax(320px, 360px)`, eliminando el desplazamiento vertical innecesario.
+- **Disposición en 2 tarjetas lado a lado para la categoría Base**: Se estructuró la categoría en una cuadrícula de 2 columnas (`.inv-editor-base-grid`):
+  - Izquierda: **Configuración Base y Catálogo** (Slug, estado, clasificación de catálogo, perfil de animación y zona horaria).
+  - Derecha: **Tarjeta para Compartir y Fechas** (Metadatos Open Graph/WhatsApp, botón de checklist WhatsApp, fechas de evento, límites de RSVP y caducidad, y pantalla al expirar).
+- **Nombres de categorías claros e intuitivos**:
+  - `base` → **General y Compartir**
+  - `portada` → **Portada Hero**
+  - `evento` → **Fecha y Lugar**
+  - `flujo` → **Orden de Bloques**
+  - `contenido` → **Textos y Galería**
+  - `atencion` → **RSVP y Pases**
+  - `extras` → **Secciones Extras**
+- Validación aprobada: `npm run css:guard` y `npm run build`.
+
+## Marcos de dispositivos — 2026-09-17
+
+La invitación vuelve a ocupar toda la pantalla del marco en ambos editores. Se retiraron las franjas decorativas del navegador y su selector; la cámara permanece superpuesta dentro del área visible. Viewports de referencia: iPhone 17 Pro Max 440×956, HONOR Magic6 Lite 400×884 e iPad 810×1080 px CSS. La escala del marco no altera el viewport interno.
+
+
+## 2026-09-17 - Dimensiones y desplazamiento del teléfono del editor
+
+- El iframe ahora conserva el ancho y alto lógico del dispositivo; antes adoptaba el ancho reducido del panel.
+- Rueda y arrastre usan distancias acordes con la escala; se normalizan las unidades de rueda y se evita desplazar el editor al recorrer la previa.
+- Prueba en editor de demos e invitaciones: seis presets correctos, 400 px de rueda y 100 px de arrastre equivalentes en pantalla.
+
+## 2026-09-17 - Fondo suave del acceso CRM
+
+- Se retiró la imagen de fondo únicamente del login, conservando los gradientes y burbujas iniciales. No se modificaron los archivos ni la configuración de fondos de otras páginas.
+
+## 2026-09-17 - Cuenta regresiva de demos
+
+- El visor renueva la fecha de los demos en ciclos de 28 días para evitar cuatro ceros y sincroniza la fecha visible del evento. Las invitaciones de cliente usan exclusivamente sus fechas guardadas.
+
+## 2026-09-17 - Fotos de archivo visual para demos
+
+- Se sustituyeron las galerías de los ocho demos base publicados por los nuevos AVIF, manteniendo 4–8 fotos según cada demo.
+- El editor de demos ofrece un selector de las diez imágenes y conserva el control de máximo visible (1–20).
+
+## 2026-09-17 - Galería centrada
+
+- El lightbox de invitaciones ajusta las imágenes al espacio visible y evita el recorte inferior de fotos verticales.
+
+## 2026-09-17 - Nombres infantiles en los demos públicos
+
+- La portada visible de los seis demos de niño muestra “Luis Arturo” y la de Fantasía/Princesas muestra “Karen Vanessa” en lugar del título temático. El CRM, catálogo y datos guardados mantienen sus nombres actuales.
+
+## 2026-09-17 - Vista previa completa del catálogo
+
+- El diálogo de vista previa ocupa la pantalla disponible y ajusta la imagen completa sin scroll interno. Las tarjetas conservan su recorte.
+
+## 2026-09-17 - Muestras de archivo independientes de demos web
+
+- Imagen Esencial, Interactiva y Video Invitación se cargan como fichas terminadas desde Sitio Web Público → Muestras, con archivo AVIF/PDF/WebM, clasificación y etiquetas manuales. El AVIF se usa directamente para tarjeta y vista previa; PDF y WebM requieren una imagen estática aparte.
+- El editor de demos sólo permite Web Esencial y Web Premium, con título y descripción de tarjeta e imagen estática obligatoria para demos nuevos publicados.
+- El catálogo público ya no incrusta la web en tarjetas: usa la imagen estática también para la vista previa completa. Imagen Esencial no tiene enlace inferior; PDF y video abren sus archivos.
+- El guardado de Muestras deja de exigir completar los cuatro demos destacados del Home.
+
 ## 2026-09-16 - Eliminación de carpeta de imágenes legacy site-shell/assets/img
 - Se desenlazaron las rutas `../img/` y `/assets/site-shell/assets/img/` en `components/site/Landing.module.css` y `public/assets/site-shell/assets/css/style.css`, redirigiéndolas a los recursos unificados de `public/assets/gloobi-home/` o a `none` para máscaras no utilizadas.
 - Se eliminó definitivamente la carpeta legacy `public/assets/site-shell/assets/img` para evitar consumo de almacenamiento innecesario en el servidor.
@@ -390,3 +493,70 @@ Se reemplazó la plantilla AIOR de `public/faq.html` por la FAQ de Gloobi. Se ag
 - Se retiró el bloque final `Static Home geometry recovered` de `gloobi-hero.css`: forzaba la geometría del hero y de las tarjetas con `!important`, ocultaba el contenido de la tarjeta izquierda y anulaba el abanico animado de categorías. Era la causa directa de la desconfiguración visual.
 - La configuración pública normaliza las rutas históricas de medios al leerlas. Los valores guardados por el editor conservan su contenido, pero Home y otras páginas reciben las rutas actuales sin depender de redirecciones por cada imagen.
 - Se corrigió la ruta del video de la tarjeta de mensaje y tres referencias CSS a archivos retirados durante la reorganización.
+# 16 de septiembre de 2026 — Flujo de demos CRM
+
+- `Nuevo Demo Base` crea un demo editable con slug `demo-*`.
+- `Crear Invitación desde este Demo` copia directamente el demo elegido a un borrador de cliente.
+- `Guardar como Demo` y `Duplicar` en demos crean copias en la sección correcta; el editor impide cambiar de tipo mediante el slug.
+- Títulos temáticos de Espacio, Dinosaurios y Sirenas actualizados en seeds y datos mock.
+# 16 de septiembre de 2026 — Clasificación comercial de demos
+
+- El editor de demos permite seleccionar tipo de invitación, categoría, subcategoría y estilos de la taxonomía pública.
+- Se guarda metadata por demo en `sections.__catalog`, compatible con Supabase y mock local; los demos históricos tienen valores de respaldo.
+- El catálogo añade demos publicados nuevos y filtra por sus datos persistidos.
+- Imagen Esencial requiere AVIF, Interactiva PDF y Video Invitación WebM. Web Esencial y Web Premium usan el visor HTML existente. La API valida el formato real del archivo.
+# 16 de septiembre de 2026 — Corrección del flujo real de demos
+
+- Se sustituye el enlace a `/admin/invitations/new?mode=demo` por una pantalla y API propias de demos, con título temático, slug y tema visual.
+- Los demos se editan en `/admin/demos/[id]`; los enlaces anteriores a la ruta de invitaciones redirigen allí.
+- Se actualizaron `sections.hero.title` y `share.og_title` de los tres demos afectados en Supabase, además de los seeds.
+# 16 de septiembre de 2026 — Editor de demos
+
+- Se ocultan “Guardar como plantilla”, tema técnico y vista RSVP de cliente al editar un demo; la cabecera indica “Editor de demo”.
+- La vista previa de borradores funciona sólo con sesión admin en `/i/[slug]` y en su API de lectura. La consulta pública normal conserva la regla de publicado.
+# 17 de septiembre de 2026 — Portada de sirenas
+
+- Se ajustó la portada pública en escritorio a 440 × 956 px y se sustituyeron los tamaños/posiciones dependientes del viewport de PC por valores equivalentes a la vista móvil para título, edad, mensaje y sirena.
+- `npm run css:guard` y `npm run build` completaron correctamente.
+
+# 18 de septiembre de 2026 — Vista previa inmediata del editor
+
+- El editor envía su borrador al visor del teléfono tras cada cambio. Los fondos de imagen y video, igual que los textos, se actualizan antes de guardar.
+- El visor valida origen y slug, y acepta borradores sólo en `crm_live` con sesión admin. La invitación publicada continúa usando los datos guardados.
+
+## 2026-09-18 - Portada del editor en tres columnas
+
+- En Portada Hero, Fondo de la Portada, Fondo para Secciones Secundarias y Elemento Decorativo Flotante aparecen en tres columnas cuando el ancho lo permite; se adaptan a dos o una en ventanas menores.
+- Se quitaron las descripciones bajo los encabezados de las tarjetas y secciones del editor compartido de demos e invitaciones.
+
+## 2026-09-18 - Galería sin espacios vacíos
+
+- Archivo visual muestra sólo las URLs de imágenes cargadas y ya no crea casillas vacías.
+- Si no hay imágenes, la sección de galería no se muestra. Verificado con el demo `demo-prueba`: seis imágenes, límite siete y seis tarjetas visibles.
+
+## 2026-09-18 - Restauración de paneles fijos en el editor
+
+- Se recuperó el comportamiento fijo durante el scroll de la navegación superior, el menú lateral y la vista previa del teléfono.
+- El recorte horizontal `clip` evita que los contenedores bloqueen `position: sticky`; la columna de vista previa queda bajo la barra y puede desplazarse internamente si la pantalla es baja.
+- Verificado a 1920 × 1080 y 1366 × 768 sin desbordamiento horizontal.
+
+## 2026-09-18 - Acciones rápidas ubicadas por función
+
+- Se retiró el editor genérico de acciones rápidas de “Textos y Galería”.
+- Compartir invitación se configura en “General y Compartir”; conserva el menú nativo del dispositivo y la copia del enlace como respaldo.
+- El acceso a la ubicación se configura junto a “Mapa Interactivo & Coordenadas GPS”, y el acceso al formulario se configura dentro de “RSVP y Pases”.
+- Se eliminó “Agregar al calendario” de demos, registros normalizados y opciones editables.
+- RSVP permite editar los textos reales de “Enviar confirmación”, “Registrar no asistencia” y “Cancelar asistencia”.
+- `npm run css:guard` y `npm run build` completaron correctamente.
+
+## 2026-09-18 - Galería determinada por imágenes agregadas
+
+- Se eliminó el campo “Máximo de imágenes visibles” del editor compartido de demos e invitaciones.
+- Ambos visores muestran todas las imágenes agregadas, sin recortarlas mediante un límite independiente.
+- La normalización retira el antiguo `max_images` al cargar registros anteriores.
+
+## 2026-09-18 - Certificado FTPS de multimedia
+
+- Se actualizó `MEDIA_FTP_TLS_SERVERNAME` de `hostinger.com` a `hstgr.io`, nombre autorizado por el certificado actual del servidor Hostinger.
+- La validación TLS continúa estricta; no se desactivó `rejectUnauthorized`.
+- `npm run media:check` verificó carga pública de PNG, PDF y WebM, soporte de Range y limpieza remota.

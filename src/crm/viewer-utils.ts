@@ -252,6 +252,40 @@ export function getCountdown(targetAt: string) {
   ];
 }
 
+const DEMO_COUNTDOWN_CYCLE_MS = 28 * 24 * 60 * 60 * 1000;
+
+export function getDemoCountdownTarget(invitation: InvitationRecord, now = Date.now()) {
+  const storedTarget = new Date(invitation.sections.countdown.target_at).getTime();
+  if (!invitation.slug.startsWith("demo-") || !Number.isFinite(storedTarget)) {
+    return invitation.sections.countdown.target_at;
+  }
+
+  const cycles = storedTarget > now ? 0 : Math.floor((now - storedTarget) / DEMO_COUNTDOWN_CYCLE_MS) + 1;
+  return new Date(storedTarget + cycles * DEMO_COUNTDOWN_CYCLE_MS).toISOString();
+}
+
+export function getDisplayInvitation(invitation: InvitationRecord, now = Date.now()): InvitationRecord {
+  if (!invitation.slug.startsWith("demo-")) return invitation;
+
+  const targetAt = getDemoCountdownTarget(invitation, now);
+  const target = new Date(targetAt);
+  if (Number.isNaN(target.getTime())) return invitation;
+  const timeZone = invitation.timezone || "America/Mexico_City";
+  const weekdayText = new Intl.DateTimeFormat("es-MX", { weekday: "long", timeZone }).format(target);
+  const dateText = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "long", year: "numeric", timeZone }).format(target);
+  const timeText = new Intl.DateTimeFormat("es-MX", { hour: "numeric", minute: "2-digit", hour12: true, timeZone }).format(target);
+
+  return {
+    ...invitation,
+    event_start_at: targetAt,
+    sections: {
+      ...invitation.sections,
+      countdown: { ...invitation.sections.countdown, target_at: targetAt },
+      event_info: { ...invitation.sections.event_info, weekday_text: weekdayText, date_text: dateText, time_text: timeText },
+    },
+  };
+}
+
 export function trimList(items?: string[]) {
   return (items || []).map((item) => item.trim()).filter(Boolean);
 }

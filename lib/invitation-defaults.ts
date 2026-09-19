@@ -1,5 +1,6 @@
 import { DEFAULT_SECTION_ORDER } from "@/lib/constants";
 import { demoInvitation } from "@/lib/demo-data";
+import { normalizeCatalogMetadata } from "@/lib/catalog-metadata";
 import type {
   BackgroundMediaConfig,
   GenericTextSectionData,
@@ -12,6 +13,7 @@ import type {
 } from "@/types/invitations";
 
 export const INVITATION_BACKGROUND_STORAGE_KEY = "__invitation_background";
+export const INVITATION_CATALOG_STORAGE_KEY = "__catalog";
 export const DEFAULT_ASTRONAUT_ASSET = "/assets/gloobi-home/tematicas-infantiles/espacio.avif";
 
 export const DEFAULT_HERO_BACKGROUND: BackgroundMediaConfig = {
@@ -89,6 +91,7 @@ function normalizeQuickActionItems(value: unknown, fallback: QuickActionItem[]) 
   }
 
   const normalized = value
+    .filter((item) => !(item && typeof item === "object" && (item as Partial<QuickActionItem>).type === "calendar"))
     .map((item, index) => {
       if (!item || typeof item !== "object") {
         return null;
@@ -101,7 +104,6 @@ function normalizeQuickActionItems(value: unknown, fallback: QuickActionItem[]) 
         type:
           candidate.type === "confirm" ||
           candidate.type === "location" ||
-          candidate.type === "calendar" ||
           candidate.type === "share"
             ? candidate.type
             : fallbackItem.type,
@@ -110,7 +112,7 @@ function normalizeQuickActionItems(value: unknown, fallback: QuickActionItem[]) 
     })
     .filter((item): item is QuickActionItem => item !== null);
 
-  return normalized.length ? normalized : [...fallback];
+  return normalized;
 }
 
 export function normalizeKenBurns(value?: Partial<KenBurnsConfig> | null): KenBurnsConfig {
@@ -208,6 +210,7 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
   const rawSections = ((invitation.sections || {}) as Partial<InvitationSections>) as Partial<InvitationSections> &
     Record<string, unknown>;
   const storedBackground = rawSections[INVITATION_BACKGROUND_STORAGE_KEY] as InvitationBackgroundConfig | undefined;
+  const storedCatalog = rawSections[INVITATION_CATALOG_STORAGE_KEY] as InvitationRecord["catalog"] | undefined;
   const hero = {
     ...fallbackRecord.sections.hero,
     ...(rawSections.hero || {}),
@@ -221,9 +224,11 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
     ...(rawSections.quick_actions || {}),
     items: normalizeQuickActionItems(rawSections.quick_actions?.items, fallbackRecord.sections.quick_actions.items),
   };
+  const { max_images: _legacyGalleryLimit, ...storedGallerySection } = (rawSections.gallery || {}) as
+    Partial<InvitationSections["gallery"]> & { max_images?: unknown };
   const gallerySection = {
     ...fallbackRecord.sections.gallery,
-    ...(rawSections.gallery || {}),
+    ...storedGallerySection,
     image_urls: normalizeStringList(rawSections.gallery?.image_urls, fallbackRecord.sections.gallery.image_urls),
   };
   const notesSection = {
@@ -362,7 +367,7 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
       ...finalSections,
       hero: {
         ...finalSections.hero,
-        title: sanitizeStr(finalSections.hero.title) || "",
+        title: finalSections.hero.title || "",
         subtitle: sanitizeStr(finalSections.hero.subtitle) || "",
         accent: sanitizeStr(finalSections.hero.accent) || "",
         badge: sanitizeStr(finalSections.hero.badge) || "",
@@ -395,6 +400,7 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
   return {
     ...fallbackRecord,
     ...invitation,
+    catalog: normalizeCatalogMetadata(invitation.catalog || storedCatalog, invitation.slug),
     active_until: activeUntil,
     rsvp_until: rsvpUntil,
     background: nextBackground,
@@ -405,13 +411,14 @@ export function normalizeInvitationRecord(invitation: InvitationRecord): Invitat
 
 export function toDatabaseInvitationRecord(invitation: InvitationRecord) {
   const normalized = normalizeInvitationRecord(invitation);
-  const { background, ...rest } = normalized;
+  const { background, catalog, ...rest } = normalized;
 
   return {
     ...rest,
     sections: {
       ...normalized.sections,
       [INVITATION_BACKGROUND_STORAGE_KEY]: background,
+      [INVITATION_CATALOG_STORAGE_KEY]: catalog,
     },
   };
 }

@@ -73,7 +73,7 @@
   padding: 12px;
   overflow: hidden;
   isolation: isolate;
-  background: #ffffff;
+  background: linear-gradient(145deg, #241f48 0%, #181434 100%);
   color: var(--landing-hero-text);
 }
 

@@ -1,5 +1,70 @@
 # CODEX HANDOFF
 
+## Rediseño del Archivo Visual en Editor CRM — 2026-09-18
+
+Las tarjetas de imágenes de la sección Archivo visual (`DraftInvitationRecord.sections.gallery`) en el editor de invitaciones y demos se organizan en una cuadrícula fluido-responsiva de 2 columnas (Imagen 1 izquierda, Imagen 2 derecha; Imagen 3 izquierda, Imagen 4 derecha, etc.). Esto reproduce la disposición exacta de 2 columnas de la galería de la invitación en el panel de vista previa del teléfono. Se retiraron párrafos explicativos/descripciones de títulos de tarjetas para mantener encabezados limpios sin texto secundario redundante. La barra de navegación superior, el menú lateral izquierdo de categorías y el teléfono de vista previa permanecieron intactos.
+
+## Nombre del demo y título de portada — 2026-09-18
+
+`normalizeInvitationRecord` ya no reemplaza nombres escritos en `sections.hero.title`; antes cambiaba «Luis Arturo» por «Mateo» en todos los demos al teclear. El nombre del demo en CRM y catálogo se obtiene de `catalog.card_title`, con respaldo de `share.og_title` para registros anteriores (por ejemplo `demo-prueba`, donde el primero estaba vacío). Al abrir un demo heredado, el editor rellena `catalog.card_title` en el borrador para fijar ese nombre en el siguiente guardado. El encabezado del editor, la lista de demos, los selectores de origen para nuevas invitaciones y el catálogo público comparten esa lectura. En invitaciones reales, el encabezado sigue usando el título principal de la portada.
+
+## Desbordamiento del editor CRM — 2026-09-18
+
+En la categoría General y Compartir, el `input[type=file]` invisible de `MediaField` heredaba el ancho del formulario y, al estar posicionado de forma absoluta sin contenedor relativo, se extendía fuera de la ventana. El botón `.site-upload-button` ahora es su contenedor de posición. La columna de vista previa puede encogerse dentro de sus 360 px y el marco se ajusta a su ancho disponible; permanecen las dos columnas centrales. El cuerpo de páginas admin usa el mismo negro que `.app-admin`, mientras que las páginas públicas conservan su fondo. Verificado a 1920, 3840 y 1366 px sin desplazamiento horizontal; a 3840 × 2020 tampoco hay desplazamiento vertical cuando cabe el contenido.
+
+## Marcos de dispositivos — 2026-09-17
+
+La invitación vuelve a ocupar toda la pantalla del marco en ambos editores. Se retiraron las franjas decorativas del navegador y su selector; la cámara permanece superpuesta dentro del área visible. Viewports de referencia: iPhone 17 Pro Max 440×956, HONOR Magic6 Lite 400×884 e iPad 810×1080 px CSS. La escala del marco no altera el viewport interno.
+
+
+## Vista previa del editor — 2026-09-17
+
+El editor compartido usa iframes con pantalla lógica fija: iPhone 15 Pro Max 430×932, iPhone 13/14 390×844, Galaxy S24 Ultra 384×832, S23 Ultra 384×824, Pixel 8 412×915 e iPad 10.2 810×1080 px CSS. Son tamaños de referencia sin barras del navegador; Android puede variar con la escala del sistema. `ResizeObserver` adapta la escala visual sin cambiar el viewport interno. La rueda se escucha con `passive: false`, normaliza `deltaMode` y compensa esa escala, igual que el arrastre. Verificado con Playwright en ambos editores, sin guardar datos.
+
+Para validar mientras está abierto `next dev`, `NEXT_DIST_DIR=.codex-artifacts/validation-build` permite ejecutar el build en otra carpeta y evita corromper el `.next` del servidor de desarrollo.
+
+## Fondo del login CRM — 2026-09-17
+
+`/admin/login` conserva los gradientes y las burbujas de `.viewer-login-ambient`, pero ya no aplica las imágenes `background_dark_url` y `background_light_url` recibidas de Site Settings. El cambio está limitado al login en `src/crm/App.tsx` y `src/crm/admin.css`; las URLs permanecen guardadas para otras páginas.
+
+## Cuenta regresiva renovable en demos — 2026-09-17
+
+`src/crm/viewer-utils.ts` calcula la próxima fecha de un demo en ciclos de 28 días cuando vence `sections.countdown.target_at`. `getDisplayInvitation` crea sólo para la vista una copia con fecha, hora y cuenta regresiva coherentes; no cambia Supabase ni el registro guardado. La condición exclusiva es slug `demo-*`. En `lib/repository.ts`, crear una invitación desde un demo exige un slug sin ese prefijo y reemplaza `event_start_at` y `sections.countdown.target_at` por la fecha real indicada. Mantener esa frontera al modificar el visor o la copia.
+
+## Archivo visual de demos — 2026-09-17
+
+Las diez imágenes `public/assets/Archivo-visual-demos/momento-magico-{1..10}.avif` se exponen en el editor de demos como opciones reutilizables. La galería muestra exactamente las imágenes agregadas, sin un límite numérico independiente. Los ocho demos base usan 4–8 imágenes según su cantidad anterior. `lib/demo-gallery.ts` centraliza sus rutas; `lib/demo-data.ts` contiene el seed y los ocho registros publicados en Supabase se actualizaron de forma individual, conservando el resto de sus secciones.
+
+## Galería pública ampliada — 2026-09-17
+
+El lightbox de `src/crm/viewer.css` ocupa `100dvh` y centra las fotos dentro del espacio disponible, bajo el botón Cerrar. El panel y la imagen limitan ancho y alto sin recortar fotos verticales. Verificado con Playwright en 1440 × 800 y 390 × 844.
+
+## Nombres en la portada pública de demos — 2026-09-17
+
+Los ocho demos infantiles conservan sus títulos temáticos en el CRM y catálogo. `HeroSectionViewer` sustituye ese título únicamente al pintar la portada: Luis Arturo para Espacio, Dinosaurios, Fútbol, Carreras, Animales y Videojuegos; Karen Vanessa para Fantasía y Princesas. La sustitución sólo aplica si el título guardado sigue siendo el título temático original, por lo que una personalización posterior desde el editor se respeta.
+
+## Portada de sirenas en escritorio — 2026-09-17
+
+El visor público muestra una columna de 440 px en escritorio. La portada de sirenas usa medidas equivalentes a un viewport móvil de 440 × 956 px en esa columna para título, edad, mensaje e ilustración; los `vw`/`vh` de la ventana completa desordenaban la composición. El ajuste vive al final de `src/crm/viewer.css`, limitado a `.viewer-shell--public.app-viewer--theme-sirenas` y `min-width: 1024px`. En móvil continúa el diseño fluido existente, sin marco visual.
+
+## Catálogo de muestras por producto — 2026-09-17
+
+`/admin/demos` conserva sólo demos Web Esencial y Web Premium. El editor web guarda en `sections.__catalog` el título y descripción de la tarjeta, clasificación, estilos y `preview_url` estático. Los demos web nuevos necesitan una imagen de vista previa para publicarse; los históricos conservan respaldo en la imagen OG o la portada.
+
+Las muestras terminadas de Imagen Esencial (AVIF), Interactiva (PDF) y Video Invitación (WebM) se administran en `/admin/site`, pestaña Muestras, sección `05 · Muestras de archivo`. Se guardan en `SiteSettingsData.catalog_samples`, no se crean como invitaciones ni aparecen en el editor de demos web. Imagen Esencial carga sólo el AVIF final y lo reutiliza para tarjeta y vista previa; PDF y WebM requieren una imagen de vista previa aparte. El backend comprueba las extensiones al publicar y la API de medios comprueba el formato real al subir.
+
+`lib/invitation-catalog.ts` reúne demos web publicados y muestras de archivo publicadas. Las tarjetas usan exclusivamente la imagen estática; el modal la muestra completa. Imagen Esencial no tiene enlace inferior; PDF y WebM abren su archivo, los demos web abren `/i/[slug]`. Los slugs demo históricos con clasificación no web sólo permanecen para edición privada y no se listan en el catálogo.
+
+## Demos e invitaciones — 2026-09-16
+
+El editor compartido distingue demos por `demo-*`: oculta “Guardar como plantilla”, el campo técnico de tema y la vista RSVP de cliente. La previa de borrador usa `/i/[slug]?crm_preview=1` o `?crm_live=...`; página y API públicas sólo aceptan registros no publicados con una sesión admin válida. Sin sesión se mantiene la restricción de `getPublicInvitationBySlug`. Nunca usar la consulta de preview para publicar o exponer borradores a visitantes.
+
+`Nuevo Demo Base` usa `/admin/demos/new` y `POST /api/admin/demos`; el editor de demos tiene ruta `/admin/demos/[id]`. La ruta anterior `/admin/invitations/new?mode=demo` redirige al formulario correcto. Los registros activos en Supabase de `demo-espacio`, `demo-dinosaurios` y `demo-princesas` recibieron títulos temáticos en `sections.hero.title` y `share.og_title` el 16 de septiembre de 2026; modificar únicamente los seeds locales no altera esos registros.
+
+La clasificación editorial de cada demo web vive en `InvitationRecord.catalog`; en Supabase se persiste bajo `sections.__catalog` para evitar una columna nueva. El editor de demos, sección Base, usa las opciones de `lib/catalog-taxonomy.ts`. Los datos históricos se normalizan desde `lib/catalog-metadata.ts`.
+
+`/admin/demos` crea borradores demo mediante `mode=demo`; `/admin/invitations` crea invitaciones de cliente. La clasificación actual usa el prefijo reservado `demo-` en el slug; el editor rechaza cambios de slug que cambien el tipo. La duplicación hacia demo requiere `?as=demo`; crear una invitación desde un demo copia el registro indicado por su ID. Los títulos de los demos base describen la temática y no el nombre de un cliente. Antes de sustituir la clasificación por un campo persistido, añadir migración Supabase y compatibilidad con datos existentes.
+
 ## Rutas de medios tras reorganización — 2026-09-16
 
 La migración de `public/aior` omitió reglas estructurales del CSS personalizado: la comparativa y el coverflow de `#celebration-categories` tenían ajustes móviles, pero no sus reglas base. Se recuperaron desde capturas del CSS anteriores a la migración y se colocaron al inicio de `gloobi-hero.css` para que los ajustes posteriores conserven precedencia.
@@ -272,3 +337,11 @@ Los tipos comerciales del filtro de `/invitaciones` se definen en `lib/catalog-t
 # Biblioteca Multimedia (2026-09-15)
 
 Antes de tocar uploads, leer `docs/MEDIA_LIBRARY.md`. La persistencia nueva usa `MEDIA_STORAGE_PATH` y `MEDIA_BASE_URL`, metadata Supabase de `0003_media_library.sql`, o `.mock-data/media.json` en local. No volver a escribir uploads dinámicos en `public/uploads/site` ni habilitar GLB/GLTF sin un consumidor 3D real.
+
+## Vista previa viva del editor
+
+El iframe del editor compartido de demos e invitaciones usa `/i/[slug]?crm_live=1` con sesión admin. Tras cargar la invitación, el visor avisa al editor mediante `postMessage`; el editor le envía el borrador actual en cada cambio, validando origen y slug en ambos lados. Así se ven de inmediato textos y fondos de imagen o video sin guardar. La URL pública normal sigue leyendo únicamente los datos persistidos.
+
+## Elementos fijos del editor CRM — 2026-09-18
+
+La barra del CRM, el menú lateral del editor y la columna de vista previa permanecen visibles durante el scroll de la página. Los contenedores generales usan `overflow-x: clip` en lugar de `hidden` para recortar desbordamiento sin crear un ancestro de scroll que anule `position: sticky`. Menú y teléfono se fijan bajo la barra superior; la columna del teléfono puede desplazarse internamente cuando supera la altura de la ventana.

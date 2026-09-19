@@ -123,7 +123,22 @@ export const categories = [
   }
 ];
 export const slugify = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-export const catalogStyles = ["Moderno", "Elegante", "Minimalista", "Temático", "Colorido", "Floral", "Fantasía", "Neón", "Divertido", "Clásico"];
+export const catalogStyles = [
+  "Moderno",
+  "Elegante",
+  "Colorido",
+  "Neón",
+  "Boho",
+  "Temático",
+  "Floral",
+  "Clásico",
+  "Tierno",
+  "Glamour",
+  "Minimalista",
+  "Divertido",
+  "Fantasía",
+  "Rústico",
+];
 export const catalogFeatures = ["Música", "Mapa GPS", "Confirmación RSVP", "Cuenta regresiva", "Galería de fotos", "Mesa de regalos", "Itinerario / programa", "Código de vestimenta"];
 export const invitationTypes = [
   { slug: "imagen-esencial", label: "Imagen Esencial" },
@@ -135,3 +150,8 @@ export const invitationTypes = [
 
 export type InvitationTypeSlug = (typeof invitationTypes)[number]["slug"];
 export const DEFAULT_INVITATION_TYPE: InvitationTypeSlug = "web-premium";
+export const catalogFileFeatures: Record<"imagen-esencial" | "interactiva" | "video-invitacion", string[]> = {
+  "imagen-esencial": ["Imagen lista para compartir", "Descarga de imagen", "Diseño personalizado", "Formato AVIF"],
+  interactiva: ["Documento PDF", "Enlaces interactivos", "Descarga de PDF", "Diseño personalizado"],
+  "video-invitacion": ["Video animado", "Reproducción en línea", "Descarga de video", "Formato WebM"],
+};

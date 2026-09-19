@@ -9,7 +9,7 @@ type GallerySectionProps = {
 };
 
 export function GallerySection({ data }: GallerySectionProps) {
-  const images = data.image_urls?.slice(0, data.max_images) || [];
+  const images = data.image_urls || [];
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {

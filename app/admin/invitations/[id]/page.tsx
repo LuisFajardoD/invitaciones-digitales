@@ -1,8 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { InvitationEditorForm } from "@/components/admin/invitation-editor-form";
-import { PublicShell } from "@/components/site/PublicShell";
+import { AdminShell } from "@/components/admin/admin-shell";
 import { requireAdminSession } from "@/lib/auth";
-import { getInvitationById } from "@/lib/repository";
+import { getInvitationById, isDemoInvitation } from "@/lib/repository";
 import styles from "@/components/admin/invitation-editor-form.module.css";
 
 type AdminInvitationEditorPageProps = {
@@ -19,12 +19,13 @@ export default async function AdminInvitationEditorPage({
   if (!invitation) {
     notFound();
   }
+  if (isDemoInvitation(invitation)) redirect(`/admin/demos/${id}`);
 
   return (
-    <PublicShell showSiteLink>
+    <AdminShell>
       <section className={styles["inv-editor-route"]}>
         <InvitationEditorForm invitation={invitation} />
       </section>
-    </PublicShell>
+    </AdminShell>
   );
 }

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/predev.mjs",
-    "prebuild": "npm run css:guard && node scripts/prebuild.mjs",
+    "prebuild": "npm run css:guard",
     "css:guard": "node scripts/css-guard.mjs",
     "dev": "next dev",
     "dev:clean": "node scripts/dev-clean.mjs",

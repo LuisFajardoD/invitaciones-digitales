@@ -1,5 +1,13 @@
 # Catálogo de invitaciones Gloobi
 
+## Flujo vigente desde el 17 de septiembre de 2026
+
+Las muestras de Imagen Esencial, Interactiva y Video Invitación se administran en Sitio Web Público → Muestras → Muestras de archivo. En Imagen Esencial se sube un solo AVIF terminado y se usa en la tarjeta y su modal. En Interactiva y Video Invitación se sube el PDF o WebM terminado y una imagen estática aparte para tarjeta y modal. Allí se asignan título de tarjeta, descripción, categoría, subcategoría, estilos y etiquetas manuales pertinentes al formato. Se guardan en `SiteSettingsData.catalog_samples`.
+
+Los demos Web Esencial y Web Premium se editan en Demos y guardan sus datos de tarjeta y vista previa en `sections.__catalog`. Las tarjetas públicas usan la imagen estática; sólo el enlace inferior abre el demo web. Imagen Esencial no muestra enlace inferior; Interactiva abre el PDF y Video Invitación abre el WebM. Las secciones históricas de este documento sobre fuentes de datos, tarjetas e iframes describen estados anteriores y quedan reemplazadas por este flujo.
+
+La vista previa pública ajusta la imagen completa al área disponible de la pantalla, sin desplazamiento interno. La tarjeta pequeña mantiene su recorte actual.
+
 > Estado vigente desde el 15 de septiembre de 2026. Las notas históricas posteriores a esta sección quedan reemplazadas cuando contradigan la lógica descrita aquí.
 
 ## Jerarquía vigente de filtros
@@ -15,7 +23,7 @@ El orden en escritorio, tablet, drawer móvil y accesos rápidos móviles es: **
 - “Limpiar filtros” conserva el tipo obligatorio y limpia sólo filtros secundarios, búsqueda y orden.
 - El filtro Funciones no existe; las funciones reales siguen visibles como badges informativos.
 
-Cada `CatalogItem` contiene `invitationTypes`. Mientras el CRM no tenga ese campo editorial, `lib/invitation-catalog.ts` es la única fuente por slug y usa Web Premium como fallback conservador. No se asignaron formatos adicionales sin datos reales. Para habilitar un diseño en otros productos se agrega `invitationTypes` a su entrada de metadata, sin duplicar la invitación.
+Cada demo publicado define en el CRM su tipo, categoría, subcategoría y estilos. Se guardan bajo `sections.__catalog` y alimentan los filtros públicos; el mapa por slug permanece sólo para muestras históricas. Los filtros muestran categorías y subcategorías que tengan demos publicados del tipo elegido.
 
 Los títulos de los cinco productos del Home enlazan a `/invitaciones?tipo={slug}`. Las tarjetas, preview, modal, hover y responsive del catálogo no fueron rediseñados.
 

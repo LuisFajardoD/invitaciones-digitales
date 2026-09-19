@@ -10,6 +10,8 @@ import {
   demoTheme,
 } from "@/lib/demo-data";
 import { normalizeInvitationRecord, toDatabaseInvitationRecord } from "@/lib/invitation-defaults";
+import { validateCatalogMetadata } from "@/lib/catalog-metadata";
+import { categories } from "@/lib/catalog-taxonomy";
 import { normalizeSiteSettingsData } from "@/lib/site-settings-defaults";
 import { hasConfiguredSupabase } from "@/lib/supabase/env";
 import { createServiceSupabaseClient } from "@/lib/supabase/server";
@@ -38,6 +40,7 @@ type CreateInvitationInput = {
   lng: number;
   hero_badge?: string;
   hero_accent?: string;
+  demo_title?: string;
 };
 
 type CreateInvitationFromTemplateInput = {
@@ -136,6 +139,12 @@ export function isUsingMockData() {
   return !hasConfiguredSupabase();
 }
 
+export function isDemoInvitation(record: InvitationRecord) {
+  if (!record || !record.slug) return false;
+  const slug = record.slug.toLowerCase();
+  return slug.startsWith("demo-") || record.id.startsWith("00000000-0000-4000-8000-");
+}
+
 export async function listInvitations() {
   if (isUsingMockData()) {
     const store = await readMockStore();
@@ -153,6 +162,16 @@ export async function listInvitations() {
   }
 
   return ((data as InvitationRecord[]) || []).map((item) => normalizeInvitationRecord(item));
+}
+
+export async function listDemoInvitations() {
+  const invitations = await listInvitations();
+  return invitations.filter((inv) => isDemoInvitation(inv));
+}
+
+export async function listClientInvitations() {
+  const invitations = await listInvitations();
+  return invitations.filter((inv) => !isDemoInvitation(inv));
 }
 
 export async function getInvitationById(id: string) {
@@ -231,6 +250,22 @@ export async function getSiteSettings() {
 }
 
 export async function saveSiteSettings(data: SiteSettingsData) {
+  const sampleIds = new Set<string>();
+  for (const sample of data.catalog_samples || []) {
+    if (sampleIds.has(sample.id)) throw new Error("Hay muestras de archivo con ID duplicado.");
+    sampleIds.add(sample.id);
+    if (!sample.published) continue;
+    const category = categories.find((item) => item.id === sample.category);
+    if (!category?.subcategories.includes(sample.subcategory)) throw new Error(`La muestra ${sample.card_title || sample.id} necesita categoría y subcategoría válidas.`);
+    const previewUrl = sample.invitation_type === "imagen-esencial" ? sample.asset_url : sample.preview_url;
+    if (!sample.card_title.trim() || !previewUrl.trim()) throw new Error(`La muestra ${sample.id} necesita título e imagen de vista previa.`);
+    const previewExtension = new URL(previewUrl, "http://localhost").pathname.toLowerCase();
+    if (!/\.(avif|webp|png|jpe?g)$/.test(previewExtension)) throw new Error(`La vista previa de ${sample.card_title} debe ser una imagen.`);
+    const requiredExtension = sample.invitation_type === "imagen-esencial" ? ".avif" : sample.invitation_type === "interactiva" ? ".pdf" : sample.invitation_type === "video-invitacion" ? ".webm" : "";
+    if (!requiredExtension || !new URL(sample.asset_url, "http://localhost").pathname.toLowerCase().endsWith(requiredExtension)) {
+      throw new Error(`La muestra ${sample.card_title} requiere un archivo ${requiredExtension || "válido"}.`);
+    }
+  }
   const record: SiteSettingsRecord = {
     id: "main",
     data,
@@ -344,8 +379,11 @@ export async function listThemes() {
   return themes.length ? themes : [{ ...demoTheme }];
 }
 
-export async function createInvitation(input: CreateInvitationInput) {
-  const slug = slugify(input.slug);
+export async function createInvitation(input: CreateInvitationInput, asDemo = false) {
+  const requestedSlug = slugify(input.slug);
+  if (!requestedSlug || (asDemo && requestedSlug === "demo")) throw new Error("Escribe un slug válido.");
+  const slug = asDemo ? `demo-${requestedSlug.replace(/^demo-/, "")}` : requestedSlug;
+  if (!asDemo && slug.startsWith("demo-")) throw new Error("Ese prefijo está reservado para demos.");
   const now = new Date();
   const { eventDate, rsvpUntil, activeUntil } = buildEventWindow(input.event_start_at);
   const defaultHeroBadge = input.hero_badge?.trim() || "Protocolo de despegue";
@@ -356,6 +394,10 @@ export async function createInvitation(input: CreateInvitationInput) {
     id: randomUUID(),
     slug,
     status: "draft",
+    catalog: asDemo ? {
+      invitation_type: "web-premium", category: "", subcategory: "", styles: [], asset_url: "",
+      card_title: input.demo_title?.trim() || "", card_description: "", preview_url: "", feature_tags: [],
+    } : undefined,
     theme_id: input.theme_id || "astronautas",
     event_start_at: eventDate.toISOString(),
     rsvp_until: rsvpUntil,
@@ -366,7 +408,7 @@ export async function createInvitation(input: CreateInvitationInput) {
       ...demoInvitation.sections,
       hero: {
         ...demoInvitation.sections.hero,
-        title: `Invitación ${slug}`,
+        title: asDemo ? input.demo_title?.trim() || `Demo ${slug.replace(/^demo-/, "")}` : `Invitación ${slug}`,
         badge: defaultHeroBadge,
         accent: defaultHeroAccent,
       },
@@ -399,8 +441,9 @@ export async function createInvitation(input: CreateInvitationInput) {
     },
     share: {
       ...demoInvitation.share,
-      og_title: `Invitación ${slug}`,
+      og_title: asDemo ? input.demo_title?.trim() || `Demo ${slug.replace(/^demo-/, "")}` : `Invitación ${slug}`,
       og_description: `Te esperamos en ${input.venue_name}.`,
+      og_image_url: asDemo ? "" : demoInvitation.share.og_image_url,
     },
   });
 
@@ -428,17 +471,19 @@ export async function createInvitationFromTemplate(input: CreateInvitationFromTe
   const siteSettings = await getSiteSettings();
   const templates = normalizeInvitationTemplates(siteSettings.data.invitation_templates);
   const template = templates.find((item) => item.id === templateId);
-  if (!template) {
+  const demoSource = template ? null : await getInvitationById(templateId);
+  if (!template && (!demoSource || !isDemoInvitation(demoSource))) {
     throw new Error("Plantilla no encontrada.");
   }
 
-  const sourceInvitation = await getInvitationById(template.source_invitation_id);
+  const sourceInvitation = demoSource || await getInvitationById(template!.source_invitation_id);
   if (!sourceInvitation) {
     throw new Error("La invitación de origen de la plantilla ya no existe.");
   }
 
   const now = new Date().toISOString();
   const slug = slugify(input.slug);
+  if (slug.startsWith("demo-")) throw new Error("Ese prefijo está reservado para demos.");
   const { eventDate, rsvpUntil, activeUntil } = buildEventWindow(input.event_start_at);
 
   const createdInvitation: InvitationRecord = normalizeInvitationRecord({
@@ -496,11 +541,17 @@ export async function createInvitationFromTemplate(input: CreateInvitationFromTe
 }
 
 export async function updateInvitation(invitation: InvitationRecord) {
+  const current = await getInvitationById(invitation.id);
+  if (!current) throw new Error("Registro no encontrado.");
+  if (isDemoInvitation(current) !== isDemoInvitation(invitation)) {
+    throw new Error("El tipo no cambia al editar el slug. Usa la acción de crear una copia.");
+  }
   const updated: InvitationRecord = normalizeInvitationRecord({
     ...invitation,
     slug: slugify(invitation.slug),
     updated_at: new Date().toISOString(),
   });
+  validateCatalogMetadata(updated.catalog!, isDemoInvitation(current), updated.status, updated.slug);
 
   if (isUsingMockData()) {
     const store = await readMockStore();
@@ -526,7 +577,7 @@ export async function updateInvitation(invitation: InvitationRecord) {
   return updated;
 }
 
-export async function duplicateInvitation(id: string) {
+export async function duplicateInvitation(id: string, asDemo = false) {
   const original = await getInvitationById(id);
   if (!original) {
     throw new Error("Invitación no encontrada.");
@@ -535,7 +586,9 @@ export async function duplicateInvitation(id: string) {
   const duplicated: InvitationRecord = normalizeInvitationRecord({
     ...original,
     id: randomUUID(),
-    slug: `${original.slug}-copy-${Date.now()}`,
+    slug: asDemo
+      ? `demo-${original.slug.replace(/^demo-/, "")}-copy-${Date.now()}`
+      : `${original.slug.replace(/^demo-/, "")}-copy-${Date.now()}`,
     status: "draft",
     client_view_token: randomUUID(),
     created_at: new Date().toISOString(),
@@ -757,4 +810,22 @@ export async function updateEventIntakeStatus(
   store.event_intake_forms[index] = updated;
   await writeMockStore(store);
   return updated;
+}
+
+export async function deleteInvitation(id: string): Promise<boolean> {
+  if (isUsingMockData()) {
+    const store = await readMockStore();
+    const index = store.invitations.findIndex((item) => item.id === id);
+    if (index === -1) return false;
+    store.invitations.splice(index, 1);
+    await writeMockStore(store);
+    return true;
+  }
+
+  const supabase = createServiceSupabaseClient();
+  const { error } = await supabase!.from("invitations").delete().eq("id", id);
+  if (error) {
+    throw new Error(error.message);
+  }
+  return true;
 }

@@ -1,5 +1,38 @@
 # Estado actual del proyecto
 
+Actualización 18 de septiembre de 2026: La sección Archivo visual del editor de invitaciones/demos organiza sus fichas de imágenes en 2 columnas (Imagen 1 izquierda, Imagen 2 derecha), ofreciendo una correspondencia visual directa con la grilla de fotos del teléfono. Se eliminaron descripciones bajo los títulos de tarjetas y se mantuvieron intactos el menú superior, menú lateral izquierdo y vista previa.
+
+Actualización 18 de septiembre de 2026: «Título principal» de la portada acepta «Luis Arturo» sin transformarlo a «Mateo». En demos, el nombre del CRM y catálogo queda separado del título visible en la invitación; los demos heredados pueden recuperar su nombre desde el título para compartir. Las invitaciones de cliente conservan su encabezado ligado al título principal.
+
+Actualización 18 de septiembre de 2026: el editor compartido de demos e invitaciones ya no genera desplazamiento horizontal por el control oculto de subida de imágenes ni por el panel del teléfono. En pantallas donde el contenido cabe, también desaparece el desplazamiento vertical; el cuerpo del CRM es negro sin exponer el fondo azul público. Se conservan menú, dos columnas de formulario y vista previa.
+
+## Marcos de dispositivos — 2026-09-17
+
+La invitación vuelve a ocupar toda la pantalla del marco en ambos editores. Se retiraron las franjas decorativas del navegador y su selector; la cámara permanece superpuesta dentro del área visible. Viewports de referencia: iPhone 17 Pro Max 440×956, HONOR Magic6 Lite 400×884 e iPad 810×1080 px CSS. La escala del marco no altera el viewport interno.
+
+
+Actualización 17 de septiembre de 2026: ambos editores muestran la invitación en un viewport fijo por dispositivo, reducido visualmente al panel. Rueda y arrastre compensan esa escala; Galaxy S23 y S24 tienen presets separados. Las barras del navegador y los ajustes particulares de pantalla no se emulan.
+
+Actualización 17 de septiembre de 2026: el login CRM muestra sólo su fondo suave y burbujas, sin cargar encima la imagen intensa de Site Settings. Las otras páginas conservan sus fondos.
+
+Actualización 17 de septiembre de 2026: la cuenta regresiva de demos se renueva cada 28 días al vencer, con fecha y hora visibles correspondientes. La invitación de cliente creada desde un demo mantiene su fecha real y no usa el recálculo.
+
+Actualización 17 de septiembre de 2026: los diez AVIF de Archivo visual están disponibles en el editor de demos. Los ocho demos publicados usan sólo su cantidad previa de fotos (4–8), y el límite editable de galería permite de 1 a 20 imágenes.
+
+Actualización 17 de septiembre de 2026: la galería pública abre imágenes completas y centradas en un visor que se ajusta a la altura visible de PC y celular.
+
+Actualización 17 de septiembre de 2026: los ocho demos infantiles muestran el nombre del niño o niña en la portada visible de la invitación; los nombres temáticos permanecen en el CRM y el catálogo.
+
+Actualización 17 de septiembre de 2026: las muestras AVIF, PDF y WebM se gestionan en Sitio Web Público → Muestras como fichas de catálogo independientes. Demos se reserva para Web Esencial y Web Premium. Imagen Esencial carga un único AVIF que sirve como archivo final, tarjeta y vista previa; PDF y WebM cargan además una imagen de vista previa. Los productos de archivo usan etiquetas manuales pertinentes; Imagen Esencial no muestra «Ver demo».
+
+Actualización 16 de septiembre de 2026: el editor de demos muestra acciones propias y permite la previa privada de borradores con sesión administrativa. La ruta pública sin sesión no muestra borradores.
+
+Actualización 16 de septiembre de 2026: creación y edición de demos tienen rutas propias `/admin/demos/new` y `/admin/demos/[id]`. Los títulos existentes de Espacio, Dinosaurios y Sirenas se corrigieron en Supabase.
+
+Actualización 16 de septiembre de 2026: cada demo web puede definir desde CRM su tipo comercial, categoría, subcategoría y estilos. El catálogo público toma esos datos del registro publicado y añade demos web nuevos automáticamente; categorías y subcategorías sin muestras del tipo elegido permanecen ocultas en los filtros.
+
+Actualización 16 de septiembre de 2026: el CRM separa la creación, edición y duplicación de demos e invitaciones mediante slugs demo reservados y acciones explícitas de copia. Los demos de Espacio, Dinosaurios y Sirenas muestran títulos temáticos.
+
 Actualización 16 de septiembre de 2026: se retiró un override de geometría al final de `gloobi-hero.css` y se restauraron reglas base de la comparativa y el coverflow omitidas al mover `public/aior` a `site-shell`. Las rutas antiguas de medios guardadas en el editor se normalizan al leer la configuración pública mediante `lib/legacy-asset-paths.json`. El Home usa las rutas físicas actuales para el video de la tarjeta y las decoraciones CSS disponibles.
 
 Actualizado: 15 de septiembre de 2026
@@ -145,6 +178,16 @@ La página `contact.html` reúne tarjetas de WhatsApp, correo y atención en lí
 
 - `/admin/media` administra los recursos cargados desde el CRM.
 - Nuevos recursos se deduplican por SHA-256 y se relacionan mediante `media_usages` al guardar sitio o invitación.
-- El backend Hostinger usa `basic-ftp`, TLS estricto, rutas relativas por hash, creación automática de carpetas y eliminación remota durante purga. La cuenta configurada valida TLS mediante `hostinger.com` y devuelve `/public_html` como raíz remota.
+- El backend Hostinger usa `basic-ftp`, TLS estricto, rutas relativas por hash, creación automática de carpetas y eliminación remota durante purga. La cuenta configurada valida el certificado actual mediante `hstgr.io` y devuelve `/public_html` como raíz remota.
 - Los uploads históricos de `public/uploads/site` se conservan sin migración automática.
 - GLB/GLTF permanecen deshabilitados porque el proyecto no tiene visor de modelos 3D.
+# 17 de septiembre de 2026 — Visor de sirenas en escritorio
+
+La invitación pública se presenta centrada en una columna de 440 px. La portada de sirenas fija su alto y geometría dentro de esa columna en escritorio para que el título, edad, sirena y mensaje mantengan la composición móvil; en celular conserva sus reglas responsivas.
+
+## Vista previa del editor
+
+- El teléfono del editor de demos e invitaciones recibe el borrador actual por `postMessage` en la ruta admin `crm_live`, sin recargar el iframe por cada campo.
+- La vista previa no persiste cambios: al recargar el editor reaparecen los últimos datos guardados. Las invitaciones públicas normales no reciben borradores.
+
+Actualización 18 de septiembre de 2026: barra superior, menú lateral y vista previa del editor permanecen fijos al recorrer formularios largos. El recorte horizontal del CRM usa `clip`; la vista previa limita su altura y permite scroll interno en pantallas bajas.

@@ -89,7 +89,6 @@
     },
     "gallery": {
       "enabled": true,
-      "max_images": 9,
       "asset_ids": []
     },
     "notes": {

@@ -1,14 +1,17 @@
 import { InvitationsDashboard } from "@/components/admin/invitations-dashboard";
 import { requireAdminSession } from "@/lib/auth";
-import { listInvitations } from "@/lib/repository";
+import { listClientInvitations, listDemoInvitations } from "@/lib/repository";
+
+export const revalidate = 0;
 
 export default async function AdminInvitationsPage() {
   await requireAdminSession();
-  const invitations = await listInvitations();
+  const clientInvitations = await listClientInvitations();
+  const demos = await listDemoInvitations();
 
   return (
     <InvitationsDashboard
-      invitations={invitations.map((invitation) => ({
+      invitations={clientInvitations.map((invitation) => ({
         id: invitation.id,
         slug: invitation.slug,
         title: invitation.sections.hero.title,
@@ -17,6 +20,7 @@ export default async function AdminInvitationsPage() {
         timezone: invitation.timezone,
         client_view_token: invitation.client_view_token,
       }))}
+      demos={demos}
     />
   );
 }

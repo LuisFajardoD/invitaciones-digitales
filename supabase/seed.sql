@@ -206,7 +206,6 @@ with invitation_seed as (
     },
     "gallery": {
       "enabled": true,
-      "max_images": 9,
       "asset_ids": []
     },
     "notes": {

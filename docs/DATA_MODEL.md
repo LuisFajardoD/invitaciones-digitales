@@ -169,7 +169,7 @@ Ejemplo resumido:
 - `quick_actions`: `{ enabled, items[] }`
 - `countdown`: `{ enabled, label, target_at }`
 - `map`: `{ enabled, embed:{lat,lng,zoom}, address_text, maps_url }`
-- `gallery`: `{ enabled, max_images, asset_ids[] }`
+- `gallery`: `{ enabled, image_urls[] }`
 - `notes`: `{ enabled, items[] }`
 - `rsvp`: `{ enabled, fields:{...}, closed_message }`
 - `contact`: `{ enabled, name, whatsapp_number, whatsapp_url, label }`

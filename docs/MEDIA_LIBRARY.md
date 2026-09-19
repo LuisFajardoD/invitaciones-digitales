@@ -104,7 +104,7 @@ En modo local crea, verifica y elimina un archivo temporal. En Hostinger:
 
 No deja archivos de prueba si el servidor permite la limpieza. La salida nunca incluye contraseña ni usuario.
 
-La sonda confirmó que el servidor anuncia `AUTH TLS`. La cuenta muestra `ftp://62.72.50.242`, y su certificado se valida con `MEDIA_FTP_TLS_SERVERNAME=hostinger.com`; no se desactiva `rejectUnauthorized`. `PWD` devuelve `/public_html`, que es el root remoto comprobado para esta cuenta.
+La sonda confirmó que el servidor anuncia `AUTH TLS`. La cuenta muestra `ftp://62.72.50.242`; desde agosto de 2026 el certificado presentado autoriza `hstgr.io` y `*.hstgr.io`, por lo que se valida con `MEDIA_FTP_TLS_SERVERNAME=hstgr.io` sin desactivar `rejectUnauthorized`. `PWD` devuelve `/public_html`, que es el root remoto comprobado para esta cuenta.
 
 ## Producción y rotación de credenciales
 

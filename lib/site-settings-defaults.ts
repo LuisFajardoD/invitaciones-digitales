@@ -475,6 +475,7 @@ export function normalizeSiteSettingsData(input?: SiteSettingsData | null): Site
       },
     },
     pages: normalizedPages,
+    catalog_samples: Array.isArray(source.catalog_samples) ? source.catalog_samples : [],
     invitation_templates: Array.isArray(source.invitation_templates)
       ? source.invitation_templates
           .filter((template): template is NonNullable<SiteSettingsData["invitation_templates"]>[number] =>

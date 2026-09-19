@@ -123,7 +123,6 @@ export interface MapSectionData extends SectionBase {
 }
 
 export interface GallerySectionData extends SectionBase {
-  max_images: number;
   image_urls: string[];
 }
 
@@ -139,6 +138,9 @@ export interface RsvpSectionData extends SectionBase {
     message: boolean;
   };
   closed_message: string;
+  submit_button_label?: string;
+  decline_button_label?: string;
+  cancel_button_label?: string;
 }
 
 export interface ContactSectionData extends SectionBase {
@@ -186,6 +188,17 @@ export interface InvitationRecord {
   event_start_at: string;
   rsvp_until: string;
   active_until: string;
+  catalog?: {
+    invitation_type: "imagen-esencial" | "interactiva" | "video-invitacion" | "web-esencial" | "web-premium";
+    category: string;
+    subcategory: string;
+    styles: string[];
+    asset_url: string;
+    card_title?: string;
+    card_description?: string;
+    preview_url?: string;
+    feature_tags?: string[];
+  };
   background?: InvitationBackgroundConfig;
   sections_order: SectionKey[];
   sections: InvitationSections;
@@ -218,6 +231,8 @@ export interface ThemeRecord {
 export interface InvitationTemplateRecord {
   id: string;
   name: string;
+  slug?: string;
+  theme_id?: string;
   description?: string;
   source_invitation_id: string;
   created_at: string;
@@ -344,6 +359,22 @@ export interface SiteSettingsData {
   blocks: SiteBlocks;
   pages: Record<SitePageKey, SiteContentPage>;
   invitation_templates?: InvitationTemplateRecord[];
+  catalog_samples?: CatalogSample[];
+}
+
+export interface CatalogSample {
+  id: string;
+  invitation_type: "imagen-esencial" | "interactiva" | "video-invitacion";
+  card_title: string;
+  card_description: string;
+  category: string;
+  subcategory: string;
+  styles: string[];
+  feature_tags: string[];
+  preview_url: string;
+  asset_url: string;
+  published: boolean;
+  created_at: string;
 }
 
 export interface SiteSettingsRecord {

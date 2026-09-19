@@ -13,10 +13,11 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   const { id } = await params;
+  const asDemo = new URL(request.url).searchParams.get("as") === "demo";
 
   try {
-    const duplicated = await duplicateInvitation(id);
-    return NextResponse.redirect(new URL(`/admin/invitations/${duplicated.id}`, request.url), 303);
+    const duplicated = await duplicateInvitation(id, asDemo);
+    return NextResponse.json({ id: duplicated.id });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "No se pudo duplicar." },

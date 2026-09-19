@@ -60,6 +60,8 @@ import {
   buildGoogleCalendarUrl,
   getBackendAssetOrigin,
   getCountdown,
+  getDemoCountdownTarget,
+  getDisplayInvitation,
   getViewerRoute,
   resolveHeroBackground,
   resolveHeroCharacterUrl,
@@ -502,11 +504,7 @@ function InvitationViewerCanvas({
   const orderedSectionKeys = getOrderedSectionKeys(invitation.sections_order);
   const mapsUrl = invitation.sections.map.maps_url?.trim();
   const noteItems = trimList(invitation.sections.notes.items);
-  const galleryMaxImages = Math.max(1, Number(invitation.sections.gallery.max_images) || 6);
-  const galleryImages = trimList(invitation.sections.gallery.image_urls).slice(
-    0,
-    galleryMaxImages,
-  );
+  const galleryImages = trimList(invitation.sections.gallery.image_urls);
   const genericSections: Partial<Record<keyof typeof sectionDisplayLabels, GenericSection>> = {
     itinerary: invitation.sections.itinerary,
     dress_code: invitation.sections.dress_code,
@@ -604,12 +602,11 @@ function InvitationViewerCanvas({
                   <MapSectionViewer key={key} invitation={invitation} mapsUrl={mapsUrl} />
                 ) : null;
               case "gallery":
-                return invitation.sections.gallery.enabled ? (
+                return invitation.sections.gallery.enabled && galleryImages.length > 0 ? (
                   <GallerySectionViewer
                     key={key}
                     themeId={invitation.theme_id}
                     images={galleryImages}
-                    maxImages={galleryMaxImages}
                     assetOrigin={assetOrigin}
                     onOpen={allowLightbox ? setLightboxImage : () => undefined}
                   />
@@ -953,9 +950,10 @@ function MermaidLiquidOverlay({ variant = "hero" }: { variant?: "hero" }) {
 
 type AppProps = {
   initialInvitationThemeId?: string;
+  liveEditorPreview?: boolean;
 };
 
-export function App({ initialInvitationThemeId }: AppProps) {
+export function App({ initialInvitationThemeId, liveEditorPreview = false }: AppProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = useMemo(() => {
@@ -1686,7 +1684,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
       return;
     }
 
-    const run = () => setCountdown(getCountdown(invitation.sections.countdown.target_at));
+    const run = () => setCountdown(getCountdown(getDemoCountdownTarget(invitation)));
     run();
     const timer = window.setInterval(run, 1000);
 
@@ -1731,6 +1729,24 @@ export function App({ initialInvitationThemeId }: AppProps) {
 
     setPublicInvitationReady(false);
   }, [route.mode, route.slug]);
+
+  useEffect(() => {
+    if (!liveEditorPreview || route.mode !== "invitation" || invitation?.slug !== route.slug || window.parent === window) {
+      return;
+    }
+
+    const receiveDraft = (event: MessageEvent) => {
+      if (event.source !== window.parent || event.origin !== window.location.origin) return;
+      if (event.data?.type !== "gloobi:editor-preview-draft") return;
+      const next = event.data.invitation as InvitationRecord | undefined;
+      if (!next || next.slug !== route.slug || !next.sections?.hero) return;
+      setInvitation(next);
+    };
+
+    window.addEventListener("message", receiveDraft);
+    window.parent.postMessage({ type: "gloobi:editor-preview-ready", slug: route.slug }, window.location.origin);
+    return () => window.removeEventListener("message", receiveDraft);
+  }, [liveEditorPreview, route.mode, route.slug, invitation?.slug]);
 
   useEffect(() => {
     if (route.mode !== "invitation" || loading || !invitation || Boolean(error)) {
@@ -2373,10 +2389,6 @@ export function App({ initialInvitationThemeId }: AppProps) {
         <div
           className="viewer-login-ambient"
           aria-hidden="true"
-          style={loginContent ? {
-            "--viewer-login-bg-dark": `url("${loginContent.background_dark_url || ""}")`,
-            "--viewer-login-bg-light": `url("${loginContent.background_light_url || loginContent.background_dark_url || ""}")`,
-          } as CSSProperties : undefined}
         >
           <span />
           <span />
@@ -2390,11 +2402,6 @@ export function App({ initialInvitationThemeId }: AppProps) {
             width="306"
             height="118"
           />
-          <div className="viewer-login-heading">
-            <p className="viewer-eyebrow">{loginContent?.eyebrow || "Acceso administrativo"}</p>
-            <h1>{loginContent?.title || "Inicia sesión"}</h1>
-            <p className="viewer-section__subtitle">{loginContent?.description || "Accede al panel de administración de Gloobi."}</p>
-          </div>
           <form className="viewer-stack-list viewer-login-form" onSubmit={handleAdminLoginSubmit}>
             <label className="viewer-field viewer-login-field">
               <span>Correo</span>
@@ -2640,8 +2647,9 @@ export function App({ initialInvitationThemeId }: AppProps) {
     const currentPreviewSignature = `${previewDeviceId}:${previewCaptureMode}`;
     const hasMatchingPreviewScreenshot =
       Boolean(previewScreenshotUrl) && previewScreenshotSignature === currentPreviewSignature;
+    const editorDisplayInvitation = getDisplayInvitation(editorDraft);
     const editorLiveCountdown = editorDraft.sections.countdown.enabled
-      ? getCountdown(editorDraft.sections.countdown.target_at)
+      ? getCountdown(editorDisplayInvitation.sections.countdown.target_at)
       : [];
     const previewDisplayWidth = Math.min(selectedPreviewDevice.viewport.w, 304);
     const previewShellWidth = Math.min(previewDisplayWidth + 24, 328);
@@ -3750,7 +3758,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
                           <div className="theme-viewer">
                             <div className="viewer-shell viewer-shell--embedded">
                               <InvitationViewerCanvas
-                                invitation={editorDraft}
+                                invitation={editorDisplayInvitation}
                                 assetOrigin={assetOrigin}
                                 countdown={editorLiveCountdown}
                                 allowLightbox={false}
@@ -4061,7 +4069,7 @@ export function App({ initialInvitationThemeId }: AppProps) {
     <main className={`app-viewer viewer-shell viewer-shell--public${viewerThemeClass}`} data-theme={viewerThemeKey}>
       <div className="theme-viewer">
         <div className="viewer-public-frame">
-          <InvitationViewerCanvas invitation={invitation} assetOrigin={assetOrigin} countdown={countdown} />
+          <InvitationViewerCanvas invitation={getDisplayInvitation(invitation)} assetOrigin={assetOrigin} countdown={countdown} />
         </div>
       </div>
     </main>

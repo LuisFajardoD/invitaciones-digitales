@@ -28,18 +28,10 @@ export function InvitationCatalog({ items, page }: { items: CatalogItem[]; page:
   const [preview, setPreview] = useState<CatalogItem | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [compactCatalog, setCompactCatalog] = useState<boolean | null>(null);
   const rail = useRef<HTMLDivElement>(null);
   const footer = useRef<HTMLDivElement>(null);
   useEffect(() => { const sync = () => { const next = readFilters(); const params = new URLSearchParams(window.location.search); if (!invitationTypes.some(type => type.slug === params.get("tipo"))) { params.set("tipo", next.invitationType); window.history.replaceState(null, "", `${window.location.pathname}?${params}`); } setFilters(next); setSearch(next.q); setLimit(10); }; sync(); setReady(true); window.addEventListener("popstate", sync); return () => window.removeEventListener("popstate", sync); }, []);
   useEffect(() => { const button = rail.current?.querySelector("button"); const nav = rail.current?.querySelector(".gloobi-rail-logo-menu"); button?.setAttribute("aria-expanded", String(menu)); nav?.classList.toggle("is-open", menu); }, [menu]);
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 800px)");
-    const sync = () => setCompactCatalog(query.matches);
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
-  }, []);
   function update(patch: Partial<Filters>) {
     const next = { ...filters, ...patch };
     const p = new URLSearchParams();
@@ -110,8 +102,8 @@ export function InvitationCatalog({ items, page }: { items: CatalogItem[]; page:
           <div className={styles.resultBar}><span role="status" aria-live="polite">{results.length} {results.length === 1 ? "invitación" : "invitaciones"}</span><label>Ordenar por <select value={filters.sort} onChange={e => update({sort: e.target.value})}><option value="featured">Destacadas</option><option value="recent">Más recientes</option><option value="az">A–Z</option></select></label></div>
           {active && <div className={styles.chips}>{category && <button onClick={() => update({category: "", subcategory: "", styles: []})}>{category.label} ×</button>}{filters.subcategory && <button onClick={() => update({subcategory: "", styles: []})}>{filters.subcategory} ×</button>}{filters.q && <button onClick={() => {setSearch(""); update({q: ""});}}>“{filters.q}” ×</button>}{filters.styles.map(s => <button key={s} onClick={() => toggleStyle(s)}>{s} ×</button>)}<button onClick={clear}>Limpiar filtros</button></div>}
           <div className={styles.grid}>{results.slice(0,limit).map((item,index) => <article className={styles.card} key={item.id}>
-            <button className={styles.media} onClick={() => setPreview(item)} aria-label={`Vista previa de ${item.title}`}>{compactCatalog !== false && item.thumbnail ? <img src={item.thumbnail} alt="" loading={index < 4 ? "eager" : "lazy"} /> : compactCatalog === false ? <iframe src={item.demoUrl} title={`Demo real de ${item.title}`} loading={index < 2 ? "eager" : "lazy"} tabIndex={-1} aria-hidden="true" /> : null}<span className={styles.previewButton}>Vista previa</span></button>
-            <div className={styles.cardCopy}><span className={styles.category}>{categories.find(c => c.id === item.category)?.label || "Invitación digital"}</span><h2>{item.title}</h2><p>{item.subcategory || item.description}</p><div className={styles.features}>{item.features.slice(0,3).map(f => <span key={f} title={f}>✓ {f}</span>)}{item.features.length > 3 && <span title={item.features.slice(3).join(" · ")}>+{item.features.length - 3}</span>}</div><a className={styles.demoLink} href={item.demoUrl}>Ver demo <span aria-hidden="true">↗</span></a></div>
+            <button className={styles.media} onClick={() => setPreview(item)} aria-label={`Vista previa de ${item.title}`}>{item.thumbnail ? <img src={item.thumbnail} alt="" loading={index < 4 ? "eager" : "lazy"} /> : null}<span className={styles.previewButton}>Vista previa</span></button>
+            <div className={styles.cardCopy}><span className={styles.category}>{categories.find(c => c.id === item.category)?.label || "Invitación digital"}</span><h2>{item.title}</h2><p>{item.subcategory || item.description}</p><div className={styles.features}>{item.features.slice(0,3).map(f => <span key={f} title={f}>✓ {f}</span>)}{item.features.length > 3 && <span title={item.features.slice(3).join(" · ")}>+{item.features.length - 3}</span>}</div>{item.showDemo ? <a className={styles.demoLink} href={item.demoUrl} target={item.invitationTypes[0].startsWith("web-") ? undefined : "_blank"} rel={item.invitationTypes[0].startsWith("web-") ? undefined : "noreferrer"}>{item.invitationTypes[0] === "interactiva" ? "Ver PDF" : item.invitationTypes[0] === "video-invitacion" ? "Ver video" : "Ver demo"} <span aria-hidden="true">↗</span></a> : null}</div>
           </article>)}</div>
           {!results.length && <div className={styles.empty}><span aria-hidden="true">✧</span><h2>No encontramos invitaciones con esos filtros</h2><p>Prueba cambiando alguna opción o limpia los filtros para ver más diseños.</p><button onClick={clear}>Limpiar filtros</button></div>}
           {results.length > limit && <div className={styles.loadMore}><button onClick={() => setLimit(n => n+10)}>Cargar más</button><p>Mostrando {Math.min(limit,results.length)} de {results.length}</p></div>}
@@ -119,7 +111,7 @@ export function InvitationCatalog({ items, page }: { items: CatalogItem[]; page:
       </div>
     </main>
     <div ref={footer} className={styles.footer} dangerouslySetInnerHTML={{__html: footerHtml}} />
-    {preview && <CatalogDialog title={preview.title} onClose={() => setPreview(null)}><div className={styles.previewScroll}><p>{categories.find(c => c.id === preview.category)?.label} · {preview.subcategory}</p>{preview.thumbnail ? <img src={preview.thumbnail} alt={`Vista previa completa de ${preview.title}`} onError={e => {e.currentTarget.hidden = true; e.currentTarget.nextElementSibling?.removeAttribute("hidden");}} /> : null}<p hidden={Boolean(preview.thumbnail)}>Imagen no disponible. Puedes abrir el demo interactivo.</p></div><footer className={styles.dialogActions}><a href={preview.demoUrl}>Ver demo interactivo ↗</a><button onClick={() => setPreview(null)}>Cerrar</button></footer></CatalogDialog>}
+    {preview && <CatalogDialog title={preview.title} onClose={() => setPreview(null)} fullScreen><div className={styles.previewScroll}>{preview.thumbnail ? <img src={preview.thumbnail} alt={`Vista previa completa de ${preview.title}`} /> : <p>Imagen de vista previa no disponible.</p>}</div></CatalogDialog>}
     {drawer && <CatalogDialog title="Filtros" drawer onClose={() => setDrawer(false)}><div className={styles.drawerScroll}>{controls}</div><footer className={styles.dialogActions}><button onClick={() => setDrawer(false)}>Ver {results.length} invitaciones</button></footer></CatalogDialog>}
   </div>;
 }

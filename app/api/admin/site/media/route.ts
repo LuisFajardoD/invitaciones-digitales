@@ -19,6 +19,12 @@ export async function POST(request: Request) {
     const invitationType = invitationTypes.some((item) => item.slug === requestedProduct) ? requestedProduct as InvitationTypeSlug : null;
     const detected = detectMedia(Buffer.from(await file.arrayBuffer()));
     validateMediaForProduct(detected.assetType, invitationType);
+    const requiredMime = invitationType === "imagen-esencial" ? "image/avif"
+      : invitationType === "interactiva" ? "application/pdf"
+      : invitationType === "video-invitacion" ? "video/webm" : null;
+    if (requiredMime && detected.mimeType !== requiredMime) {
+      throw new Error(`El tipo ${invitationType} requiere ${requiredMime}.`);
+    }
     const hash = sha256(detected.buffer);
     const storage = getMediaStorageAdapter();
     const existing = await findMediaAssetByHash(hash);

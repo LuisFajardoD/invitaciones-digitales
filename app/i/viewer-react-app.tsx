@@ -16,6 +16,7 @@ const PublicReactApp = dynamic(() => import("@/src/crm/App").then((module) => mo
 
 type ViewerReactAppProps = {
   initialInvitationThemeId?: string;
+  liveEditorPreview?: boolean;
 };
 
 function getInitialThemeMode(): SiteThemeMode {
@@ -31,7 +32,7 @@ function getInitialThemeMode(): SiteThemeMode {
   return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
 }
 
-export function ViewerReactApp({ initialInvitationThemeId }: ViewerReactAppProps) {
+export function ViewerReactApp({ initialInvitationThemeId, liveEditorPreview = false }: ViewerReactAppProps) {
   const [themeMode, setThemeMode] = useState<SiteThemeMode>("dark");
 
   useEffect(() => {
@@ -65,7 +66,7 @@ export function ViewerReactApp({ initialInvitationThemeId }: ViewerReactAppProps
 
   return (
     <div className={`viewer-theme-sync viewer-theme-sync--${themeMode}`}>
-      <PublicReactApp initialInvitationThemeId={initialInvitationThemeId} />
+      <PublicReactApp initialInvitationThemeId={initialInvitationThemeId} liveEditorPreview={liveEditorPreview} />
     </div>
   );
 }

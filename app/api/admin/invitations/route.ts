@@ -26,6 +26,7 @@ export async function POST(request: Request) {
     address_text?: string;
     lat?: number;
     lng?: number;
+    mode?: "demo";
   };
 
   if (!body.slug || !body.event_start_at || !body.venue_name || !body.address_text) {
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
       address_text: body.address_text,
       lat: body.lat || 0,
       lng: body.lng || 0,
-    });
+    }, body.mode === "demo");
     return NextResponse.json({ id: invitation.id });
   } catch (error) {
     return NextResponse.json(

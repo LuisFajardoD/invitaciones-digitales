@@ -16,6 +16,17 @@ const HERO_TYPEWRITER_LINE_GAP_STEPS = 3;
 const HERO_BUBBLE_COUNT = 28;
 let hasPlayedAstronautTypewriter = false;
 
+const DEMO_CHILD_NAMES: Record<string, { themeTitle: string; childName: string }> = {
+  "demo-espacio": { themeTitle: "Misión espacial", childName: "Luis Arturo" },
+  "demo-dinosaurios": { themeTitle: "Cumple jurásico", childName: "Luis Arturo" },
+  "demo-futbol": { themeTitle: "Cumple de campeones", childName: "Luis Arturo" },
+  "demo-carreras": { themeTitle: "Cumple a toda velocidad", childName: "Luis Arturo" },
+  "demo-animales": { themeTitle: "Safari de cumpleanos", childName: "Luis Arturo" },
+  "demo-videojuegos": { themeTitle: "Cumple nivel legendario", childName: "Luis Arturo" },
+  "demo-fantasia": { themeTitle: "Cumple en el reino encantado", childName: "Karen Vanessa" },
+  "demo-princesas": { themeTitle: "Aventura de sirenas", childName: "Karen Vanessa" },
+};
+
 function isAstronautTheme(themeId: string) {
   return themeId === "astronautas";
 }
@@ -181,7 +192,11 @@ export function HeroSectionViewer({
 }) {
   const usesAstronautTheme = isAstronautTheme(invitation.theme_id);
   const usesMermaidTheme = isMermaidTheme(invitation.theme_id);
-  const heroTitle = repairLegacyText(invitation.sections.hero.title).trim();
+  const storedHeroTitle = repairLegacyText(invitation.sections.hero.title).trim();
+  const demoChildName = DEMO_CHILD_NAMES[invitation.slug];
+  // Keep the themed title in CRM and catalog; replace it only on the demo cover.
+  // If an editor changes the hero title, show that new title instead.
+  const heroTitle = demoChildName?.themeTitle === storedHeroTitle ? demoChildName.childName : storedHeroTitle;
   const titleLines = usesAstronautTheme
     ? buildAstronautTitleLines(heroTitle).filter(Boolean)
     : splitTitle(heroTitle).filter(Boolean);
@@ -749,18 +764,14 @@ export function MapSectionViewer({
 export function GallerySectionViewer({
   themeId,
   images,
-  maxImages,
   assetOrigin,
   onOpen,
 }: {
   themeId: string;
   images: string[];
-  maxImages: number;
   assetOrigin: string;
   onOpen: (url: string) => void;
 }) {
-  const totalSlots = Math.max(1, Math.trunc(maxImages) || 1);
-
   return (
     <InvitationSectionFrameViewer
       eyebrow="Archivo visual"
@@ -769,21 +780,9 @@ export function GallerySectionViewer({
       decorIcon={getSectionDecorIcon(themeId, "gallery")}
     >
       <div className="gallery-grid gallery-grid--mission">
-        {Array.from({ length: totalSlots }).map((_, index) => {
-          const imageUrl = images[index] || "";
+        {images.map((imageUrl, index) => {
           const src = resolveMediaUrl(imageUrl, assetOrigin);
           const shouldSpanFull = images.length % 2 === 1 && index === images.length - 1 && images.length > 1;
-
-          if (!src) {
-            return (
-              <div
-                key={`placeholder-${index}`}
-                className={`gallery-tile gallery-tile--placeholder${shouldSpanFull ? " gallery-tile--wide" : ""}`}
-              >
-                <span>Espacio {index + 1}</span>
-              </div>
-            );
-          }
 
           return (
             <GalleryTileViewer
@@ -796,11 +795,6 @@ export function GallerySectionViewer({
           );
         })}
       </div>
-      {!images.length ? (
-        <p className="mission-caption">
-          Espacio temporal activo: reemplaza estos bloques con el arte final cuando cargues recursos reales.
-        </p>
-      ) : null}
     </InvitationSectionFrameViewer>
   );
 }
@@ -898,6 +892,9 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
   const fields = invitation.sections.rsvp.fields || {};
   const allowGuestsCount = Boolean(fields.guests_count ?? fields.allow_guests_count);
   const allowMessage = Boolean(fields.message ?? fields.allow_message);
+  const submitButtonLabel = invitation.sections.rsvp.submit_button_label?.trim() || "Enviar confirmación";
+  const declineButtonLabel = invitation.sections.rsvp.decline_button_label?.trim() || "Registrar no asistencia";
+  const cancelButtonLabel = invitation.sections.rsvp.cancel_button_label?.trim() || "Cancelar asistencia";
   const isClosed = useMemo(
     () => new Date().getTime() > new Date(invitation.rsvp_until).getTime(),
     [invitation.rsvp_until],
@@ -1168,7 +1165,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
           ) : null}
           <div className="mission-field mission-field--wide rsvp-form__actions">
             <button type="submit" className="mission-button quick-button" disabled={submitting}>
-              {submitting ? "Transmitiendo..." : attending === "no" ? "Registrar no asistencia" : "Enviar confirmación"}
+              {submitting ? "Transmitiendo..." : attending === "no" ? declineButtonLabel : submitButtonLabel}
             </button>
             <button
               type="button"
@@ -1176,10 +1173,10 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
               disabled={submitting}
               onClick={() => openCancelModal()}
             >
-              {submitting ? "Transmitiendo..." : "Cancelar asistencia"}
+              {submitting ? "Transmitiendo..." : cancelButtonLabel}
             </button>
             <p className="mission-caption mission-caption--wide">
-              Si ya habías confirmado y ahora no podrás asistir, usa "Cancelar asistencia".
+              Si ya habías confirmado y ahora no podrás asistir, usa "{cancelButtonLabel}".
             </p>
           </div>
         </form>
@@ -1198,7 +1195,7 @@ export function RsvpSectionViewer({ invitation }: { invitation: InvitationRecord
             role="document"
             aria-live="polite"
           >
-            <h3 id="rsvp-cancel-modal-title">Cancelar asistencia</h3>
+            <h3 id="rsvp-cancel-modal-title">{cancelButtonLabel}</h3>
             <p>Ingresa un nombre de referencia y cuántos asistentes deseas cancelar.</p>
             <form className="rsvp-cancel-form" onSubmit={handleCancelAttendanceSubmit}>
               <label className="mission-field rsvp-cancel-form__field">

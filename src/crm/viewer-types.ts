@@ -114,7 +114,6 @@ export type InvitationRecord = {
     gallery: {
       enabled: boolean;
       image_urls: string[];
-      max_images: number;
     };
     notes: {
       enabled: boolean;
@@ -125,6 +124,9 @@ export type InvitationRecord = {
     rsvp: {
       enabled: boolean;
       closed_message: string;
+      submit_button_label?: string;
+      decline_button_label?: string;
+      cancel_button_label?: string;
       fields: {
         guests_count?: boolean;
         message?: boolean;

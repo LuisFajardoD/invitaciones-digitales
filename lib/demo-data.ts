@@ -1,4 +1,5 @@
 import { DEFAULT_BLOCK_ORDER, DEFAULT_SECTION_ORDER } from "@/lib/constants";
+import { demoGalleryImages } from "@/lib/demo-gallery";
 import { DEFAULT_PACKAGES_SERVICE_NOTE, RECOMMENDED_SITE_PACKAGES } from "@/lib/site-packages";
 import { createDefaultSiteSettings } from "@/lib/site-settings-defaults";
 import { createWhatsAppUrl } from "@/lib/utils";
@@ -88,7 +89,6 @@ export const demoInvitation: InvitationRecord = {
       items: [
         { type: "confirm", label: "Confirmar" },
         { type: "location", label: "Ubicación" },
-        { type: "calendar", label: "Agregar al calendario" },
         { type: "share", label: "Compartir" },
       ],
     },
@@ -112,7 +112,6 @@ export const demoInvitation: InvitationRecord = {
     },
     gallery: {
       enabled: true,
-      max_images: 6,
       image_urls: [
         "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
         "https://images.unsplash.com/photo-1447433819943-74a20887a5b8?auto=format&fit=crop&w=800&q=80",
@@ -136,6 +135,9 @@ export const demoInvitation: InvitationRecord = {
         message: true,
       },
       closed_message: "RSVP cerrado. Gracias por tu interés.",
+      submit_button_label: "Enviar confirmación",
+      decline_button_label: "Registrar no asistencia",
+      cancel_button_label: "Cancelar asistencia",
     },
     contact: {
       enabled: true,
@@ -270,7 +272,6 @@ export const demoJulietaInvitation: InvitationRecord = {
       items: [
         { type: "confirm", label: "Confirmar" },
         { type: "location", label: "Ubicación" },
-        { type: "calendar", label: "Agregar al calendario" },
         { type: "share", label: "Compartir" },
       ],
     },
@@ -292,7 +293,6 @@ export const demoJulietaInvitation: InvitationRecord = {
     },
     gallery: {
       enabled: true,
-      max_images: 6,
       image_urls: [
         "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
         "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
@@ -313,6 +313,9 @@ export const demoJulietaInvitation: InvitationRecord = {
         message: true,
       },
       closed_message: "RSVP cerrado. Gracias por tu interés.",
+      submit_button_label: "Enviar confirmación",
+      decline_button_label: "Registrar no asistencia",
+      cancel_button_label: "Cancelar asistencia",
     },
     contact: {
       enabled: true,
@@ -402,6 +405,7 @@ type CategoryDemoSpec = {
   base: "space" | "princess";
   themeId: string;
   coverUrl: string;
+  galleryCount: number;
   heroTitle: string;
   heroSubtitle: string;
   heroBadge: string;
@@ -425,7 +429,8 @@ const categoryDemoSpecs: CategoryDemoSpec[] = [
     base: "space",
     themeId: "astronautas",
     coverUrl: "/assets/gloobi-home/tematicas-infantiles/espacio.avif",
-    heroTitle: "Cumple espacial de Mateo",
+    galleryCount: 8,
+    heroTitle: "Misión espacial",
     heroSubtitle: "Prepara tu casco para una fiesta fuera de este mundo.",
     heroBadge: "Mision espacial",
     heroAccent: "Despegue de cumpleanos",
@@ -450,7 +455,8 @@ const categoryDemoSpecs: CategoryDemoSpec[] = [
     base: "space",
     themeId: "astronautas",
     coverUrl: "/assets/gloobi-home/tematicas-infantiles/dinosaurios.avif",
-    heroTitle: "Cumple jurásico de Leo",
+    galleryCount: 6,
+    heroTitle: "Cumple jurásico",
     heroSubtitle: "Una expedicion llena de dinosaurios, pistas y mucha diversion.",
     heroBadge: "Aventura jurásica",
     heroAccent: "Exploradores invitados",
@@ -474,6 +480,7 @@ const categoryDemoSpecs: CategoryDemoSpec[] = [
     base: "space",
     themeId: "astronautas",
     coverUrl: "/assets/gloobi-home/tematicas-infantiles/futbol.avif",
+    galleryCount: 6,
     heroTitle: "Cumple de campeones",
     heroSubtitle: "La cancha esta lista para celebrar con goles, juegos y pastel.",
     heroBadge: "Final de cumpleanos",
@@ -498,6 +505,7 @@ const categoryDemoSpecs: CategoryDemoSpec[] = [
     base: "space",
     themeId: "astronautas",
     coverUrl: "/assets/gloobi-home/tematicas-infantiles/carreras.avif",
+    galleryCount: 6,
     heroTitle: "Cumple a toda velocidad",
     heroSubtitle: "Enciende motores para una fiesta llena de pistas, luces y adrenalina.",
     heroBadge: "Gran premio infantil",
@@ -522,6 +530,7 @@ const categoryDemoSpecs: CategoryDemoSpec[] = [
     base: "princess",
     themeId: "sirenas",
     coverUrl: "/assets/gloobi-home/tematicas-infantiles/fantasia.avif",
+    galleryCount: 4,
     heroTitle: "Cumple en el reino encantado",
     heroSubtitle: "Una celebracion con magia, brillos y momentos de cuento.",
     heroBadge: "Fiesta de fantasía",
@@ -546,6 +555,7 @@ const categoryDemoSpecs: CategoryDemoSpec[] = [
     base: "space",
     themeId: "astronautas",
     coverUrl: "/assets/gloobi-home/tematicas-infantiles/animales.avif",
+    galleryCount: 6,
     heroTitle: "Safari de cumpleanos",
     heroSubtitle: "Una aventura entre animalitos, juegos y mucha alegria.",
     heroBadge: "Safari party",
@@ -570,6 +580,7 @@ const categoryDemoSpecs: CategoryDemoSpec[] = [
     base: "space",
     themeId: "astronautas",
     coverUrl: "/assets/gloobi-home/tematicas-infantiles/videojuegos.avif",
+    galleryCount: 6,
     heroTitle: "Cumple nivel legendario",
     heroSubtitle: "Presiona start y acompananos a desbloquear una fiesta epica.",
     heroBadge: "Level up party",
@@ -594,7 +605,8 @@ const categoryDemoSpecs: CategoryDemoSpec[] = [
     base: "princess",
     themeId: "sirenas",
     coverUrl: "/assets/gloobi-home/tematicas-infantiles/princesas.avif",
-    heroTitle: "Cumple de cuento mágico",
+    galleryCount: 5,
+    heroTitle: "Aventura de sirenas",
     heroSubtitle: "Una fiesta dulce con coronas, brillos y momentos inolvidables.",
     heroBadge: "Princesas y magia",
     heroAccent: "Baile real",
@@ -625,6 +637,12 @@ function createCategoryDemoInvitation(spec: CategoryDemoSpec): InvitationRecord 
       id: spec.id,
       slug: spec.slug,
       status: "published",
+      sections: {
+        ...base.sections,
+        hero: { ...base.sections.hero, title: spec.heroTitle },
+        gallery: { ...base.sections.gallery, image_urls: demoGalleryImages.slice(0, spec.galleryCount) },
+      },
+      share: { ...base.share, og_title: spec.heroTitle },
       client_view_token: `${spec.slug}-token-demo`,
       created_at: now,
       updated_at: now,
@@ -692,7 +710,7 @@ function createCategoryDemoInvitation(spec: CategoryDemoSpec): InvitationRecord 
       },
       gallery: {
         ...sections.gallery,
-        image_urls: [spec.coverUrl, ...sections.gallery.image_urls].slice(0, 6),
+        image_urls: demoGalleryImages.slice(0, spec.galleryCount),
       },
       notes: {
         ...sections.notes,

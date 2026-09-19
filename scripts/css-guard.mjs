@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
-const SKIP_DIRS = ["node_modules", ".next", "dist", "build", "out", "coverage"];
+const SKIP_DIRS = ["node_modules", ".next", ".codex-artifacts", "dist", "build", "out", "coverage"];
 const SKIP_PATHS = [`${path.sep}public${path.sep}assets${path.sep}site-shell${path.sep}`];
 
 const includeCss = (filePath) => filePath.endsWith(".css");

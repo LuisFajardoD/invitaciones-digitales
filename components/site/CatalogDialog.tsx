@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import styles from "./InvitationCatalog.module.css";
-export function CatalogDialog({ title, onClose, children, drawer = false }: { title: string; onClose: () => void; children: ReactNode; drawer?: boolean }) {
+export function CatalogDialog({ title, onClose, children, drawer = false, fullScreen = false }: { title: string; onClose: () => void; children: ReactNode; drawer?: boolean; fullScreen?: boolean }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
@@ -14,7 +14,7 @@ export function CatalogDialog({ title, onClose, children, drawer = false }: { ti
     ref.current?.showModal();
     return () => { body.style.overflow = overflow; body.style.paddingRight = padding; opener?.focus({ preventScroll: true }); };
   }, []);
-  return <dialog ref={ref} className={`${styles.dialog} ${drawer ? styles.drawer : ""}`} role="dialog" aria-modal="true" aria-label={title}
+  return <dialog ref={ref} className={`${styles.dialog} ${drawer ? styles.drawer : ""} ${fullScreen ? styles.previewDialog : ""}`} role="dialog" aria-modal="true" aria-label={title}
     onKeyDown={event => {
       if (event.key !== "Tab") return;
       const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex="0"]')).filter(el => !el.hasAttribute("disabled") && el.getClientRects().length > 0);

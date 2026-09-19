@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
-import { getInvitationById, updateInvitation } from "@/lib/repository";
+import { deleteInvitation, getInvitationById, updateInvitation } from "@/lib/repository";
 import type { InvitationRecord } from "@/types/invitations";
 
 type Params = {
@@ -42,6 +42,28 @@ export async function PATCH(request: Request, { params }: Params) {
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "No se pudo guardar." },
+      { status: 400 },
+    );
+  }
+}
+
+export async function DELETE(_request: Request, { params }: Params) {
+  const session = await getAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const deleted = await deleteInvitation(id);
+    if (!deleted) {
+      return NextResponse.json({ error: "Invitación no encontrada." }, { status: 404 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "No se pudo eliminar." },
       { status: 400 },
     );
   }
