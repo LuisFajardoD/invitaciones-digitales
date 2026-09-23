@@ -303,7 +303,33 @@
                 <svg class="gloobi-top-wave" viewBox="0 0 558.5 62.8" preserveAspectRatio="none" aria-hidden="true">
                     <path transform="translate(0 62.8) scale(1 -1)" d="M0 62.6719C37 62.1892 38 46.8658 38 22.6469C38 -3.37199 71 0.16008 80 0.167316C88.3481 0.174867 377.697 0.169147 458.456 0.167649L477.5 0.167316C486.5 0.167316 520.5 -3.37199 520.5 22.6469C520.5 46.8658 517.685 62.1892 554.772 62.6719C556.095 62.6719 557.339 62.6719 558.5 62.6719C557.214 62.6876 555.972 62.6875 554.772 62.6719C480.897 62.6711 158.494 62.6497 0 62.6719Z"></path>
                 </svg>
+                <!-- Panel central superior DESKTOP: pieza única y simétrica, centrada como
+                     la original (misma estrategia left:50%/translateX), sin extenderse a los
+                     bordes asimétricos de .gloobi-top-bar (eso causaba el aspecto inclinado). -->
+                <svg class="gloobi-top-wave-desktop" viewBox="0 0 1000 64" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M0,0 H1000 V12 H930 C895,12 835,60 800,60 H200 C165,60 105,12 70,12 H0 Z"></path>
+                </svg>
                 <div class="gloobi-filter-bar" aria-label="Características clave de Gloobi">
+                    <div class="gloobi-filter-item"><span class="gloobi-filter-value"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg> Música</span></div>
+                    <div class="gloobi-filter-divider"></div>
+                    <div class="gloobi-filter-item"><span class="gloobi-filter-value"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Mapa GPS</span></div>
+                    <div class="gloobi-filter-divider"></div>
+                    <div class="gloobi-filter-item"><span class="gloobi-filter-value"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> RSVP</span></div>
+                </div>
+                <!-- Fila DESKTOP dentro del mismo panel: marca protagonista + separador +
+                     copia exacta (mismos textos/iconos/orden) de Música | Mapa GPS | RSVP,
+                     como una sola composición centrada. El .gloobi-filter-bar de arriba se
+                     oculta en desktop y sigue intacto para móvil. -->
+                <div class="gloobi-panel-brand-row">
+                    <a href="/" class="gloobi-brand-lockup gloobi-panel-brand" aria-label="Gloobi, inicio">
+                        <span class="gloobi-brand-orb">
+                            <video autoplay muted loop playsinline preload="auto" aria-hidden="true">
+                                <source src="/assets/compartidos/marca/gloobi-orb.webm" type="video/webm">
+                            </video>
+                        </span>
+                        <span class="gloobi-brand-word">gloobi</span>
+                    </a>
+                    <div class="gloobi-filter-divider gloobi-panel-brand-divider"></div>
                     <div class="gloobi-filter-item"><span class="gloobi-filter-value"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg> Música</span></div>
                     <div class="gloobi-filter-divider"></div>
                     <div class="gloobi-filter-item"><span class="gloobi-filter-value"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Mapa GPS</span></div>
@@ -404,8 +430,20 @@
                             <path d="M 75 0 H 355 C 396 0, 430 34, 430 75 V 355 C 430 396, 396 430, 355 430 H 198 C 170 430, 153 400, 153 355 C 153 312, 118 277, 75 277 C 35 277, 0 225, 0 180 V 75 C 0 34, 34 0, 75 0 Z" fill="none" stroke="url(#gloobi-card-border)" stroke-width="2.4"></path>
                         </svg>
                         <p class="gloobi-card-right-desc gloobi-card-right-message">Descubre invitaciones digitales interactivas para celebraciones infantiles, bodas, XV años y eventos especiales. Diseños con música integrada, mapas GPS y confirmación RSVP al instante.</p>
+                        <div class="gloobi-card-right-actions">
+                            <a href="#demos" class="gloobi-card-btn">Ver Demos <span class="icon"><img src="/assets/compartidos/iconos/flecha-derecha.svg" alt=""></span></a>
+                            <a href="/contact.html#contacto" class="gloobi-card-btn gloobi-card-btn--ghost">Cotizar <span class="icon"><img src="/assets/compartidos/iconos/flecha-derecha.svg" alt=""></span></a>
+                        </div>
                     </article>
-                    <div class="gloobi-badge-logo" aria-hidden="true"><img src="/assets/compartidos/marca/logo-gloobi.svg" alt=""></div>
+                    <div class="gloobi-badge-logo" aria-hidden="true">
+                        <svg class="gloobi-badge-orbit" viewBox="0 0 134 134" aria-hidden="true">
+                            <g class="gloobi-badge-orbit-spin">
+                                <path id="gloobi-orbit-path" d="M67,17 a50,50 0 1,1 -0.1,0" fill="none"></path>
+                                <text><textPath href="#gloobi-orbit-path" startOffset="0%">Bienvenido a Gloobi • Invitaciones digitales • </textPath></text>
+                            </g>
+                        </svg>
+                        <span class="gloobi-badge-word">gloobi</span>
+                    </div>
                 </div>
             </div>
         </div>

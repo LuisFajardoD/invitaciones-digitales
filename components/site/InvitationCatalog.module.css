@@ -8,8 +8,21 @@
 .root :focus-visible { outline:3px solid #9c79ff; outline-offset:4px; }
 .main { position:relative; z-index:1; width:min(1240px,calc(100% - 240px)); margin:auto; padding:32px 0 100px; }
 .topbar { display:flex; justify-content:space-between; align-items:center; }
-.topbar img { object-fit:contain; }
 .topbar button { font-size:24px; border-radius:50%; width:48px; height:48px; padding:0; }
+/* Lockup de marca: [esfera animada] + wordmark "gloobi". Isotipo WebM 1:1
+   transparente, sin controles ni captura de clics propios. Wordmark en la
+   fuente real (archivo Sigko.woff/.ttf, confirmada como la tipografía
+   visual correcta pese a su nombre interno). */
+@font-face {
+  font-family: "GloobiWordmark";
+  src: url("/assets/site-shell/assets/fonts/migko/Sigko.woff") format("woff"),
+       url("/assets/site-shell/assets/fonts/migko/Sigko.ttf") format("truetype");
+  font-display: swap;
+}
+.brandLockup { display:inline-flex; align-items:center; gap:10px; }
+.brandOrb { position:relative; flex:0 0 auto; width:38px; height:38px; border-radius:50%; overflow:hidden; }
+.brandOrb video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; }
+.brandWord { font-family:"GloobiWordmark",Georgia,serif; font-size:22px; line-height:1; letter-spacing:.01em; color:var(--ink); }
 .heading { text-align:center; padding:36px 0 54px; }
 .heading nav { color:var(--muted); font-size:13px; margin-bottom:36px; }
 .eyebrow { color:var(--accent); font-size:11px; font-weight:800; letter-spacing:3px; }

@@ -75,8 +75,93 @@
    exactamente el mismo fondo base continuo (#06050b) de Demos destacadas.
    ========================================================================== */
 
+/* Wordmark de marca "gloobi": archivo real proporcionado por el cliente
+   (Sigko.woff/.ttf); el nombre interno del archivo es "Sigko" pero es la
+   tipografía visual correcta confirmada para el wordmark. Nombre de familia
+   propio para no depender de su nombre interno. */
+@font-face {
+  font-family: "GloobiWordmark";
+  src: url("/assets/site-shell/assets/fonts/migko/Sigko.woff") format("woff"),
+       url("/assets/site-shell/assets/fonts/migko/Sigko.ttf") format("truetype");
+  font-display: swap;
+}
+
 :root {
   --gloobi-home-bg: #06050b;
+  /* Fuente única de verdad para el material del marco del hero y del panel
+     central superior: ambos deben usar siempre el mismo valor exacto. */
+  --gloobi-frame-dark: #18122b;
+  --gloobi-frame-light: #ffffff;
+  --gloobi-wordmark-font: "GloobiWordmark", Georgia, serif;
+}
+
+/* ==========================================================================
+   Elementos exclusivos de DESKTOP del hero (panel superior reconstruido con
+   la marca integrada, acciones de la tarjeta biselada, texto circular de la
+   esfera). Se ocultan por completo en <=1024px para no alterar el móvil,
+   que sigue usando sus elementos/markup originales sin ningún cambio.
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .gloobi-top-wave-desktop,
+  .gloobi-panel-brand-row,
+  .gloobi-card-right-actions,
+  .gloobi-badge-orbit {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .gloobi-top-left-space .gloobi-top-btn,
+  .gloobi-top-right-space,
+  .gloobi-filter-bar {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   Lockup de marca reutilizable: [esfera animada] + wordmark "gloobi".
+   Usado en el Home (arriba-izquierda del hero) y en las páginas internas
+   (about.html, faq.html, contact.html) dentro de su wrapper de posición
+   .gloobi-about-brand. Isotipo: WebM 1:1 transparente, sin controles, sin
+   captar clics propios (pointer-events:none en el video).
+   ========================================================================== */
+.gloobi-brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.gloobi-brand-orb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.gloobi-brand-orb video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.gloobi-brand-word {
+  font-family: var(--gloobi-wordmark-font);
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+}
+
+body.light-mode .gloobi-brand-word,
+html[data-theme="light"] .gloobi-brand-word {
+  color: #17123a;
 }
 
 html {
@@ -225,31 +310,34 @@ html[data-theme="light"] .gloobi-hero {
   inset: 12px;
   z-index: -2;
   overflow: hidden;
-  border: 12px solid #18122b;
+  border: 12px solid var(--gloobi-frame-dark);
   border-radius: clamp(48px, 5.4vw, 104px);
   background: linear-gradient(112deg, #07466e 0%, #0d3273 38%, #241d75 70%, #341269 100%);
-  box-shadow: 0 0 0 1px #18122b, 0 24px 50px rgba(24, 18, 43, 0.4);
+  box-shadow: 0 0 0 1px var(--gloobi-frame-dark), 0 24px 50px rgba(24, 18, 43, 0.4);
   transition: background 0.4s ease, border-color 0.4s ease;
 }
 
 body.dark-mode .gloobi-hero-backdrop,
 body.theme2:not(.light-mode) .gloobi-hero-backdrop,
 html[data-theme="dark"] .gloobi-hero-backdrop {
-  border-color: #18122b !important;
+  border-color: var(--gloobi-frame-dark) !important;
   background: linear-gradient(112deg, #07466e 0%, #0d3273 38%, #241d75 70%, #341269 100%) !important;
-  box-shadow: 0 0 0 1px #18122b, 0 24px 50px rgba(24, 18, 43, 0.4) !important;
+  box-shadow: 0 0 0 1px var(--gloobi-frame-dark), 0 24px 50px rgba(24, 18, 43, 0.4) !important;
 }
 
 body.dark-mode .gloobi-top-wave path,
 body.theme2:not(.light-mode) .gloobi-top-wave path,
 html[data-theme="dark"] .gloobi-top-wave path,
+body.dark-mode .gloobi-top-wave-desktop path,
+body.theme2:not(.light-mode) .gloobi-top-wave-desktop path,
+html[data-theme="dark"] .gloobi-top-wave-desktop path,
 body.dark-mode .gloobi-theme-dock-shape path,
 body.theme2:not(.light-mode) .gloobi-theme-dock-shape path,
 html[data-theme="dark"] .gloobi-theme-dock-shape path,
 body.dark-mode .gloobi-card-left-shape path,
 body.theme2:not(.light-mode) .gloobi-card-left-shape path,
 html[data-theme="dark"] .gloobi-card-left-shape path {
-  fill: #18122b !important;
+  fill: var(--gloobi-frame-dark) !important;
 }
 
 .gloobi-goo-filter {
@@ -286,18 +374,20 @@ html[data-theme="dark"] .gloobi-bubbles-bg {
 /* Light Mode Hero Backdrop & Bubbles Override */
 body.light-mode .gloobi-hero-backdrop,
 html[data-theme="light"] .gloobi-hero-backdrop {
-  border-color: #ffffff !important;
+  border-color: var(--gloobi-frame-light) !important;
   background: #cbd5e1 !important;
-  box-shadow: 0 0 0 1px #ffffff, 0 24px 50px rgba(10, 15, 45, 0.25) !important;
+  box-shadow: 0 0 0 1px var(--gloobi-frame-light), 0 24px 50px rgba(10, 15, 45, 0.25) !important;
 }
 
 body.light-mode .gloobi-top-wave path,
 html[data-theme="light"] .gloobi-top-wave path,
+body.light-mode .gloobi-top-wave-desktop path,
+html[data-theme="light"] .gloobi-top-wave-desktop path,
 body.light-mode .gloobi-theme-dock-shape path,
 html[data-theme="light"] .gloobi-theme-dock-shape path,
 body.light-mode .gloobi-card-left-shape path,
 html[data-theme="light"] .gloobi-card-left-shape path {
-  fill: #ffffff !important;
+  fill: var(--gloobi-frame-light) !important;
 }
 
 body.light-mode .gloobi-bubbles-bg,
@@ -861,7 +951,7 @@ html[data-theme="light"] .gloobi-rail-tooltip::before {
   z-index: 0;
   width: min(1060px, 58vw);
   height: 55px;
-  color: #ffffff;
+  color: var(--gloobi-frame-light);
   filter: drop-shadow(0 18px 28px rgba(20, 26, 74, 0.12));
   transform: translateX(-50%);
   pointer-events: none;
@@ -871,9 +961,33 @@ html[data-theme="light"] .gloobi-rail-tooltip::before {
   fill: currentColor;
 }
 
+/* Panel central superior reconstruido para DESKTOP: pieza única y simétrica
+   (tramo plano -> curva -> meseta del panel -> curva espejo -> tramo plano),
+   centrada igual que la pieza original (left:50%/translateX(-50%)) en vez de
+   estirarse a los límites asimétricos de .gloobi-top-bar (eso causaba el
+   aspecto inclinado/deformado). Mismo color que el marco vía los tokens
+   --gloobi-frame-*; sin drop-shadow propio para que se lea como una sola
+   pieza de material con .gloobi-hero-backdrop. Altura sin cambios (64px) vs.
+   la iteración anterior. Oculto en <=1024px (ver bloque móvil arriba). */
+.gloobi-top-wave-desktop {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  z-index: 0;
+  width: clamp(820px, 66vw, 1220px);
+  height: 64px;
+  color: var(--gloobi-frame-light);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.gloobi-top-wave-desktop path {
+  fill: currentColor;
+}
+
 .gloobi-filter-bar {
   position: absolute;
-  top: 5px;
+  top: 20px;
   left: 50%;
   z-index: 1;
   display: flex;
@@ -882,6 +996,32 @@ html[data-theme="light"] .gloobi-rail-tooltip::before {
   gap: 32px;
   transform: translateX(-50%);
   pointer-events: none;
+}
+
+/* Fila DESKTOP única dentro del mismo panel: marca protagonista (esfera +
+   wordmark) + separador + Música | Mapa GPS | RSVP (mismos textos/iconos/
+   orden que en .gloobi-filter-bar, que se oculta en desktop y sigue intacto
+   para móvil). Centrada como una sola composición, altura del panel sin
+   cambios: el contenido se alinea verticalmente en el centro de la meseta. */
+.gloobi-panel-brand-row {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.gloobi-panel-brand-row .gloobi-brand-orb {
+  width: 40px;
+  height: 40px;
+}
+
+.gloobi-panel-brand-row .gloobi-brand-word {
+  font-size: 24px;
 }
 
 .gloobi-filter-item {
@@ -1075,7 +1215,7 @@ html body .gloobi-hero .gloobi-bubbles-container {
 
 .gloobi-theme-dock-shape path,
 .gloobi-card-left-shape path {
-  fill: #ffffff;
+  fill: var(--gloobi-frame-light);
 }
 
 .gloobi-theme-controls {
@@ -1643,6 +1783,96 @@ html[data-theme="light"] .gloobi-left-feature-pill svg {
   z-index: 1;
 }
 
+/* Ver Demos / Cotizar reubicados dentro de la tarjeta biselada (solo
+   DESKTOP; ver el bloque de visibilidad exclusiva de desktop arriba).
+   Hermano de .gloobi-card-right-message, nunca dentro: el CMS reescribe
+   el textContent de ese párrafo y borraría botones anidados en él. */
+/* Misma zona segura que .gloobi-card-right-message (align-self:flex-end +
+   margin-right:24px, ver "Keep the message clear of the circular logo
+   notch" y el override de alineación derecha más abajo): ambos botones se
+   quedan siempre en la columna derecha protegida, lejos de la muesca. */
+.gloobi-card-right-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  align-self: flex-end;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  margin-right: 24px;
+}
+
+.gloobi-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  background: #7c5cff;
+  color: #ffffff !important;
+  font-family: "Sora", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(124, 92, 255, 0.28);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gloobi-card-btn:hover {
+  background: #633ef3;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(124, 92, 255, 0.36);
+}
+
+.gloobi-card-btn--ghost {
+  background: rgba(15, 23, 42, 0.07);
+  color: #1e1b4b !important;
+  box-shadow: none;
+}
+
+.gloobi-card-btn--ghost:hover {
+  background: rgba(15, 23, 42, 0.13);
+  box-shadow: none;
+}
+
+.gloobi-card-btn .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gloobi-card-btn .icon img {
+  width: 11px;
+  height: 11px;
+}
+
+.gloobi-card-btn--ghost .icon img {
+  filter: none;
+}
+
+html[data-theme="dark"] .gloobi-card-btn--ghost .icon img,
+body.dark-mode .gloobi-card-btn--ghost .icon img,
+body.theme2:not(.light-mode) .gloobi-card-btn--ghost .icon img {
+  filter: brightness(0) invert(1);
+}
+
+html[data-theme="dark"] .gloobi-card-btn--ghost,
+body.dark-mode .gloobi-card-btn--ghost,
+body.theme2:not(.light-mode) .gloobi-card-btn--ghost {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .gloobi-card-btn--ghost:hover,
+body.dark-mode .gloobi-card-btn--ghost:hover,
+body.theme2:not(.light-mode) .gloobi-card-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
 .gloobi-demo-features-row {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -1865,8 +2095,60 @@ html[data-theme="light"] .gloobi-left-feature-pill svg {
   box-shadow: inset 12px 14px 24px rgba(255, 255, 255, 0.12), inset -16px -18px 28px rgba(0, 0, 0, 0.22), 0 20px 40px rgba(20, 10, 66, 0.38);
 }
 
-.gloobi-badge-logo img {
-  width: 88px;
+/* Wordmark pequeño en el centro de la esfera (reemplaza el icono estático).
+   Fuente: ver --gloobi-wordmark-font en :root (GloobiWordmark, Sigko.woff/
+   .ttf). Tamaño/posición de .gloobi-badge-logo sin cambios. */
+.gloobi-badge-word {
+  position: relative;
+  z-index: 2;
+  font-family: var(--gloobi-wordmark-font);
+  font-size: 15px;
+  line-height: 1;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
+
+/* Texto circular "Bienvenido a Gloobi..." girando alrededor de la esfera.
+   Solo DESKTOP (ver bloque de visibilidad exclusiva arriba): a los 44-58px
+   que mide el badge en móvil el texto rotando sería ilegible/saturado, así
+   que ahí se conserva únicamente el wordmark centrado, sin animación. */
+.gloobi-badge-orbit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.gloobi-badge-orbit-spin {
+  transform-origin: 50% 50%;
+  animation: gloobi-orbit-spin 21s linear infinite;
+}
+
+.gloobi-badge-orbit text {
+  font-family: "Sora", sans-serif;
+  font-size: 8.6px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  fill: rgba(255, 255, 255, 0.85);
+}
+
+@keyframes gloobi-orbit-spin {
+  to { transform: rotate(360deg); }
+}
+
+html[data-theme="light"] .gloobi-badge-word,
+body.light-mode .gloobi-badge-word {
+  color: #3a2200 !important;
+}
+
+html[data-theme="light"] .gloobi-badge-orbit text,
+body.light-mode .gloobi-badge-orbit text {
+  fill: rgba(58, 34, 0, 0.72);
 }
 
 @keyframes gloobi-logo-float {
@@ -2153,7 +2435,8 @@ html[data-theme="light"] .gloobi-left-feature-pill svg {
 
 @media (prefers-reduced-motion: reduce) {
   .gloobi-bubble,
-  .gloobi-hero-title-letter {
+  .gloobi-hero-title-letter,
+  .gloobi-badge-orbit-spin {
     animation: none !important;
   }
 }
@@ -5089,11 +5372,6 @@ html[data-theme="light"] .gloobi-badge-logo {
     0 16px 36px rgba(245, 158, 11, 0.38) !important;
 }
 
-body.light-mode .gloobi-badge-logo img,
-html[data-theme="light"] .gloobi-badge-logo img {
-  filter: drop-shadow(0 2px 4px rgba(120, 53, 15, 0.45)) !important;
-}
-
 /* --- Celebration Categories (Open9) already mostly done, fine-tune --- */
 body.light-mode .gloobi-celebration-cta,
 html[data-theme="light"] .gloobi-celebration-cta {
@@ -7451,7 +7729,7 @@ html[data-theme="light"] .gloobi-pricing-section .price-box.style2.active {
 .gloobi-card-right-message {
   max-width: 278px;
   margin: 18px 24px 0 28px;
-  padding-bottom: 82px;
+  padding-bottom: 6px;
   font-size: clamp(.96rem, 1.15vw, 1.24rem) !important;
   line-height: 1.38 !important;
 }
@@ -7655,7 +7933,7 @@ body.theme2:not(.light-mode) .gloobi-card-right-wrap {
     margin: 0;
   }
 
-  .gloobi-badge-logo img { width: 36px; }
+  .gloobi-badge-word { font-size: 10px; }
 
   .gloobi-kicker {
     grid-row: 3;
@@ -7909,7 +8187,7 @@ body.theme2:not(.light-mode) .gloobi-card-right-wrap {
     animation: gloobi-logo-float 4.5s ease-in-out infinite;
   }
 
-  .gloobi-badge-logo img { width: 40px; }
+  .gloobi-badge-word { font-size: 11px; }
 
   .gloobi-kicker,
   .gloobi-hero-title,

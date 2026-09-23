@@ -87,7 +87,7 @@ export function InvitationCatalog({ items, page }: { items: CatalogItem[]; page:
     </div>
     <div ref={rail} onClick={e => { if ((e.target as Element).closest("button")) setMenu(!menu); }} onKeyDown={e => { if(e.key === "Escape") setMenu(false); }} dangerouslySetInnerHTML={{ __html: railHtml }} />
     <main className={styles.main}>
-      <div className={styles.topbar}><a href="/" aria-label="Gloobi, inicio"><img src="/assets/compartidos/marca/logo-gloobi.svg" alt="Gloobi" width="112" height="46" /></a><button onClick={toggleTheme} aria-label={themeMode === "dark" ? "Activar modo claro" : "Activar modo oscuro"}>{themeMode === "dark" ? "☀" : "☾"}</button></div>
+      <div className={styles.topbar}><a href="/" aria-label="Gloobi, inicio" className={styles.brandLockup}><span className={styles.brandOrb}><video autoPlay muted loop playsInline preload="auto" aria-hidden="true"><source src="/assets/compartidos/marca/gloobi-orb.webm" type="video/webm" /></video></span><span className={styles.brandWord}>gloobi</span></a><button onClick={toggleTheme} aria-label={themeMode === "dark" ? "Activar modo claro" : "Activar modo oscuro"}>{themeMode === "dark" ? "☀" : "☾"}</button></div>
       <header className={styles.heading} hidden={heroContent?.enabled === false}><nav aria-label="Breadcrumb"><a href="/">Inicio</a><span> / </span> Invitaciones</nav><p className={styles.eyebrow}>{heroContent?.eyebrow}</p><h1>{heroContent?.title}</h1><p>{heroContent?.description}</p></header>
       <nav className={styles.quickTypes} aria-label="Tipos de invitación">
         {invitationTypes.map(type => <button key={type.slug} className={filters.invitationType === type.slug ? styles.quickTypeActive : ""} onClick={() => selectInvitationType(type.slug)}>{type.label}</button>)}
