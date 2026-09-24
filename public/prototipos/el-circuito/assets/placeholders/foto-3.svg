@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 427" width="320" height="427">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2EC4B6"/><stop offset="1" stop-color="#9BE564"/></linearGradient></defs>
+  <rect width="320" height="427" fill="url(#g)"/>
+  <circle cx="60" cy="60" r="90" fill="#fff" opacity=".14"/><circle cx="290" cy="390" r="120" fill="#fff" opacity=".12"/>
+  <g transform="translate(0 40)"><rect x="80" y="40" width="160" height="160" rx="36" fill="#fff" opacity=".22" stroke="#fff" stroke-width="4"/><path d="M96 150c14-12 28-12 42 0s28 12 42 0 28-12 42 0" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><circle cx="160" cy="112" r="20" fill="#FFC93C" stroke="#1B1F3B" stroke-width="6"/></g>
+  <text x="160" y="330" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="30" fill="#fff" stroke="#1B1F3B" stroke-width="5" paint-order="stroke">FOTO 3</text>
+  <text x="160" y="366" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="17" fill="#fff" opacity=".9">Reemplazar por foto real (3:4)</text>
+</svg>

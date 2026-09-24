@@ -1,0 +1,97 @@
+/* El Circuito — HUD de la carrera, banners, textos flotantes, semáforo, ayudas. */
+.hud {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 20;
+  padding: calc(var(--sat) + 10px) 12px 0; pointer-events: none;
+  transition: transform .35s var(--bounce), opacity .25s;
+}
+.hud.is-hidden { transform: translateY(-120%); opacity: 0; }
+.hud > * { pointer-events: auto; }
+/* Barra de progreso de la pista */
+.track {
+  position: relative; height: 34px; margin: 0 4px 8px; pointer-events: none;
+}
+.track-line { position: absolute; left: 12px; right: 18px; top: 15px; height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .7); border: 2.5px solid var(--ink); }
+.track-fill { position: absolute; left: 12px; top: 15px; height: 8px; border-radius: 99px; background: var(--coral); border: 2.5px solid var(--ink); width: 0; }
+.track-ic { position: absolute; top: 5px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; border: 2.5px solid var(--ink); background: #fff; display: grid; place-items: center; font: 400 13px var(--f-title); }
+.track-ic.is-done { background: var(--lime); }
+.track-ic.is-goal { background: var(--yellow); }
+.track-me { position: absolute; top: -4px; width: 26px; height: 30px; margin-left: -13px; transition: left .12s linear; }
+.hud-row { display: flex; align-items: center; gap: 8px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px;
+  border: 3px solid var(--ink); border-radius: 999px; background: rgba(255, 255, 255, .88);
+  font: 400 19px/1 var(--f-title); color: var(--ink); box-shadow: 0 3px 0 var(--ink);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.pill.timer { min-width: 108px; justify-content: center; font-variant-numeric: tabular-nums; }
+.pill .cam { font-size: 17px; }
+.hud-row .grow { flex: 1; }
+.hud .fl-round { --face: rgba(255, 255, 255, .92); }
+.hud .fl-round[aria-pressed="false"] { --face: #D9E2EA; }
+
+/* Banners (PUNTO DE CONTROL, ¡TERMINASTE!) */
+.banner {
+  position: absolute; left: 50%; top: 24%; z-index: 55; transform: translate(-50%, -50%);
+  padding: 12px 22px 14px; border: 4px solid var(--ink); border-radius: 22px; background: var(--yellow);
+  font: 400 clamp(24px, 7.4vw, 32px)/1.05 var(--f-title); color: var(--ink); text-align: center; white-space: nowrap;
+  box-shadow: 0 6px 0 var(--ink); animation: banner-in .55s var(--bounce) both; pointer-events: none;
+}
+.banner small { display: block; margin-top: 4px; font: 800 15px var(--f-body); letter-spacing: .06em; }
+.banner.is-out { animation: banner-out .3s ease-in both; }
+@keyframes banner-in { from { transform: translate(-50%, -50%) scale(.3) rotate(-8deg); opacity: 0; } }
+@keyframes banner-out { to { transform: translate(-50%, -80%) scale(.8); opacity: 0; } }
+
+/* Textos que rebotan (¡SPLASH!, ¡Así se hace!) */
+.pop-text {
+  position: absolute; left: 50%; top: 40%; z-index: 56; transform: translate(-50%, -50%);
+  font: 400 clamp(38px, 12vw, 54px)/1 var(--f-title); color: #fff; white-space: nowrap; pointer-events: none;
+  -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink);
+  animation: pop-text 1.2s var(--bounce) both;
+}
+.pop-text.is-water { color: #BDF3FF; }
+.pop-text.is-good { color: var(--lime); }
+@keyframes pop-text {
+  0% { transform: translate(-50%, -50%) scale(.2); opacity: 0; }
+  20% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  32% { transform: translate(-50%, -50%) scale(.95); }
+  80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -75%) scale(.9); opacity: 0; }
+}
+/* Mini polaroid al recoger una foto */
+.polaroid-pop {
+  position: absolute; right: 16px; top: calc(var(--sat) + 104px); z-index: 56; width: 118px; padding: 7px 7px 10px;
+  border: 3px solid var(--ink); border-radius: 8px; background: #fff; box-shadow: 0 5px 0 var(--ink);
+  transform: rotate(6deg); text-align: center; animation: polaroid 1.9s var(--bounce) both; pointer-events: none;
+}
+.polaroid-pop img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 3px; background: #DDF6F4; }
+.polaroid-pop b { display: block; margin-top: 6px; font: 400 17px var(--f-title); }
+@keyframes polaroid { 0% { transform: translateY(-30px) rotate(-20deg) scale(.4); opacity: 0; } 15% { transform: rotate(8deg) scale(1.05); opacity: 1; } 80% { transform: rotate(6deg); opacity: 1; } 100% { transform: translate(40px, -30px) rotate(20deg) scale(.6); opacity: 0; } }
+
+/* Semáforo */
+.semaphore {
+  position: absolute; left: 50%; top: 30%; z-index: 55; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: none;
+}
+.lights { display: flex; gap: 10px; padding: 10px 14px; border: 4px solid var(--ink); border-radius: 26px; background: #2A2F52; box-shadow: 0 6px 0 var(--ink); }
+.lights i { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--ink); background: #4A4F72; transition: background .1s, box-shadow .1s; }
+.lights i.on-r { background: var(--coral); box-shadow: 0 0 16px var(--coral); }
+.lights i.on-y { background: var(--yellow); box-shadow: 0 0 16px var(--yellow); }
+.lights i.on-g { background: var(--lime); box-shadow: 0 0 18px var(--lime); }
+.sem-num { font: 400 64px/1 var(--f-title); color: #fff; -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 6px 0 var(--ink); animation: num-pop .5s var(--bounce) both; }
+@keyframes num-pop { from { transform: scale(.3); opacity: 0; } }
+
+/* Tutorial */
+.tut {
+  position: absolute; left: 0; right: 0; top: 18%; z-index: 55; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none;
+}
+.tut-label { padding: 12px 22px 14px; border: 4px solid var(--ink); border-radius: 999px; background: #fff; font: 400 24px/1 var(--f-title); box-shadow: 0 5px 0 var(--ink); animation: tut-pulse 1.1s ease-in-out infinite; }
+.tut-sub { margin: 0; padding: 6px 12px; border-radius: 12px; background: rgba(27, 31, 59, .72); color: #fff; font-weight: 600; font-size: 16px; }
+@keyframes tut-pulse { 50% { transform: scale(1.06); } }
+.hand { position: absolute; z-index: 56; width: 64px; height: 64px; pointer-events: none; opacity: 0; transition: opacity .4s; }
+.hand.is-on { opacity: 1; animation: hand-tap 1s ease-in-out infinite; }
+@keyframes hand-tap { 50% { transform: translate(-4px, 10px) scale(.92); } }
+
+/* Pasar este obstáculo */
+.skip-ob { position: absolute; left: 50%; bottom: calc(var(--sab) + 26px); z-index: 50; transform: translateX(-50%); white-space: nowrap; animation: banner-in .5s var(--bounce) both; }
+.skip-ob.fl { transform: translateX(-50%); }
+.skip-ob.fl:active { transform: translate(-50%, 4px); }

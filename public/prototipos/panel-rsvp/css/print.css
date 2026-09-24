@@ -1,0 +1,138 @@
+/* Hoja imprimible del Panel RSVP. Tinta mínima: fondos blancos, líneas finas, el color del tema
+   sólo en acentos pequeños. Tamaño carta. Todo scopeado bajo .pp */
+
+@page {
+  size: letter;
+  margin: 14mm 14mm 18mm;
+  @bottom-left { content: "Invitación creada con Gloobi"; font: 8.5pt system-ui, sans-serif; color: #666; }
+  @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8.5pt system-ui, sans-serif; color: #666; }
+}
+
+.pp, .pp *, .pp *::before, .pp *::after { box-sizing: border-box; }
+.pp { -webkit-text-size-adjust: 100%; }
+.pp body {
+  margin: 0;
+  background: #EDEEF2;
+  color: #1A1A1A;
+  font-family: var(--f-body, system-ui, sans-serif);
+  font-size: 11pt;
+  line-height: 1.35;
+}
+
+/* ---------- Barra de pantalla (no se imprime) ---------- */
+.pp .toolbar {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 10px 16px;
+  background: #fff; border-bottom: 1px solid #D9DBE3;
+}
+.pp .tb-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 0 16px;
+  border: 1px solid #C9CEE0; border-radius: 10px;
+  background: #fff; color: #1D2233;
+  font: 600 15px/1 var(--f-body, system-ui, sans-serif);
+  text-decoration: none; cursor: pointer;
+}
+.pp .tb-primary { background: var(--t-primary, #5A67F2); color: var(--t-on-primary, #fff); border-color: transparent; }
+
+/* ---------- Hoja ---------- */
+.pp .sheet {
+  width: 100%; max-width: 216mm;
+  margin: 16px auto 32px;
+  padding: 14mm;
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+}
+@media (max-width: 600px) {
+  .pp .sheet { margin: 0; padding: 18px 16px 28px; box-shadow: none; }
+}
+
+.pp .p-head {
+  display: flex; align-items: center; gap: 14px;
+  padding-bottom: 10px; margin-bottom: 12px;
+  border-bottom: 2px solid var(--t-line-strong, #333);
+}
+.pp .p-art { flex: 0 0 auto; width: 110px; }
+.pp .p-art svg { display: block; width: 100%; height: auto; }
+.pp .p-head-text { min-width: 0; }
+.pp .p-kicker { margin: 0; font-size: 9pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #555; }
+.pp .p-title {
+  margin: 2px 0 4px;
+  font-family: var(--f-display, inherit); font-weight: var(--f-display-weight, 800);
+  font-size: 18pt; line-height: 1.1; color: var(--t-text, #111);
+}
+.pp .p-meta { margin: 0; font-size: 10pt; color: #333; }
+.pp .p-gen { margin: 4px 0 0; font-size: 8.5pt; color: #777; }
+
+.pp .p-totals { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+.pp .p-tot { border: 1px solid #BBB; border-radius: 6px; padding: 6px 8px; text-align: center; }
+.pp .p-tot.is-main { border: 2px solid var(--t-line-strong, #333); }
+.pp .p-tot-n { display: block; font-size: 16pt; font-weight: 800; line-height: 1.1; }
+.pp .p-tot-l { display: block; font-size: 8pt; color: #555; }
+@media (max-width: 600px) {
+  .pp .p-head { align-items: flex-start; }
+  .pp .p-art { width: 72px; }
+  .pp .p-title { font-size: 16pt; }
+  .pp .p-totals { grid-template-columns: repeat(4, 1fr); }
+  .pp .p-tot { padding: 6px 4px; }
+  .pp .p-tot-l { font-size: 7.5pt; }
+  .pp .p-totals .is-main { grid-column: 1 / -1; }
+}
+
+.pp .p-banquet {
+  border: 1.5px dashed #888; border-radius: 6px;
+  padding: 6px 10px; margin-bottom: 12px;
+  break-inside: avoid;
+}
+.pp .p-banquet h2, .pp .p-no h2 { margin: 0 0 2px; font-size: 10pt; text-transform: uppercase; letter-spacing: .06em; }
+.pp .p-banquet p { margin: 0; font-size: 10.5pt; }
+
+/* ---------- Tabla de acceso ---------- */
+.pp .p-table { width: 100%; border-collapse: collapse; font-size: 10.5pt; }
+.pp .p-table caption { caption-side: top; text-align: left; font-weight: 700; font-size: 10pt; padding-bottom: 4px; }
+.pp .p-table thead { display: table-header-group; }
+.pp .p-table tfoot { display: table-row-group; } /* el total sólo al final, no en cada página */
+.pp .p-table th {
+  text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .05em;
+  border-bottom: 1.5px solid #333; padding: 4px 6px;
+}
+.pp .p-table td { border-bottom: 1px solid #CCC; padding: 7px 6px; vertical-align: middle; }
+.pp .p-table tr { break-inside: avoid; page-break-inside: avoid; }
+.pp .p-table tfoot td { border-top: 1.5px solid #333; border-bottom: none; font-weight: 800; }
+.pp .c-check { width: 28px; text-align: center; }
+.pp .box { display: inline-block; width: 14px; height: 14px; border: 1.5px solid #333; border-radius: 2px; vertical-align: middle; }
+.pp .c-name { font-weight: 600; }
+.pp .num { display: inline-block; min-width: 1.8em; color: #888; font-weight: 400; font-size: 9pt; }
+.pp .c-n { width: 58px; text-align: center; font-variant-numeric: tabular-nums; }
+.pp .c-notes { width: 34%; }
+.pp td.c-notes { border-bottom-color: #999; }
+@media (max-width: 600px) {
+  .pp .p-table { font-size: 10pt; }
+  .pp .c-n { width: 44px; }
+  .pp .c-notes { width: 22%; }
+  .pp .p-table th { font-size: 7.5pt; letter-spacing: 0; }
+}
+
+.pp .p-no { margin-top: 14px; break-inside: avoid; }
+.pp .p-no p { margin: 0; font-size: 9.5pt; color: #444; }
+
+.pp .p-empty { padding: 40px 0; text-align: center; }
+.pp .p-empty h2 { font-family: var(--f-display, inherit); font-weight: var(--f-display-weight, 800); font-size: 16pt; margin: 0 0 6px; }
+.pp .p-empty p { margin: 0; color: #555; }
+
+.pp .p-foot-screen { margin-top: 18px; font-size: 8.5pt; color: #888; text-align: center; }
+
+/* ---------- Impresión ---------- */
+@media print {
+  .pp body { background: #fff; font-size: 10.5pt; }
+  .pp .toolbar, .pp .p-foot-screen { display: none; }
+  .pp .sheet { max-width: none; margin: 0; padding: 0; box-shadow: none; }
+  .pp .p-art { print-color-adjust: exact; -webkit-print-color-adjust: exact; width: 90px; }
+  .pp .p-totals { grid-template-columns: repeat(5, 1fr); }
+  .pp .p-totals .is-main { grid-column: auto; }
+  .pp .p-head { align-items: center; }
+  .pp .p-title { font-size: 17pt; }
+  .pp .c-n { width: 58px; }
+  .pp .c-notes { width: 34%; }
+}

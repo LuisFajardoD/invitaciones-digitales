@@ -1,0 +1,208 @@
+/* Isla Cubo — HUD superior, dock, etiquetas flotantes, info rápida y panel debug. */
+
+.hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding: calc(var(--sat) + 12px) calc(var(--sar) + 12px) 0 calc(var(--sal) + 12px);
+  pointer-events: none;
+  transition: opacity .4s, transform .5s var(--spring);
+}
+.hud > * { pointer-events: auto; }
+.hud.is-hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+.hud.is-hidden > * { pointer-events: none; }
+.plate {
+  --s: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 58%;
+  padding: 9px 14px 8px 10px;
+}
+/* La placa es un botón de madera: se hunde al presionar */
+button.plate { border: 0; font: inherit; color: inherit; cursor: pointer; min-height: 44px; transition: transform .1s var(--smooth); }
+button.plate:active { transform: translateY(3px); }
+.plate-name { font-family: var(--f-title); font-size: 15px; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plate-ic { flex: none; }
+.hud-btns { display: flex; gap: 8px; padding-bottom: 6px; }
+.hud-btns .bb-round[aria-pressed="true"] { --face: var(--gold); }
+
+/* ---------- Etiquetas flotantes (vista de la isla, bloques del muro) ---------- */
+.labels { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+.label3d {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+  pointer-events: auto;
+  min-height: 44px;
+  padding: 7px 12px 6px;
+  border: 2px solid var(--brown);
+  border-radius: 7px;
+  background: var(--cream);
+  box-shadow: 0 4px 0 #D9C2A0, 0 4px 0 2px var(--brown);
+  font-family: var(--f-title);
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: nowrap;
+  cursor: pointer;
+  animation: label-in .45s var(--spring) both;
+}
+.label3d::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: var(--cream);
+  border-right: 2px solid var(--brown);
+  border-bottom: 2px solid var(--brown);
+  transform: rotate(45deg);
+}
+.label3d.is-guest { font-family: var(--f-body); font-weight: 900; font-size: 15px; pointer-events: none; }
+@keyframes label-in { from { opacity: 0; transform: translate(-50%, -80%) scale(.7); } }
+
+/* ---------- Dock (anclado sobre la tarjeta) ---------- */
+.dock {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 calc(var(--sar) + 10px) 10px calc(var(--sal) + 10px);
+}
+.dock-mid {
+  --s: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-height: 52px;
+  padding: 7px 10px 8px;
+  text-align: center;
+}
+.dock-name { font-family: var(--f-title); font-size: 13px; line-height: 1.1; }
+/* Puntos tocables: el punto visible mide 11 px; el área táctil (44 px de alto) se reparte todo el ancho */
+.dots { display: flex; justify-content: center; width: 100%; margin: -12px 0 -16px; }
+.dot-btn {
+  position: relative;
+  flex: 1 1 0;
+  max-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.dot-btn i { width: 11px; height: 11px; border-radius: 2px; background: #FFF6E5; border: 2px solid var(--brown); transition: background .3s, transform .3s var(--spring); }
+.dot-btn.is-seen i { background: var(--caramel); }
+.dot-btn.is-on i { background: var(--accent); transform: scale(1.35); }
+.dot-btn::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  z-index: 5;
+  padding: 5px 9px 4px;
+  border: 2px solid var(--brown);
+  border-radius: 6px;
+  background: var(--cream);
+  font: 900 13px var(--f-body);
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition: opacity .15s, transform .15s;
+}
+.dot-btn:hover::after, .dot-btn:active::after, .dot-btn:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+.dot-btn:first-child::after { left: 0; transform: translate(0, 4px); }
+.dot-btn:first-child:hover::after, .dot-btn:first-child:active::after, .dot-btn:first-child:focus-visible::after { transform: none; }
+.dot-btn:last-child::after { left: auto; right: 0; transform: translate(0, 4px); }
+.dot-btn:last-child:hover::after, .dot-btn:last-child:active::after, .dot-btn:last-child:focus-visible::after { transform: none; }
+.dock-mid { overflow: visible; }
+
+/* Índice de la Vista de la isla */
+.stop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 8px; }
+.stop-tile {
+  position: relative;
+  justify-content: flex-start;
+  gap: 6px;
+  min-height: 44px;
+  padding: 5px 8px 4px 6px;
+  font-size: 13px;
+  --side: #D9C2A0;
+  box-shadow: 0 4px 0 var(--side), 0 4px 0 2px var(--brown);
+  text-align: left;
+}
+.stop-num { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 5px; background: var(--brown); color: var(--cream); font: 400 12px var(--f-title); }
+.stop-ic { flex: none; }
+.stop-name { line-height: 1.1; }
+.stop-check { position: absolute; top: -8px; right: -6px; width: 22px; height: 22px; display: grid; place-items: center; border: 2px solid var(--brown); border-radius: 50%; background: var(--mint); }
+
+/* Etiquetas de la vista general: más pequeñas, área táctil de 44 px, líneas guía */
+.label3d.is-small { min-height: 34px; padding: 6px 9px 5px; font-size: 13px; }
+.label3d.is-small::before { content: ""; position: absolute; inset: -5px -3px; }
+.label3d.is-moved::after { display: none; }
+.label-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.label-lines line { stroke: var(--brown); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.dock .bb { width: 52px; height: 52px; padding: 0; }
+
+/* ---------- Info rápida ---------- */
+.modal {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: calc(var(--sat) + 70px) 12px calc(var(--sab) + 12px);
+  background: rgba(58, 36, 16, .45);
+  animation: fade-in .25s both;
+}
+.modal-panel { width: 100%; max-height: 100%; display: flex; flex-direction: column; animation: panel-up .45s var(--spring) both; }
+@keyframes panel-up { from { transform: translateY(40px); opacity: 0; } }
+.modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 16px 8px; }
+.modal-head h2 { margin: 0; font-family: var(--f-title); font-size: 20px; font-weight: 400; }
+.modal-body { padding: 4px 16px 18px; overflow-y: auto; scrollbar-width: none; }
+.modal-body::-webkit-scrollbar { display: none; }
+/* Aviso del modo muestra (en lugar de abrir WhatsApp): centrado, sobre la celebración */
+.modal.demo-note { z-index: 85; align-items: center; }
+.demo-note .modal-panel { max-width: 380px; }
+.demo-note .modal-body { padding: 18px 18px 20px; text-align: center; }
+.demo-note-ic { margin: 0; font-size: 34px; line-height: 1; }
+.demo-note .lead { margin: 0; font-weight: 800; }
+
+/* ---------- Debug ---------- */
+.debug {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 1000;
+  width: 250px;
+  max-height: 86vh;
+  overflow: auto;
+  padding: 10px;
+  border: 2px solid var(--brown);
+  border-radius: 8px;
+  background: rgba(255, 246, 229, .97);
+  font: 700 12px/1.35 var(--f-body);
+  color: var(--text);
+  scrollbar-width: none;
+}
+.debug.is-min > :not(.debug-head) { display: none; }
+.debug-head { display: flex; justify-content: space-between; align-items: center; font-weight: 900; }
+.debug h4 { margin: 8px 0 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.debug-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.debug button { min-height: 28px; padding: 3px 7px; border: 2px solid var(--brown); border-radius: 6px; background: #fff; font: 800 11px var(--f-body); cursor: pointer; }
+.debug button.is-on { background: var(--gold); }
+.debug-perf { margin-top: 6px; font: 800 12px ui-monospace, monospace; }
