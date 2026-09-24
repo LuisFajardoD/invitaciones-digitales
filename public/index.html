@@ -41,7 +41,9 @@
 	============================== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preload" href="/assets/compartidos/fuentes/embryo.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/site-shell/assets/fonts/migko/Sigko.woff" as="font" type="font/woff" crossorigin>
     <link rel="preload" href="/assets/site-shell/assets/fonts/fontawesome/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Indie+Flower&family=Sora:wght@100..800&family=Urbanist:ital,wght@0,100..900;1,100..900&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
@@ -110,20 +112,16 @@
 	******************************** -->
 
 
-    <div id="preloader">
-        <div class="preloader-bg preloader-bg-one"></div>
-        <div class="preloader-bg preloader-bg-two"></div>
-        <div class="loader-wrapper">
-            <span class="loader-letter">G</span>
-            <span class="loader-letter">L</span>
-            <span class="loader-letter">O</span>
-            <span class="loader-letter">O</span>
-            <span class="loader-letter">B</span>
-            <span class="loader-letter">I</span>
-            <div class="loader"></div>
+    <div id="preloader" class="gloobi-home-loader" data-home-loader role="status" aria-live="polite" aria-label="Preparando Gloobi">
+        <div class="gloobi-home-loader__brand" aria-hidden="true">
+            <span class="gloobi-home-loader__orb">
+                <video autoplay muted loop playsinline preload="auto">
+                    <source src="/assets/compartidos/marca/gloobi-orb.webm" type="video/webm">
+                </video>
+            </span>
+            <span class="gloobi-home-loader__wordmark">gloobi</span>
         </div>
-
-
+        <span class="gloobi-home-loader__indicator" aria-hidden="true"></span>
     </div><!--==============================
     Sidemenu
 ============================== -->
@@ -307,7 +305,7 @@
                      la original (misma estrategia left:50%/translateX), sin extenderse a los
                      bordes asimétricos de .gloobi-top-bar (eso causaba el aspecto inclinado). -->
                 <svg class="gloobi-top-wave-desktop" viewBox="0 0 1000 64" preserveAspectRatio="none" aria-hidden="true">
-                    <path d="M0,0 H1000 V12 H930 C895,12 835,60 800,60 H200 C165,60 105,12 70,12 H0 Z"></path>
+                    <path d="M0 0 H1000 C940 0 912 2 884 14 C848 29 832 50 798 56 C785 58.5 772 60 752 60 H248 C228 60 215 58.5 202 56 C168 50 152 29 116 14 C88 2 60 0 0 0 Z"></path>
                 </svg>
                 <div class="gloobi-filter-bar" aria-label="Características clave de Gloobi">
                     <div class="gloobi-filter-item"><span class="gloobi-filter-value"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg> Música</span></div>
@@ -381,7 +379,7 @@
                         <svg class="gloobi-card-left-shape" viewBox="0 0 750 360" preserveAspectRatio="none" aria-hidden="true"><path d="M 104 0 H 520 C 590 0, 646 56, 646 126 V 200 C 646 270, 672 360, 750 360 H 84 C 38 360, 0 322, 0 276 V 104 C 0 46, 46 0, 104 0 Z"></path></svg>
                         <div class="gloobi-card-left-content">
                             <div class="gloobi-season-screen" aria-label="Video temático de temporada">
-                                <video class="gloobi-season-video" autoplay muted loop playsinline preload="metadata" data-fallback-src="/assets/gloobi-home/encabezado/mes-de-festejo.webm"></video>
+                                <video class="gloobi-season-video" autoplay muted loop playsinline preload="auto" data-fallback-src="/assets/gloobi-home/encabezado/calaverita.webm"></video>
                             </div>
                             <div class="gloobi-left-badge">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
@@ -1439,36 +1437,53 @@ Contact Area
     <!-- Lenis Js -->
     <script src="/assets/site-shell/assets/js/lenis.min.js"></script>
 
+    <script src="/assets/site-shell/assets/js/gloobi-home-loader.js?v=20260923-1"></script>
     <script type="module">
       const canvas = document.getElementById("gloobi-liquid-canvas");
       if (canvas) {
-        import("https://cdn.jsdelivr.net/npm/threejs-components@0.0.27/build/backgrounds/liquid1.min.js").then(({ default: LiquidBackground }) => {
+        const panelSources = { dark: "", light: "" };
+        const contentReady = new Promise((resolve) => {
+          if (document.documentElement.dataset.siteContentReady) resolve();
+          else window.addEventListener("gloobi-site-content-ready", resolve, { once: true });
+        });
+        window.addEventListener("gloobi-site-background-change", function (event) {
+          if (!event.detail || event.detail.scope !== "panel") return;
+          panelSources.dark = event.detail.dark || panelSources.dark;
+          panelSources.light = event.detail.light || panelSources.light;
+        });
+        Promise.all([
+          import("https://cdn.jsdelivr.net/npm/threejs-components@0.0.27/build/backgrounds/liquid1.min.js"),
+          contentReady
+        ]).then(async ([{ default: LiquidBackground }]) => {
           const app = LiquidBackground(canvas);
-          function loadPanelTexture(theme) {
-            app.loadImage(theme === "light"
-              ? "/assets/gloobi-home/encabezado/fondo-panel-claro.avif"
-              : "/assets/gloobi-home/encabezado/fondo-panel-oscuro.avif");
+          async function loadPanelTexture(theme) {
+            const source = theme === "light"
+              ? (panelSources.light || "/assets/gloobi-home/encabezado/fondo-panel-claro.avif")
+              : (panelSources.dark || "/assets/gloobi-home/encabezado/fondo-panel-oscuro.avif");
+            await app.loadImage(source);
           }
-          loadPanelTexture(document.documentElement.dataset.theme);
-          window.addEventListener("site-theme-change", function (event) { loadPanelTexture(event.detail); });
-          window.addEventListener("gloobi-site-background-change", function (event) {
-            if (!event.detail || event.detail.scope !== "panel") return;
-            var theme = document.documentElement.dataset.theme || "dark";
-            var source = theme === "light" ? event.detail.light : event.detail.dark;
-            if (source) app.loadImage(source);
-          });
           app.liquidPlane.material.metalness = 0.75;
           app.liquidPlane.material.roughness = 0.25;
           app.liquidPlane.uniforms.displacementScale.value = 5;
           app.setRain(false);
-        }).catch(() => canvas.remove());
+          await loadPanelTexture(document.documentElement.dataset.theme || "dark");
+          window.addEventListener("site-theme-change", function (event) { loadPanelTexture(event.detail); });
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            document.documentElement.dataset.heroLiquidReady = "true";
+            window.dispatchEvent(new CustomEvent("gloobi-hero-liquid-ready"));
+          }));
+        }).catch(() => {
+          canvas.remove();
+          document.documentElement.dataset.heroLiquidReady = "fallback";
+          window.dispatchEvent(new CustomEvent("gloobi-hero-liquid-ready", { detail: { fallback: true } }));
+        });
       }
     </script>
     <!-- Main Js File -->
     <script src="/assets/site-shell/assets/js/main.js?v=20260910-2"></script>
     <script src="/assets/site-shell/assets/js/gloobi-hero.js?v=20260915-3"></script>
     <script src="/assets/site-shell/assets/js/gloobi-global-bg.js?v=20260915-1"></script>
-    <script src="/assets/site-shell/assets/js/gloobi-site-content.js?v=20260915-1"></script>
+    <script src="/assets/site-shell/assets/js/gloobi-site-content.js?v=20260923-1"></script>
 
 </body>
 

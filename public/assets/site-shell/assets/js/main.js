@@ -32,7 +32,7 @@
       JS Index End
   ==================================*/
     // ------------ Preloader ------------
-    if ($("#preloader").length) {
+    if ($("#preloader").length && !document.querySelector("#preloader[data-home-loader]")) {
         var preloaderDismissed = false;
         function hidePreloader() {
             if (preloaderDismissed) return;

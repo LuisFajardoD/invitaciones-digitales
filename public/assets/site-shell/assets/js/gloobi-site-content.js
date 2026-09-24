@@ -40,12 +40,16 @@
     var video = document.querySelector("#hero .gloobi-season-video");
     if (!video || !source) return;
     video.dataset.ready = "false";
-    video.addEventListener("loadeddata", function () { video.dataset.ready = "true"; }, { once: true });
+    video.addEventListener("loadeddata", function () {
+      video.dataset.ready = "true";
+      window.dispatchEvent(new CustomEvent("gloobi-hero-video-ready"));
+    }, { once: true });
     if (video.getAttribute("src") !== source) {
       video.src = source;
       video.load();
     } else if (video.readyState >= 2) {
       video.dataset.ready = "true";
+      window.dispatchEvent(new CustomEvent("gloobi-hero-video-ready"));
     }
   }
   function applyHome(page, blocks) {
@@ -106,5 +110,6 @@
     else if(document.querySelector(".gloobi-faq-page")) applyFaq(data.pages.faq);
     else if(document.querySelector(".gloobi-contact-page")) applyContact(data.pages.contact,data.blocks);
     document.documentElement.dataset.siteContentReady="true";
-  }).catch(function(){ var fallbackVideo=document.querySelector("#hero .gloobi-season-video"); if(fallbackVideo)loadHeroVideo(fallbackVideo.dataset.fallbackSrc); document.documentElement.dataset.siteContentReady="fallback"; });
+    window.dispatchEvent(new CustomEvent("gloobi-site-content-ready"));
+  }).catch(function(){ var fallbackVideo=document.querySelector("#hero .gloobi-season-video"); if(fallbackVideo)loadHeroVideo(fallbackVideo.dataset.fallbackSrc); document.documentElement.dataset.siteContentReady="fallback"; window.dispatchEvent(new CustomEvent("gloobi-site-content-ready", { detail: { fallback: true } })); });
 })();
