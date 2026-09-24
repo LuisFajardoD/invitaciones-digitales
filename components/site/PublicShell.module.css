@@ -50,8 +50,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: 42px;
-  block-size: 42px;
+    inline-size: 48px;
+    block-size: 48px;
   border-radius: 999px;
   border: 1px solid var(--site-shell-border);
   background: var(--site-shell-header-bg);
@@ -75,8 +75,8 @@
 }
 
 .site-shell-icon {
-  inline-size: 18px;
-  block-size: 18px;
+    inline-size: 20px;
+    block-size: 20px;
 }
 
 .site-shell-menu {

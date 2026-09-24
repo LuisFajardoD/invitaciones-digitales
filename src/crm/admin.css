@@ -25,22 +25,22 @@ body:has(> .app-admin) {
 }
 
 .app-admin.viewer-admin-theme--light {
-  --admin-shell-bg: #08090d;
-  --admin-panel-bg: rgba(14, 13, 24, 0.92);
-  --admin-surface-bg: rgba(255, 255, 255, 0.04);
-  --admin-note-bg: rgba(255, 255, 255, 0.06);
-  --admin-note-border: rgba(255, 255, 255, 0.14);
-  --admin-border: rgba(255, 255, 255, 0.12);
-  --admin-border-strong: rgba(255, 255, 255, 0.26);
-  --admin-text: #f4f5f7;
-  --admin-text-soft: #a8adba;
-  --admin-accent: #d7deed;
-  --admin-button-bg: #ffffff;
-  --admin-button-text: #111318;
-  --admin-secondary-bg: rgba(255, 255, 255, 0.05);
-  --admin-phone-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  color-scheme: dark;
-  background-color: #08090d !important;
+  --admin-shell-bg: #f4f6fb;
+  --admin-panel-bg: rgba(255, 255, 255, 0.9);
+  --admin-surface-bg: rgba(66, 47, 99, 0.045);
+  --admin-note-bg: rgba(98, 70, 145, 0.07);
+  --admin-note-border: rgba(67, 48, 102, 0.16);
+  --admin-border: rgba(44, 30, 75, 0.15);
+  --admin-border-strong: rgba(105, 70, 174, 0.38);
+  --admin-text: #211a2d;
+  --admin-text-soft: #6d6679;
+  --admin-accent: #6544b8;
+  --admin-button-bg: #211a2d;
+  --admin-button-text: #ffffff;
+  --admin-secondary-bg: rgba(62, 43, 94, 0.07);
+  --admin-phone-shadow: 0 20px 50px rgba(57, 36, 98, 0.16);
+  color-scheme: light;
+  background-color: #f4f6fb !important;
 }
 
 .app-admin .viewer-admin-shell,
@@ -433,6 +433,19 @@ body:has(> .app-admin) {
 .app-admin.viewer-admin-theme--light .viewer-login-field .viewer-login-input-wrap input.viewer-login-control {
   border-color: rgba(44, 30, 75, 0.14);
   background: rgba(64, 39, 112, 0.04);
+  color: #211a2d;
+  caret-color: #6544b8;
+}
+
+.app-admin.viewer-admin-theme--light .viewer-login-field > span:first-child,
+.app-admin.viewer-admin-theme--light .viewer-remember-login strong {
+  color: #211a2d;
+}
+
+.app-admin.viewer-admin-theme--light .viewer-login-input-wrap > svg,
+.app-admin.viewer-admin-theme--light .viewer-login-password-toggle,
+.app-admin.viewer-admin-theme--light .viewer-remember-login small {
+  color: #716a80;
 }
 
 .app-admin .viewer-login-field .viewer-login-input-wrap:focus-within input.viewer-login-control {

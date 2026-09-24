@@ -105,7 +105,7 @@ export function PublicShell({
           onClick={toggleTheme}
           aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
         >
-          <ThemeIcon mode={themeMode} />
+          <ThemeIcon mode={isDark ? "light" : "dark"} />
         </button>
 
         {(showLogout || showSiteLink) ? (

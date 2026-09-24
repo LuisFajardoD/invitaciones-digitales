@@ -4,8 +4,7 @@
   var storageKey = "site-theme-mode";
   var root = document.documentElement;
   var body = document.body;
-  var darkButton = document.querySelector(".gloobi-btn-dark");
-  var lightButton = document.querySelector(".gloobi-btn-light");
+  var themeButton = document.querySelector(".gloobi-theme-toggle");
   var railButton = document.querySelector(".gloobi-rail-avatar");
   var railMenu = document.querySelector(".gloobi-rail-logo-menu");
 
@@ -15,16 +14,20 @@
     root.dataset.siteTheme = isLight ? "light" : "dark";
     body.classList.toggle("light-mode", isLight);
     body.classList.toggle("dark-mode", !isLight);
-    if (darkButton) darkButton.classList.toggle("is-active", !isLight);
-    if (lightButton) lightButton.classList.toggle("is-active", isLight);
+    if (themeButton) {
+      themeButton.textContent = isLight ? "☾" : "☀";
+      themeButton.setAttribute("aria-label", isLight ? "Activar modo oscuro" : "Activar modo claro");
+      themeButton.setAttribute("title", isLight ? "Activar modo oscuro" : "Activar modo claro");
+    }
     try { localStorage.setItem(storageKey, isLight ? "light" : "dark"); } catch (error) {}
   }
 
   var savedTheme = null;
   try { savedTheme = localStorage.getItem(storageKey); } catch (error) {}
   applyTheme(savedTheme === "light" ? "light" : "dark");
-  if (darkButton) darkButton.addEventListener("click", function () { applyTheme("dark"); });
-  if (lightButton) lightButton.addEventListener("click", function () { applyTheme("light"); });
+  if (themeButton) themeButton.addEventListener("click", function () {
+    applyTheme(root.dataset.theme === "light" ? "dark" : "light");
+  });
   if (railButton && railMenu) railButton.addEventListener("click", function () {
     var open = railMenu.classList.toggle("is-open");
     railButton.setAttribute("aria-expanded", String(open));
