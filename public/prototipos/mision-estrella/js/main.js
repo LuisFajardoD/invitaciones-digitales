@@ -60,11 +60,20 @@ async function boot() {
   window.__setCoverBand = (a, b) => { film.setCoverBand(a, b); bandSet = true; };
 
   /* ---------- Bucle ---------- */
-  let last = performance.now(), t = 0, frames = 0, running = true, story = { chapter: 1, p: 0 };
+  // Un SOLO bucle vivo (rafId): al ocultarse la pestaña se cancela y al volver se reanuda sólo si no hay otro. Antes, el
+  // cuadro pendiente de antes de ocultarse seguía vivo y se sumaba uno nuevo en cada regreso: varios bucles a la vez,
+  // con dt ≈ 0 (o negativo) en los extra. El paso de tiempo nunca es negativo ni mayor a 1/30 s, y el reloj se
+  // reinicia (resetClock) al volver de otra ventana o pestaña: el primer cuadro después no da un salto.
+  const MAX_DT = 1 / 30;
+  let last = -1, t = 0, frames = 0, running = true, rafId = 0, story = { chapter: 1, p: 0 };
   let scroll = null, ctl = null;
+  const resetClock = () => { last = -1; };
+  const start = () => { running = true; resetClock(); if (!rafId) rafId = requestAnimationFrame(loop); };
+  const stop = () => { running = false; if (rafId) cancelAnimationFrame(rafId); rafId = 0; };
   function loop(now) {
+    rafId = 0;
     if (!running) return;
-    const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    const dt = last < 0 ? 0 : Math.min(MAX_DT, Math.max(0, (now - last) / 1000)); last = now; t += dt;
     if (film.mode === "story" && scroll) story = scroll.update(dt);
     film.update(dt, t, story);
     R.render();
@@ -72,14 +81,19 @@ async function boot() {
     fadeEl.style.opacity = String(film.fade || 0);
     ctl?.frame(dt, story);
     if (++frames === revealAt) { poster.classList.add("is-out"); film.startCoverDrift(); window.__ready = true; }
-    requestAnimationFrame(loop);
+    if (!rafId) rafId = requestAnimationFrame(loop);
   }
-  requestAnimationFrame(loop);
+  start();
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") { running = false; audio.suspend(); }
-    else { running = true; last = performance.now(); requestAnimationFrame(loop); if (state.soundEnabled() && !SHOWCASE) audio.resume(); }
+    if (document.visibilityState === "hidden") { stop(); audio.suspend(); }
+    else { start(); if (state.soundEnabled() && !SHOWCASE) audio.resume(); }
   });
-  addEventListener("pagehide", () => audio.suspend());
+  addEventListener("pagehide", () => { stop(); audio.suspend(); });
+  addEventListener("pageshow", () => { if (document.visibilityState !== "hidden") start(); });
+  // cambiar de ventana sin ocultar la pestaña (otra app encima): el navegador puede frenar los cuadros; al volver,
+  // el reloj se reinicia para no aplicar de golpe el tiempo perdido
+  addEventListener("blur", resetClock);
+  addEventListener("focus", resetClock);
 
   if (SHOWCASE) { // vitrina: sólo la portada en loop, sin texto, botones ni sonido
     if (flag("title")) ui.append(h("h1.showcase-title", { text: missionName() }));

@@ -76,6 +76,7 @@ export function createAstronaut({ suitColor, accentColor }) {
   const ready = loadAll(); // se resuelve al terminar de cargar (o fallar) los GLB: el procedural queda de respaldo
   let headYaw = 0, headTarget = 0;
   const headQ = new THREE.Quaternion(), headQW = new THREE.Quaternion(), Y_AXIS = new THREE.Vector3(0, 1, 0);
+  const headApplied = { bone: null, q: new THREE.Quaternion() }; // giro de cabeza aplicado en el cuadro anterior
 
   return {
     root, ready,
@@ -134,13 +135,18 @@ export function createAstronaut({ suitColor, accentColor }) {
         else if (pending) { show(pending); pending = null; }
       } else if (holder.scale.x < 1) holder.scale.setScalar(Math.min(1, holder.scale.x + dt * 0.9));
       if (!pending && swapT >= 0 && holder.scale.x >= 1) swapT = -1;
+      // Giro de la cabeza encima de la animación: ABSOLUTO (pose del mixer + giro de este cuadro). El AnimationMixer
+      // sólo reescribe un hueso si su valor cambió respecto al que él aplicó antes; en un cuadro con dt = 0 (o con la
+      // animación quieta) no lo toca y un giro multiplicado sobre el cuadro anterior se acumulaba hasta dar la vuelta.
+      // Por eso primero se quita el giro aplicado el cuadro anterior (el hueso vuelve a la pose del mixer), luego se
+      // actualiza la animación y al final se aplica el giro nuevo.
+      if (headApplied.bone) { headApplied.bone.quaternion.multiply(headQ.copy(headApplied.q).invert()); headApplied.bone = null; }
       if (active === proc) proc.update(dt, t);
       else { active.mixer?.update(dt); if (!active.actions || !Object.keys(active.actions).length) proceduralMotion(active.root, t, pose); }
-      // giro de la cabeza encima de la animación (suave): el casco mira hacia algo sin mover el cuerpo
       headYaw += (headTarget - headYaw) * (1 - Math.exp(-3 * dt));
       if (Math.abs(headYaw) > 0.002) {
         const hb = active.parts?.headBone || proc.parts?.head;
-        if (hb) hb.quaternion.multiply(headQ.setFromAxisAngle(Y_AXIS, headYaw));
+        if (hb) { headApplied.q.setFromAxisAngle(Y_AXIS, headYaw); hb.quaternion.multiply(headApplied.q); headApplied.bone = hb; }
       }
     },
     /** Giro de la cabeza (radianes, + = hacia la izquierda del astronauta) encima de la pose actual. */
