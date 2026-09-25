@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { demoData } from "../data.js";
 import { clamp, smooth, easeInOut, easeIn, invLerp, lerp, prefersReduced, vibrate, missionName, loadImage } from "../util.js";
 import { V, samplePath, blendShots, camSpace, shake, shot } from "./camera-path.js";
-import { ENV, glowTexture } from "./materials.js";
+import { ENV, glowTexture, createStudioEnv } from "./materials.js";
 import { renderNebula } from "./nebula.js";
 import { createSky, createNebulaClouds } from "./sky.js";
 import { createStars } from "./stars.js";
@@ -49,6 +49,7 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   // --- cielo, nebulosa, estrellas
   const neb = renderNebula(R.renderer, { w: q.nebula, h: q.nebula / 2 });
   ENV.envMap.value = neb;
+  try { createStudioEnv(R.renderer); } catch { /* sin reflejos de estudio */ }
   const sky = createSky(neb); scene.add(sky.mesh);
   const clouds = createNebulaClouds(showcase ? 6 : 10); scene.add(clouds);
   const stars = createStars({ density: q.stars }); scene.add(stars.group);

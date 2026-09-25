@@ -10,6 +10,33 @@ export const RIM = {
   rimPower: { value: 2.6 }
 };
 export const ENV = { envMap: { value: null } }; // textura equirectangular del cielo (nebulosa)
+export const STUDIO = { texture: null }; // reflejo "de estudio" para materiales PBR (cohete)
+
+/**
+ * Entorno de estudio para reflejos (una sola vez, PMREM): cúpula lavanda → índigo, luz cálida principal y
+ * luces de borde rosa y turquesa. Da brillo de juguete de colección a metales y pintura sin verse frío.
+ */
+export function createStudioEnv(renderer) {
+  if (STUDIO.texture) return STUDIO.texture;
+  const scene = new THREE.Scene();
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    uniforms: { top: { value: new THREE.Color("#B8AEE0") }, mid: { value: new THREE.Color("#5E4E9A") }, bot: { value: new THREE.Color("#2A2266") } },
+    vertexShader: "varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: "uniform vec3 top, mid, bot; varying vec3 vP; void main(){ vec3 c = mix(bot, mid, smoothstep(-0.6, 0.1, vP.y)); c = mix(c, top, smoothstep(0.1, 0.9, vP.y)); gl_FragColor = vec4(c, 1.0); }"
+  }));
+  scene.add(dome);
+  const panel = (color, intensity, pos, w, h) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity), side: THREE.DoubleSide })); m.position.copy(pos); m.lookAt(0, 0, 0); scene.add(m); };
+  panel("#FFE3C4", 1.25, new THREE.Vector3(5, 6, 5), 5, 3.5);   // principal cálida
+  panel("#FF8FA3", 0.9, new THREE.Vector3(-7, 1, 2), 2.5, 6);  // borde rosa
+  panel("#6FD6E8", 0.9, new THREE.Vector3(6, 0, -5), 2.5, 6);  // borde turquesa
+  panel("#FFFFFF", 0.7, new THREE.Vector3(0, 9, 0), 4, 4);     // cenital suave
+  const pm = new THREE.PMREMGenerator(renderer);
+  STUDIO.texture = pm.fromScene(scene, 0.02).texture;
+  pm.dispose();
+  scene.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); });
+  return STUDIO.texture;
+}
 
 /** Inyecta la luz de borde en cualquier material con iluminación (Lambert, Standard, Toon). */
 export function addRim(mat, strength = 1) {

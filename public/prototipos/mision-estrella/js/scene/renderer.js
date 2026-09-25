@@ -27,7 +27,7 @@ export function createRenderer(canvas, { stage, level = "medium", maxDpr = 2, pr
     if (!q.bloom) return;
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    bloom = new UnrealBloomPass(new THREE.Vector2(Math.max(1, w / 2), Math.max(1, h / 2)), 0.55, 0.6, 0.72);
+    bloom = new UnrealBloomPass(new THREE.Vector2(Math.max(1, w / 2), Math.max(1, h / 2)), 0.35, 0.5, 0.93);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
     resize(true);
