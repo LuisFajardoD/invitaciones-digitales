@@ -41,6 +41,8 @@ const EARTH_R = 100, EARTH_Y = -114; // la curvatura se ve desde la órbita
 const WALK = V(0.9, 2.48, 2.6); // dónde saluda el astronauta en la caminata
 const JUMP_FROM = V(2.4, PAD_Y + 0.9, 1.6);
 export const CHAPTER_COUNT = 9;
+// Portada: media luna [giro Z, escala] y astronauta [rotX, rotY, rotZ (orden ZYX), x, y, z] respecto a COVER
+const CRES_DEFAULT = "1.0,1.0", COV_DEFAULT = "0,0.4,0.75,-0.228,-0.283,0.05";
 const T = 0.22; // fracción de cada capítulo dedicada a viajar desde el anterior
 
 export function createFilm({ R, quality, audio, showcase = false }) {
@@ -62,8 +64,10 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   // Listo para mostrarse: astronauta (GLB o respaldo) con su pose, foto del visor y shaders de lo visible compilados
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const ready = Promise.all([astro.ready, photoP]).then(() => wait(400)).then(() => precompile(true));
-  // --- portada
-  const crescent = createCrescent(); crescent.holder.position.copy(COVER); crescent.holder.rotation.set(0.12, -0.3, 0.5); crescent.holder.scale.setScalar(0.8); scene.add(crescent.holder);
+  // --- portada: media luna como cuna (abertura hacia arriba a la derecha); [giro Z, escala] ajustable con ?cres=
+  const params = new URLSearchParams(location.search);
+  const CRES = (params.get("cres") || CRES_DEFAULT).split(",").map(Number);
+  const crescent = createCrescent(); crescent.holder.position.copy(COVER); crescent.holder.rotation.set(0.12, -0.3, CRES[0]); crescent.holder.scale.setScalar(CRES[1]); scene.add(crescent.holder);
 
   // --- partes que se construyen al acercarse
   const W = { earth: null, launch: null, rocket: null, mural: null, constellation: null, moon: null, station: null, memories: null, flight: null, cargo: null, comets: null, trail: null };
@@ -201,7 +205,7 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     solidPoints(crescent.holder, world);
     astro.box(cBox2);
     for (let i = 0; i < 8; i++) world.push(V(i & 1 ? cBox2.max.x : cBox2.min.x, i & 2 ? cBox2.max.y : cBox2.min.y, i & 4 ? cBox2.max.z : cBox2.min.z));
-    cBox2.setFromCenterAndSize(gloobi.root.position, cSize.setScalar(0.16 * 3.4));
+    cBox2.setFromCenterAndSize(gloobi.root.position, cSize.setScalar(0.16 * 3.4 * gloobi.root.scale.x));
     for (let i = 0; i < 8; i++) world.push(V(i & 1 ? cBox2.max.x : cBox2.min.x, i & 2 ? cBox2.max.y : cBox2.min.y, i & 4 ? cBox2.max.z : cBox2.min.z));
     const g = CF.goal; cBox.setFromPoints(world).getCenter(g.ctr);
     cRight.crossVectors(UP, CDIR).normalize(); cUp.crossVectors(CDIR, cRight);
@@ -241,15 +245,24 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     out.pos.copy(c.ctr).addScaledVector(cDir, c.d * (1 + Math.sin(a) * 0.015)).add(c.off);
     return out;
   }
-  // Pose del astronauta dormido sobre la media luna: [rotX, rotY, rotZ, x, y, z] (ajustable con ?cov= en pruebas)
-  const COV = (new URLSearchParams(location.search).get("cov") || "-0.6,0.1,1.2,0.05,0.1,0.5").split(",").map(Number);
+  // Astronauta dormido acurrucado en la curva interior de la media luna (pose "sleep": rodillas al pecho abrazando a
+  // Gloobi). [inclinación X, giro Y, recostado Z (orden ZYX: primero se inclina, luego se gira de 3/4 y al final se
+  // recuesta en la curva), x, y, z] (ajustable con ?cov= en pruebas). La posición deja el casco y la espalda
+  // apoyados en la luna (holgura ≈ 0.007, sin atravesarla en todo el ciclo de respiración).
+  const COV = (params.get("cov") || COV_DEFAULT).split(",").map(Number);
+  const covE = new THREE.Euler(0, 0, 0, "ZYX");
+  const G_COVER = 0.62; // Gloobi más chico en la portada: cabe en el abrazo (en los capítulos vuelve a 1)
+  // (descansa sobre la luna: sin balanceo propio; la vida la dan la respiración, el cabeceo y la deriva de cámara)
   function placeCover(t, hold) {
-    const k = (t / 24) * Math.PI * 2;
     astro.root.visible = true; astro.root.scale.setScalar(1);
-    astro.root.position.set(COVER.x + COV[3], COVER.y + COV[4] + Math.sin(k * 3) * 0.03, COVER.z + COV[5]);
-    astro.root.rotation.set(COV[0], COV[1], COV[2] + Math.sin(k * 2) * 0.03);
+    astro.root.position.set(COVER.x + COV[3], COVER.y + COV[4], COVER.z + COV[5]);
+    covE.set(COV[0], COV[1], COV[2]); astro.root.quaternion.setFromEuler(covE);
+    astro.root.updateMatrixWorld(true);
+    astro.setHeadYaw(0); // con este giro de 3/4 el visor ya queda de frente a la cámara
     gloobi.follow(null); gloobi.root.visible = true;
-    tmp.set(0.1, -0.16, 0.27).applyEuler(astro.root.rotation).add(astro.root.position);
+    const wake = smooth(clamp((hold - 0.1) / 0.25)); // al despertar vuelve a su tamaño y sale del abrazo
+    gloobi.root.scale.setScalar(lerp(G_COVER, 1, wake));
+    if (!astro.hugWorld(tmp)) tmp.set(0.1, -0.16, 0.27).applyQuaternion(astro.root.quaternion).add(astro.root.position);
     if (hold > 0.2) tmp.y += hold * 0.3;
     gloobi.root.position.lerp(tmp, hold > 0.15 ? 0.08 : 1);
   }
@@ -366,10 +379,12 @@ export function createFilm({ R, quality, audio, showcase = false }) {
       if (W.earth) W.earth.group.visible = false;
       hideStory();
     } else if (st.mode === "launch") {
+      gloobi.root.scale.setScalar(1); astro.setHeadYaw(0);
       earthY = updateLaunch(dt, t, R0);
       space = st.space; shakeAmp = st.shake;
       hideStory();
     } else {
+      gloobi.root.scale.setScalar(1);
       updateStory(dt, t, story, R0);
     }
     if (W.comets) W.comets.update(dt, camera);
@@ -406,7 +421,7 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     kg.copy(gloobi.root.position).applyMatrix4(camera.matrixWorldInverse);
     const zV = -kv.z, zG = -kg.z;
     if (zG <= 0.05 || zG >= zV) return;
-    const need = (astro.visorRadius() * 1.12) / zV + G_R / zG;
+    const need = (astro.visorRadius() * 1.12) / zV + (G_R * gloobi.root.scale.x) / zG;
     const dx = kg.x / zG - kv.x / zV, dy = kg.y / zG - kv.y / zV, dist = Math.hypot(dx, dy);
     if (dist >= need) return;
     const ux = dist > 1e-4 ? dx / dist : 0.7, uy = dist > 1e-4 ? dy / dist : 0.7;
@@ -646,7 +661,7 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     get fade() { return st.fade; },
     get flightActive() { return st.flightActive; },
     get launchInfo() { return { t: st.launchT, ign: IGN(), len: LAUNCH_LEN(), short: st.launchShort }; },
-    astro, gloobi, world: W, sky, stars, ready,
+    astro, gloobi, crescent, world: W, sky, stars, ready,
     update,
     buildRest() { buildIdle(); },
     setHold(h) { st.hold = h; },

@@ -96,6 +96,8 @@ export function createAstronaut({ suitColor, accentColor }) {
       if (active.parts?.headRestInv) headQW.multiply(active.parts.headRestInv);
       fwd.set(0, 0, 1).applyQuaternion(headQW); up.set(0, 1, 0).applyQuaternion(headQW);
     },
+    /** Punto del abrazo de "sleep" (entre las manos, frente al pecho) en el mundo; null si el modelo no lo tiene. */
+    hugWorld(out = new THREE.Vector3()) { const a = active.parts?.hugAnchor; return a ? a.bone.localToWorld(out.copy(a.offset)) : null; },
     /** Radio del visor en unidades de mundo (para el encuadre y para que nada lo tape). */
     visorRadius() { const a = active.parts?.visorAnchor; return (a ? a.radius : 0.24) * root.scale.x; },
     /** Caja del astronauta tal como está ahora (incluye la pose animada si tiene piel). */

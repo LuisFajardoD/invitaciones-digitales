@@ -110,8 +110,16 @@ export const models = {
   (`astronaut_body`, 7 materiales) + `visor` (UV frontal para la foto; se aplica con `flipY = false`, convención
   glTF) + `helmet_glass` (se reemplaza por el vidrio fresnel, que también sigue al esqueleto). Sólo huesos de
   deformación; animaciones horneadas `float`, `wave`, `sleep`, `celebrate`, `fly`, en bucle perfecto. Piernas y cadera
-  quedan en su pose de reposo: el cuerpo se mueve entero. Fuente y scripts de Blender fuera del repo
-  (`blender-trabajo/`).
+  quedan en su pose de reposo (el cuerpo se mueve entero), salvo en `sleep`: pose fija acurrucada, sólo `thigh_fk` y
+  `shin_fk` en su eje de flexión (cadera ≈ 68°, rodilla ≈ 86° medidas en los huesos) y los brazos abrazando a Gloobi
+  frente al pecho. Fuente y scripts de Blender fuera del repo (`blender-trabajo/`: `11_animaciones.py`,
+  verificación `27_verif_sleep.py`). Compresión: `gltf-transform optimize <raw> <out> --compress meshopt
+  --simplify false --texture-compress false --palette false --prune-attributes false` (sin `--prune-attributes
+  false` se pierden las UV del visor y la foto sale negra).
+- **Portada**: el astronauta duerme en la curva interior de la media luna (cuna, abertura arriba a la derecha),
+  espalda y casco apoyados en ella, visor de frente a la cámara; Gloobi va a 0.62× en el abrazo (ancla `hugAnchor`
+  en el hueso del pecho, `astro.hugWorld()`) y vuelve a su tamaño al despertar. Ajuste en pruebas: `?cres=` y `?cov=`
+  (ver `timeline.js`).
 
 ### Nombres de piezas que se reconocen (sin distinguir mayúsculas)
 

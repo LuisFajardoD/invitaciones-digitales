@@ -107,6 +107,16 @@ export function adapt(gltf, { height = 1, suitColor, accentColor, visorPhoto = t
     const bone = (v.isSkinnedMesh && headBone) || v;
     parts.visorAnchor = { bone, offset: bone.worldToLocal(c.clone()), radius: Math.max(s.x, s.y) / 2 };
   }
+  // Ancla del abrazo de "sleep" (Gloobi entre las manos): mismo punto que usa la pose en Blender
+  // (11_animaciones.py → sleep_hug_center): pecho (DEF-spine.003) + 1.45 al frente − 0.4 hacia abajo, en unidades
+  // del rig; se guarda relativa a ese hueso para que siga la respiración.
+  let chestBone = null;
+  src.traverse((o) => { if (!chestBone && o.isBone && /spine\.?003$/i.test(o.name)) chestBone = o; });
+  if (chestBone) {
+    root.updateMatrixWorld(true);
+    const p = chestBone.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, -0.4 * k, 1.45 * k));
+    parts.hugAnchor = { bone: chestBone, offset: chestBone.worldToLocal(p) };
+  }
   // Animaciones: nombre exacto de la pose y, si no hay, palabras clave
   let mixer = null; const actions = {};
   if (gltf.animations?.length) {

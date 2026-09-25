@@ -34,7 +34,7 @@
       /* Póster con la proporción más cercana a la del escenario y el mismo punto focal que la cámara 3D.
          La lista la reescribe tools/regenerar-poster.mjs: [nombre, ancho/alto, foco x %, foco y %]. */
       (function () {
-        var P = /*POSTERS*/[["9x19.5", 0.4615, 46.1, 46.6], ["9x16", 0.5625, 45.3, 43.8], ["3x4", 0.7504, 47.5, 43.3], ["16x9", 1.7778, 43.8, 54.1]]/*/POSTERS*/;
+        var P = /*POSTERS*/[["9x19.5", 0.4615, 48.4, 45.9], ["9x16", 0.5625, 48.2, 43], ["3x4", 0.7504, 49, 42.5], ["16x9", 1.7778, 48.2, 52.1]]/*/POSTERS*/;
         // vitrina (?showcase=1): el escenario ocupa todo el iframe; la clase se pone aquí para medirlo ya
         if (/[?&]showcase=1\b/.test(location.search)) document.documentElement.classList.add("is-showcase");
         var s = document.getElementById("stage"), a = s.clientWidth / Math.max(1, s.clientHeight), b = P[0];
