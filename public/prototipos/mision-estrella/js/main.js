@@ -50,6 +50,15 @@ async function boot() {
   const monitor = createMonitor(level, (l) => { if (!forced) { level = l; R.setLevel(l); markLevel(l); } });
   canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); fallback("se perdió el contexto WebGL"); stage.remove(); });
 
+  /* ---------- Póster → 3D ---------- */
+  // El póster se va (fundido de 0.4 s) sólo cuando el 3D ya pintó un frame completo: astronauta GLB (o su
+  // respaldo), foto del visor, shaders compilados y el encuadre de la portada con la franja del título/botón.
+  let bandSet = SHOWCASE, revealAt = -1;
+  if (SHOWCASE) film.setCoverBand(flag("title") ? 0.2 : 0.06, 0.95);
+  const reveal = () => { if (revealAt < 0) revealAt = frames + 2; };
+  Promise.race([Promise.all([film.ready, new Promise((r) => { const k = () => (bandSet ? r() : setTimeout(k, 50)); k(); })]), new Promise((r) => setTimeout(r, 9000))]).then(reveal);
+  window.__setCoverBand = (a, b) => { film.setCoverBand(a, b); bandSet = true; };
+
   /* ---------- Bucle ---------- */
   let last = performance.now(), t = 0, frames = 0, running = true, story = { chapter: 1, p: 0 };
   let scroll = null, ctl = null;
@@ -62,7 +71,7 @@ async function boot() {
     monitor.tick(dt);
     fadeEl.style.opacity = String(film.fade || 0);
     ctl?.frame(dt, story);
-    if (++frames === 3) { poster.classList.add("is-out"); window.__ready = true; }
+    if (++frames === revealAt) { poster.classList.add("is-out"); film.startCoverDrift(); window.__ready = true; }
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
@@ -74,6 +83,7 @@ async function boot() {
 
   if (SHOWCASE) { // vitrina: sólo la portada en loop, sin texto, botones ni sonido
     if (flag("title")) ui.append(h("h1.showcase-title", { text: missionName() }));
+    if (DEBUG) import("./debug.js").then((m) => m.posterTools({ R, film })); // póster 16:9 y OG (tools/regenerar-poster.mjs)
     window.__film = film;
     return;
   }
@@ -115,7 +125,8 @@ async function startExperience({ R, film, scroll, monitor, getLevel, setLevel })
   const chapters = createChapters(ui, {
     audio, getRsvp: rsvp, crewCount: () => film.crewCount(),
     onJoin: () => openForm(), onDecline: () => openForm({ decline: true }), onEdit: () => openForm({ previous: rsvp() }),
-    onResend: () => sendWhatsApp(rsvp()), onLog: () => openLog(), onReplay: () => replay()
+    onResend: () => sendWhatsApp(rsvp()), onLog: () => openLog(), onReplay: () => replay(),
+    onGiftFocus: (i) => film.focusGift(i)
   });
   const swipe = h("div.swipe-hint", { "aria-hidden": "true" }, h("span", { text: "Desliza para continuar" }), h("span.swipe-arrow", { html: icon("chevronDown", { size: 22 }) }));
   const skipBtn = h("button.btn.btn-ghost.btn-sm.skip", { type: "button", onclick: () => skipLaunch() }, "Omitir");
@@ -140,10 +151,19 @@ async function startExperience({ R, film, scroll, monitor, getLevel, setLevel })
         if (p > 0.05 && Math.random() < p * 0.12) vibrate(10 + p * 25);
       },
       onIgnite: () => ignite(),
-      onInfo: () => openLog({ fromCover: true }),
-      onGoLog: () => openLog({ fromCover: true })
+      onInfo: () => openLog({ fromCover: true })
     });
+    measureCoverBand();
   }
+  /** Franja libre entre el título y el botón (fracciones del alto): la escena centra ahí la luna y el astronauta. */
+  function measureCoverBand() {
+    const top = cover?.el.querySelector(".cover-top"), bot = cover?.el.querySelector(".cover-bottom"), H = stage.clientHeight;
+    if (!top || !bot || !H) return;
+    const a = (top.offsetTop + top.offsetHeight + 8) / H, b = (bot.offsetTop - 6) / H;
+    if (!(b - a > 0.2)) return; // franja inválida (UI oculta o sin medir): se conserva la anterior
+    window.__setCoverBand(a, b);
+  }
+  addEventListener("resize", () => requestAnimationFrame(measureCoverBand));
   function ignite() {
     audio.unlock(); audio.rumble(0);
     if (soundOn) { audio.setEnabled(true); audio.music(true); audio.duck(true); }
@@ -234,6 +254,7 @@ async function startExperience({ R, film, scroll, monitor, getLevel, setLevel })
     if (overlay) return;
     const rect = stage.getBoundingClientRect();
     const hit = film.tap(e.clientX - rect.left, e.clientY - rect.top);
+    if (hit?.kind === "gift") chapters.highlightGift(hit.index);
     if (hit?.kind === "photo") {
       setOverlay(1); scroll.lock(true);
       Promise.resolve(film.flyPhoto(hit.index)).then(() => openViewer(ui, hit.index, { audio, onClose: () => { film.photoBack(hit.index); setOverlay(-1); scroll.lock(false); } }));
@@ -256,6 +277,7 @@ async function startExperience({ R, film, scroll, monitor, getLevel, setLevel })
     }
     const inStory = film.mode === "story";
     chapters.update(story.chapter, story.p, { flightActive: film.flightActive, hidden: !inStory || overlay > 0 });
+    film.setCardOn(chapters.visible);
     if (inStory) progress.set(story.chapter);
     swipe.classList.toggle("is-on", inStory && story.chapter === 1 && story.p < 0.3 && !overlay);
     if (inStory && story.chapter !== lastChapter) { lastChapter = story.chapter; state.set({ lastChapter }); }
@@ -271,7 +293,7 @@ async function startExperience({ R, film, scroll, monitor, getLevel, setLevel })
     initDebug({ R, film, scroll, monitor, audio, state, getLevel, setLevel, replay: () => { showCoverScreen(); }, jump: (n) => { if (film.mode !== "story") leaveCover(n); else scroll.jump(n); } });
   }
   window.__film = film;
-  if (DEBUG) window.__R = R;
+  if (DEBUG) { window.__R = R; window.__scroll = scroll; window.__chapters = chapters; }
   return { frame };
 }
 

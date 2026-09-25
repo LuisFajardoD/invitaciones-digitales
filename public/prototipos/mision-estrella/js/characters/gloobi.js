@@ -3,24 +3,37 @@
 // Comportamientos: dormir (zzz), despertar, reír con squash & stretch, girar de felicidad, señalar,
 // mirar hacia un punto, seguir a un objetivo con retraso orgánico y parpadear cada 3–6 s.
 import * as THREE from "three";
-import { vinyl, halo, canvasTex } from "../scene/materials.js";
+import { vinyl, halo, canvasTex, addRim, STUDIO } from "../scene/materials.js";
 
 const BODY = "#8ED8F8", LIGHT = "#B7E8FC", DARK = "#6FC3EA", RING = "#FFC96B", INK = "#1E1B4B", CHEEK = "#FF8FA3";
 
-/* ---------- Texturas ---------- */
+/* ---------- Texturas (alta resolución, una sola vez) ---------- */
 function bodyTexture() {
-  return canvasTex(512, 256, (c, w, hh) => {
+  // manchas del planeta con transición suave (degradados amplios + desenfoque final)
+  return canvasTex(1024, 512, (c, w, hh) => {
     c.fillStyle = BODY; c.fillRect(0, 0, w, hh);
-    const blob = (x, y, r, col, a) => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); c.globalAlpha = a; c.fillStyle = g; c.beginPath(); c.ellipse(x, y, r * 1.5, r, 0, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1; };
+    const blob = (x, y, r, col, a) => { const g = c.createRadialGradient(x, y, 0, x, y, r * 1.2); g.addColorStop(0, col); g.addColorStop(0.55, col); g.addColorStop(1, "rgba(142,216,248,0)"); c.globalAlpha = a; c.fillStyle = g; c.beginPath(); c.ellipse(x, y, r * 1.6, r * 1.1, 0, 0, Math.PI * 2); c.fill(); c.globalAlpha = 1; };
     const spots = [[60, 70, 38, LIGHT], [170, 190, 30, DARK], [300, 60, 44, DARK], [420, 170, 40, LIGHT], [480, 60, 26, LIGHT], [230, 110, 22, LIGHT], [360, 210, 30, DARK], [100, 200, 24, LIGHT]];
-    for (const [x, y, r, col] of spots) { blob(x, y, r, col, 0.9); blob(x + w, y, r, col, 0.9); blob(x - w, y, r, col, 0.9); }
+    for (const [x, y, r, col] of spots) for (const ox of [0, 512, -512]) blob((x + ox) * 2, y * 2, r * 2, col, 0.8);
+    c.filter = "blur(6px)"; c.drawImage(c.canvas, 0, 0); c.filter = "none";
     const g = c.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, "rgba(255,255,255,.22)"); g.addColorStop(0.5, "rgba(255,255,255,0)"); g.addColorStop(1, "rgba(40,80,140,.12)");
     c.fillStyle = g; c.fillRect(0, 0, w, hh);
   });
 }
-/** Caras intercambiables: "smile" | "wow" | "laugh" | "sleep" | "blink". */
-function faceTexture(kind) {
-  return canvasTex(512, 384, (c, w, hh) => {
+/** Ojo abierto (malla aparte, así puede mirar un poco hacia la cámara): iris oscuro con doble brillo. */
+function eyeTexture() {
+  return canvasTex(128, 160, (c, w, h) => {
+    const cx = w / 2, cy = h / 2, rx = w * 0.46, ry = h * 0.46;
+    c.fillStyle = INK; c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#3B2A7A"; c.beginPath(); c.ellipse(cx, cy + ry * 0.42, rx * 0.72, ry * 0.36, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#fff"; c.beginPath(); c.ellipse(cx - rx * 0.3, cy - ry * 0.36, rx * 0.36, ry * 0.3, -0.4, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(cx + rx * 0.36, cy + ry * 0.22, rx * 0.15, 0, Math.PI * 2); c.fill();
+  });
+}
+/** Caras intercambiables: "smile" | "wow" | "laugh" | "sleep" | "blink". eyes = false → sin ojos abiertos (van aparte). */
+function faceTexture(kind, { eyes = true } = {}) {
+  return canvasTex(1024, 768, (c, w, hh) => {
+    c.scale(2, 2); w /= 2; hh /= 2;
     const ex = 150, cx = w / 2, ey = 170;
     c.lineCap = "round"; c.lineJoin = "round";
     // cachetes
@@ -35,7 +48,7 @@ function faceTexture(kind) {
       c.beginPath(); c.arc(x + rx * 0.35, ey + ry * 0.22, rx * 0.14, 0, Math.PI * 2); c.fill();
     };
     if (kind === "sleep" || kind === "blink" || kind === "laugh") { closedEye(cx - ex, kind === "laugh"); closedEye(cx + ex, kind === "laugh"); }
-    else { openEye(cx - ex, kind === "wow"); openEye(cx + ex, kind === "wow"); }
+    else if (eyes) { openEye(cx - ex, kind === "wow"); openEye(cx + ex, kind === "wow"); }
     c.fillStyle = INK; c.strokeStyle = INK;
     if (kind === "wow") { c.beginPath(); c.ellipse(cx, 285, 26, 32, 0, 0, Math.PI * 2); c.fill(); c.fillStyle = CHEEK; c.beginPath(); c.ellipse(cx, 300, 14, 10, 0, 0, Math.PI * 2); c.fill(); }
     else if (kind === "laugh") { c.beginPath(); c.moveTo(cx - 62, 262); c.quadraticCurveTo(cx, 272, cx + 62, 262); c.quadraticCurveTo(cx + 50, 345, cx, 348); c.quadraticCurveTo(cx - 50, 345, cx - 62, 262); c.fill(); c.fillStyle = CHEEK; c.beginPath(); c.ellipse(cx, 326, 28, 16, 0, 0, Math.PI * 2); c.fill(); }
@@ -55,19 +68,37 @@ export function createGloobi({ size = 0.18 } = {}) {
   const r = size;
   const root = new THREE.Group(); root.name = "gloobi";
   const wobble = new THREE.Group(); root.add(wobble); // squash & stretch
-  const body = new THREE.Mesh(new THREE.SphereGeometry(r, 40, 28), vinyl(0xffffff, { map: bodyTexture(), emissive: new THREE.Color("#2b86b8"), emissiveIntensity: 0.32, rim: 1.2 }));
+  // cuerpo tipo gomita: capa brillante (clearcoat), brillo suave de tela en los bordes (sheen, dispersión sutil de la
+  // luz) y su brillo propio; sigue siendo caricatura (nada de realismo)
+  const bodyMat = new THREE.MeshPhysicalMaterial({ map: bodyTexture(), roughness: 0.48, metalness: 0, clearcoat: 0.85, clearcoatRoughness: 0.22, sheen: 0.6, sheenColor: new THREE.Color("#CFF3FF"), sheenRoughness: 0.5, emissive: new THREE.Color("#2b86b8"), emissiveIntensity: 0.3 });
+  if (STUDIO.texture) { bodyMat.envMap = STUDIO.texture; bodyMat.envMapIntensity = 0.55; }
+  addRim(bodyMat, 1.25);
+  const body = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 32), bodyMat);
   body.name = "gloobi-body";
   wobble.add(body);
-  // carita (segmento de esfera al frente, con transparencia)
-  const faces = { smile: faceTexture("smile"), wow: faceTexture("wow"), laugh: faceTexture("laugh"), sleep: faceTexture("sleep"), blink: faceTexture("blink") };
+  // carita (segmento de esfera al frente, con transparencia); los ojos abiertos son mallas aparte
+  const faces = { smile: faceTexture("smile", { eyes: false }), wow: faceTexture("wow", { eyes: false }), laugh: faceTexture("laugh"), sleep: faceTexture("sleep"), blink: faceTexture("blink") };
   const faceMat = new THREE.MeshBasicMaterial({ map: faces.sleep, transparent: true, depthWrite: false, toneMapped: false });
-  const face = new THREE.Mesh(new THREE.SphereGeometry(r * 1.004, 32, 24, Math.PI / 2 - 0.98, 1.96, Math.PI / 2 - 0.78, 1.5), faceMat);
+  const face = new THREE.Mesh(new THREE.SphereGeometry(r * 1.004, 40, 30, Math.PI / 2 - 0.98, 1.96, Math.PI / 2 - 0.78, 1.5), faceMat);
   face.renderOrder = 2;
   wobble.add(face);
-  // anillo dorado inclinado
-  const ringPivot = new THREE.Group(); ringPivot.rotation.set(1.18, 0, 0.32); wobble.add(ringPivot);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 1.5, r * 0.075, 10, 72), vinyl(RING, { emissive: new THREE.Color("#b07a1c"), emissiveIntensity: 0.35, rim: 0.6 }));
-  ring.scale.z = 0.55;
+  // ojos: sobre la superficie en el lugar que marca la textura; se asoman un poquito hacia la cámara
+  const eyeMat = new THREE.MeshBasicMaterial({ map: eyeTexture(), transparent: true, depthWrite: false, toneMapped: false });
+  const eyeGeo = new THREE.PlaneGeometry(r * 0.34, r * 0.44);
+  const EYE = [new THREE.Vector3(-0.539, 0.115, 0.834), new THREE.Vector3(0.539, 0.115, 0.834)];
+  const eyes = EYE.map((n) => { const e = new THREE.Mesh(eyeGeo, eyeMat); e.renderOrder = 3; e.userData.n = n.clone().normalize(); wobble.add(e); return e; });
+  // anillo dorado: banda plana con grosor y cantos redondeados (torno), metálica con reflejos; gira sobre su propio
+  // eje (nunca se pone de canto como un "palito")
+  const prof = [];
+  const rin = r * 1.28, rout = r * 1.62, th = r * 0.075, rc = th * 0.5;
+  for (let k = 0; k <= 6; k++) { const a = -Math.PI / 2 + (k / 6) * Math.PI; prof.push(new THREE.Vector2(rout - rc + Math.cos(a) * rc, Math.sin(a) * rc)); }
+  for (let k = 0; k <= 6; k++) { const a = Math.PI / 2 + (k / 6) * Math.PI; prof.push(new THREE.Vector2(rin + rc + Math.cos(a) * rc, Math.sin(a) * rc)); }
+  prof.push(prof[0].clone());
+  const ringMat = new THREE.MeshStandardMaterial({ color: RING, roughness: 0.26, metalness: 0.85, emissive: new THREE.Color("#8a5a14"), emissiveIntensity: 0.28 });
+  if (STUDIO.texture) { ringMat.envMap = STUDIO.texture; ringMat.envMapIntensity = 1.3; }
+  addRim(ringMat, 0.5);
+  const ringPivot = new THREE.Group(); ringPivot.rotation.set(1.18 - Math.PI / 2, 0, 0.32); wobble.add(ringPivot);
+  const ring = new THREE.Mesh(new THREE.LatheGeometry(prof, 96), ringMat);
   ringPivot.add(ring);
   // bracitos (para señalar y celebrar)
   const armGeo = new THREE.SphereGeometry(r * 0.2, 16, 12);
@@ -91,6 +122,7 @@ export function createGloobi({ size = 0.18 } = {}) {
     wowT: -1, faceLocked: null
   };
   const tmpM = new THREE.Matrix4(), tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+  const eyeLook = new THREE.Vector3(0, 0, 1), eyeN = new THREE.Vector3(), eyeTo = new THREE.Vector3();
   const setFace = (k) => { if (faceMat.map !== faces[k]) { faceMat.map = faces[k]; faceMat.needsUpdate = true; } st.expr = k; };
 
   const api = {
@@ -145,7 +177,19 @@ export function createGloobi({ size = 0.18 } = {}) {
       }
       root.quaternion.copy(st.lookQ);
       wobble.rotation.set(sleeping ? 0.25 : Math.sin(t * 1.3) * 0.06, spinY, sleeping ? 0.18 : Math.sin(t * 0.9) * 0.08);
-      ringPivot.rotation.y = t * 0.35;
+      ring.rotation.y = t * 0.35; // gira sobre su eje: los reflejos se mueven, la silueta no cambia
+      ringPivot.rotation.z = 0.32 + Math.sin(t * 0.7) * 0.06;
+      // ojos: abiertos sólo con caras de ojos abiertos; se desplazan un poco hacia la cámara
+      const open = st.expr === "smile" || st.expr === "wow";
+      if (camera) { wobble.updateMatrixWorld(); eyeLook.copy(camera.position); wobble.worldToLocal(eyeLook).normalize(); }
+      eyes.forEach((e) => {
+        e.visible = open;
+        if (!open) return;
+        eyeN.copy(e.userData.n).addScaledVector(eyeLook, 0.07).normalize();
+        e.position.copy(eyeN).multiplyScalar(r * 1.012);
+        e.lookAt(wobble.localToWorld(eyeTo.copy(eyeN).multiplyScalar(r * 3))); // lookAt usa coordenadas de mundo
+        e.scale.setScalar(st.expr === "wow" ? 1.12 : 1);
+      });
       // parpadeo cada 3–6 s
       if (!sleeping && st.laughT < 0 && !st.faceLocked) {
         if (st.wowT > 0) { st.wowT -= dt; setFace(st.wowT > 0 ? "wow" : "smile"); }

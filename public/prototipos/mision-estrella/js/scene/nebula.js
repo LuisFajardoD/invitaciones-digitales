@@ -42,7 +42,15 @@ export function renderNebula(renderer, { w = 1024, h = 512 } = {}) {
         col += cPink * smoothstep(0.05, 0.55, n1) * band * 0.55;
         col += cPeach * smoothstep(0.15, 0.6, n2) * band * 0.35;
         col += cTeal * smoothstep(0.1, 0.6, n3) * (0.35 + 0.65 * (1.0 - band)) * 0.32 * smoothstep(-0.3, 0.3, d.x + n1);
-        // polvo dorado muy tenue
+        // filamentos finos dentro de la banda (segunda escala de detalle)
+        float fil = fbm(d * 6.5 + vec3(n1 * 1.5, n2, 0.0));
+        col += mix(cPink, cTeal, smoothstep(-0.2, 0.3, n3)) * smoothstep(0.18, 0.5, fil) * band * 0.18;
+        // vetas de polvo oscuro (profundidad por capas): oscurecen suavemente la banda
+        float lane = smoothstep(0.1, 0.45, fbm(d * 3.9 + vec3(2.4, 9.1, 3.3))) * band;
+        col = mix(col, col * vec3(0.55, 0.5, 0.75), lane * 0.55);
+        // nudos brillantes (regiones de formación estelar) y polvo dorado muy tenue
+        float knot = smoothstep(0.42, 0.62, n1 + fil * 0.4) * band;
+        col += mix(cPeach, vec3(1.0), 0.4) * knot * 0.22;
         float dust = smoothstep(0.35, 0.6, fbm(d * 7.0)) * 0.12;
         col += cGold * dust * band;
         gl_FragColor = vec4(col, 1.0);

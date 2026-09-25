@@ -8,13 +8,14 @@ import { peopleLabel } from "../../../_shared/rsvp-contract.js";
 
 export const CHAPTER_LABELS = ["Despegue", "Caminata espacial", "La constelación", "La Luna", "Estación espacial", "Cinturón de recuerdos", "Plan de vuelo", "Tripulación", "Te esperamos a bordo"];
 
-export function createChapters(root, { audio, onJoin, onDecline, onEdit, onResend, onLog, onReplay, getRsvp, crewCount }) {
+export function createChapters(root, { audio, onJoin, onDecline, onEdit, onResend, onLog, onReplay, onGiftFocus, getRsvp, crewCount }) {
   const wrap = h("div.cards"); root.append(wrap);
   const card = (n, kicker, ...body) => h(`section.card.card-${n}`, { "aria-label": CHAPTER_LABELS[n - 1], "aria-hidden": "true" }, kicker ? h("p.kicker", { text: kicker }) : null, ...body);
   const cd = countdown({ compact: true });
   const planList = h("div"), setPlan = (i) => planList.replaceChildren(itineraryList(i));
   setPlan(-1);
   const crewBody = h("div.stack");
+  const gifts = giftsList(audio, { onFocus: (i) => { audio.tap(); onGiftFocus?.(i); } });
   const cards = {
     2: card(2, "Caminata espacial", h("p.big", { text: tpl(demoData.tagline) })),
     3: card(3, "La constelación", h("p.big", { text: `¡${demoData.child.name} cumple ${demoData.child.age}!` }), h("p.hint", { html: `${icon("star", { size: 16 })} Toca una estrella` })),
@@ -23,7 +24,7 @@ export function createChapters(root, { audio, onJoin, onDecline, onEdit, onResen
     6: card(6, "Cinturón de recuerdos", h("p.big.big-sm", { text: "Nuestros momentos favoritos" }), h("p.hint", { html: `${icon("photo", { size: 16 })} Toca una foto para verla` })),
     7: [
       card(7, "Plan de vuelo", planList),
-      card(7, "Carga de la misión", giftsList(audio)),
+      card(7, "Carga de la misión", gifts),
       card(7, null, dressBlock())
     ],
     8: card(8, `${missionName()}`, crewBody),
@@ -64,7 +65,11 @@ export function createChapters(root, { audio, onJoin, onDecline, onEdit, onResen
   return {
     el: wrap,
     renderCrew,
+    /** Regalo tocado en 3D → resalta su fila en la tarjeta de la bodega. */
+    highlightGift(i) { gifts.highlight(i); },
     /** Llamar cada frame con el capítulo y el progreso suavizado. */
+    /** ¿Hay una tarjeta en pantalla? */
+    get visible() { return !!visible; },
     update(chapter, p, { flightActive = -1, hidden = false } = {}) {
       if (hidden) { show(null); return; }
       let el = null;

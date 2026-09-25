@@ -60,12 +60,20 @@ export function transportBlock() {
 export function itineraryList(active = -1) {
   return h("ol.plan", ...demoData.itinerary.map((it, k) => h(`li${k === active ? ".is-on" : ""}`, h("span.plan-dot", { "aria-hidden": "true" }), h("div", h("p.plan-time", { text: it.time }), h("p.plan-title", { text: it.title })))));
 }
-export function giftsList(audio) {
+/**
+ * Lista de regalos (mismo orden que los regalos 3D: "Tu presencia" primero). Con onFocus, tocar una fila (fuera del
+ * botón "Ver") llama onFocus(i): en el capítulo 7 la cámara gira hacia ese regalo. highlight(i) resalta una fila.
+ */
+export function giftsList(audio, { onFocus } = {}) {
   const gifts = [...demoData.gifts].sort((a, b) => (b.highlight ? 1 : 0) - (a.highlight ? 1 : 0));
-  return h("div.gifts", ...gifts.map((g) => h(`article.gift${g.highlight ? ".is-top" : ""}`,
+  const rows = gifts.map((g, i) => h(`article.gift${g.highlight ? ".is-top" : ""}${onFocus ? ".is-tap" : ""}`,
+    onFocus ? { role: "button", tabindex: "0", "aria-label": `Mirar el regalo: ${g.name}`, onclick: (e) => { if (!e.target.closest("a")) onFocus(i); }, onkeydown: (e) => { if ((e.key === "Enter" || e.key === " ") && !e.target.closest("a")) { e.preventDefault(); onFocus(i); } } } : {},
     h("span.gift-ic", { html: icon(g.highlight ? "star" : "gift") }),
     h("div.grow", h("p.gift-name", { text: g.name }), g.note ? h("p.gift-note", { text: g.note }) : null),
-    g.url ? h("a.btn.btn-cream.btn-xs", { href: g.url, target: "_blank", rel: "noopener", "aria-label": `Ver ${g.name}`, onclick: () => audio?.tap() }, "Ver") : null)));
+    g.url ? h("a.btn.btn-cream.btn-xs", { href: g.url, target: "_blank", rel: "noopener", "aria-label": `Ver ${g.name}`, onclick: () => audio?.tap() }, "Ver") : null));
+  const el = h("div.gifts", ...rows);
+  el.highlight = (i) => { const r = rows[i]; if (!r) return; r.classList.remove("is-hl"); void r.offsetWidth; r.classList.add("is-hl"); r.scrollIntoView?.({ block: "nearest", behavior: "smooth" }); };
+  return el;
 }
 export function dressBlock({ title = "Uniforme de la misión" } = {}) {
   if (!demoData.dressCode?.text) return null;

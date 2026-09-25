@@ -1,14 +1,14 @@
 // Portada: título "Misión {name}", insignia "¡Cumple {age}!" y el botón circular "Mantén presionado para encender
 // motores" con anillo de progreso (~1.5 s). Nunca avanza solo: a los 4 s aparece una manita. Si se suelta antes,
 // todo baja suavemente. El gesto desbloquea el audio (en pointerdown y en pointerup, por iOS). Teclado: barra
-// espaciadora. Debajo, "Ver solo la información" (abre la Bitácora).
+// espaciadora. Debajo, "Ver solo la información" (abre la Bitácora); en visitas repetidas, el botón "Ver la bitácora".
 import { h, missionName, prefersReduced } from "../util.js";
 import { demoData } from "../data.js";
 import { icon } from "./icons.js";
 
 const HOLD = 1.5;
 
-export function showCover(root, { audio, returning = false, onHold, onIgnite, onInfo, onGoLog }) {
+export function showCover(root, { audio, returning = false, onHold, onIgnite, onInfo }) {
   const R = 46, C = 2 * Math.PI * R;
   const ring = h("span.hold-ring", { "aria-hidden": "true", html: `<svg viewBox="0 0 110 110"><circle class="hold-track" cx="55" cy="55" r="${R}"/><circle class="hold-fill" cx="55" cy="55" r="${R}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/></svg>` });
   const fill = ring.querySelector(".hold-fill");
@@ -23,8 +23,10 @@ export function showCover(root, { audio, returning = false, onHold, onIgnite, on
       h("p.badge", { html: `${icon("star", { size: 18 })}<span>¡Cumple ${demoData.child.age}!</span>` })),
     h("div.cover-bottom",
       h("div.hold-wrap", btn, hand), label,
-      returning ? h("button.btn.btn-cream.btn-sm", { type: "button", onclick: () => { audio.unlock(); onGoLog?.(); }, html: `${icon("log", { size: 20 })}<span>Ir a la bitácora</span>` }) : null,
-      h("button.link", { type: "button", onclick: () => { audio.unlock(); onInfo?.(); } }, "Ver solo la información")));
+      // visita repetida: un solo botón secundario; primera visita: sólo el enlace discreto (hacen lo mismo)
+      returning
+        ? h("button.btn.btn-ghost.btn-sm", { type: "button", onclick: () => { audio.unlock(); onInfo?.(); }, html: `${icon("log", { size: 20 })}<span>Ver la bitácora</span>` })
+        : h("button.link", { type: "button", onclick: () => { audio.unlock(); onInfo?.(); } }, "Ver solo la información")));
   root.append(el);
 
   let holding = false, prog = 0, done = false, raf = 0, last = performance.now(), idle = 0;

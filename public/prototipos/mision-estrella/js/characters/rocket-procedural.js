@@ -117,6 +117,14 @@ export function createProceduralRocket({ bodyColor = "#FFF7EC", accentColor = "#
   const tex = hullTextures({ bodyColor, accentColor });
   const hullMat = pbr("#F2EDF6", { rough: 0.5, map: tex.map, normalMap: tex.normalMap, env: 0.55 });
   hullMat.normalScale = new THREE.Vector2(0.7, 0.7);
+  // abertura real en el casco detrás de la ventana: por ahí se ve la cabina (y el astronauta en el final)
+  const WIN_Y = 2.2, WIN_R = 0.335, prevOBC = hullMat.onBeforeCompile;
+  hullMat.onBeforeCompile = (sh, r) => {
+    prevOBC?.(sh, r);
+    sh.vertexShader = sh.vertexShader.replace("void main() {", "varying vec3 vObjP;\nvoid main() {\n  vObjP = position;");
+    sh.fragmentShader = sh.fragmentShader.replace("void main() {", `varying vec3 vObjP;\nvoid main() {\n  if (vObjP.z > 0.3 && length(vec2(vObjP.x, vObjP.y - ${WIN_Y.toFixed(2)})) < ${WIN_R.toFixed(3)}) discard;`);
+  };
+  hullMat.customProgramCacheKey = () => "rim-hull-window";
   const gold = pbr("#FFC96B", { rough: 0.32, metal: 0.7, emissive: "#6a4a10", ei: 0.12, env: 1, rim: 0.4 });
   const accent = pbr(accentColor, { rough: 0.38, metal: 0.05, env: 0.6 });
   const steel = pbr("#9C95C4", { rough: 0.38, metal: 0.55, env: 1, rim: 0.4 });
@@ -170,9 +178,20 @@ export function createProceduralRocket({ bodyColor = "#FFF7EC", accentColor = "#
   const hatchPivot = new THREE.Group(); hatchPivot.position.set(-0.36, 0, 0.04); windowGroup.add(hatchPivot); // bisagra a la izquierda
   const hatch = new THREE.Mesh(new THREE.CircleGeometry(0.33, 40), glassMaterial({ tint: "#9FD8FF", strength: 1.15 })); hatch.name = "hatch"; hatch.position.x = 0.36; hatch.renderOrder = 3; hatchPivot.add(hatch);
   const hatchBack = new THREE.Mesh(new THREE.CircleGeometry(0.33, 40), new THREE.MeshBasicMaterial({ color: "#3B2A7A", transparent: true, opacity: 0.35, depthWrite: false })); hatchBack.position.set(0.36, 0, -0.005); hatchPivot.add(hatchBack);
-  const hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.16, 10), steel); hinge.position.set(-0.38, 0, 0.06); windowGroup.add(hinge);
-  // interior oscuro (para ver al astronauta por la ventana en el capítulo final)
-  const cabin = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 16), new THREE.MeshBasicMaterial({ color: "#1A1640", side: THREE.BackSide })); cabin.position.set(0, wy, wr - 0.55); root.add(cabin);
+  // escotilla con detalle mecánico: aro dorado en la puerta, cierre con perilla, bisagra de dos nudillos y sello
+  const doorRim = new THREE.Mesh(new THREE.TorusGeometry(0.325, 0.022, 10, 48), gold); doorRim.position.set(0.36, 0, 0.012); hatchPivot.add(doorRim);
+  const latch = new THREE.Group(); latch.position.set(0.66, 0, 0.03); hatchPivot.add(latch);
+  latch.add(new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.13, 0.03), steel));
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.028, 12, 10), accent); knob.position.z = 0.03; latch.add(knob);
+  for (const y of [-0.09, 0.09]) { const k = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.08, 12), steel); k.position.set(-0.38, y, 0.06); windowGroup.add(k); }
+  const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 8), gold); pin.position.set(-0.38, 0, 0.06); windowGroup.add(pin);
+  const seal = new THREE.Mesh(new THREE.TorusGeometry(0.345, 0.014, 8, 48), dark); seal.position.z = 0.045; windowGroup.add(seal);
+  // interior acogedor (se ve al abrir la escotilla y en el capítulo final): luz cálida y tablero con botoncitos
+  const cabin = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 16), new THREE.MeshBasicMaterial({ color: "#2A2360", side: THREE.BackSide })); cabin.position.set(0, wy, wr - 0.55); root.add(cabin);
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.2), new THREE.MeshBasicMaterial({ color: "#3B3170" })); board.position.set(0, wy - 0.2, wr - 0.86); board.rotation.x = 0.5; root.add(board);
+  const btnCols = ["#FF8FA3", "#6FD6E8", "#FFD27A", "#9BE5B4"];
+  for (let k = 0; k < 8; k++) { const b = new THREE.Mesh(new THREE.CircleGeometry(0.018, 10), new THREE.MeshBasicMaterial({ color: btnCols[k % 4], toneMapped: false })); b.position.set(-0.16 + (k % 4) * 0.105, wy - 0.17 - Math.floor(k / 4) * 0.07, wr - 0.85); b.rotation.x = 0.5; root.add(b); }
+  const cabinLight = new THREE.Mesh(new THREE.CircleGeometry(0.2, 20), new THREE.MeshBasicMaterial({ color: "#FFCF9E", transparent: true, opacity: 0.35, toneMapped: false, depthWrite: false })); cabinLight.position.set(0, wy + 0.18, wr - 0.95); root.add(cabinLight);
 
   // mural (lado +X): posiciones sobre la superficie, dentro del panel pintado
   const mural = new THREE.Group(); mural.name = "mural_area"; root.add(mural);
@@ -186,7 +205,7 @@ export function createProceduralRocket({ bodyColor = "#FFF7EC", accentColor = "#
   return {
     root, kind: "procedural", slots, windowGroup, hatchPivot, cabin, mural,
     // Oculta el fondo oscuro de la ventana para ver el interior (astronauta dentro o saliendo).
-    setInterior(open) { inside.visible = !open; },
+    setInterior(open) { inside.visible = !open; hatchBack.material.opacity = open ? 0.06 : 0.35; }, // con el interior a la vista, el vidrio casi no tiñe
     nozzleY: -0.4,
     boosters: [new THREE.Vector3(0, -0.4, 0)], // de dónde sale el humo (un GLB puede tener varios)
     windowWorld(out = new THREE.Vector3()) { return windowGroup.getWorldPosition(out); },

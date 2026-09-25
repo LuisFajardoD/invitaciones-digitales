@@ -60,10 +60,12 @@ export function createAstronaut({ suitColor, accentColor }) {
     await Promise.all(jobs);
     if (Object.keys(glb).length) { pending = pose; swapT = 0; }
   }
-  loadAll();
+  const ready = loadAll(); // se resuelve al terminar de cargar (o fallar) los GLB: el procedural queda de respaldo
+  let headYaw = 0, headTarget = 0;
+  const headQ = new THREE.Quaternion(), headQW = new THREE.Quaternion(), Y_AXIS = new THREE.Vector3(0, 1, 0);
 
   return {
-    root,
+    root, ready,
     get pose() { return pose; },
     get kind() { return activeKey; },
     /** Cambia de pose. `safe` = la escena garantiza que el cambio no se ve (transición o fuera de cuadro). */
@@ -79,7 +81,25 @@ export function createAstronaut({ suitColor, accentColor }) {
     snapPose(p) { pose = p; pending = null; show(p); if (active === proc) proc.snapPose(p); },
     setVisorTexture(t) { visorTex = t; proc.setVisorTexture(t); applyTextures(active); Object.values(glb).forEach(applyTextures); },
     setPatchTexture(t) { patchTex = t; proc.setPatchTexture(t); applyTextures(active); Object.values(glb).forEach(applyTextures); },
-    visorWorld(out = new THREE.Vector3()) { const v = active.parts?.visor || proc.visor; return v.getWorldPosition(out); },
+    visorWorld(out = new THREE.Vector3()) {
+      const a = active.parts?.visorAnchor;
+      if (a) return a.bone.localToWorld(out.copy(a.offset));
+      const v = active.parts?.visor || proc.visor; return v.getWorldPosition(out);
+    },
+    /** Base de la cabeza en el mundo. */
+    headWorld(out = new THREE.Vector3()) { const hb = active.parts?.headBone || proc.parts?.head; return hb ? hb.getWorldPosition(out) : root.getWorldPosition(out); },
+    /** Hacia dónde mira el casco (fwd) y su "arriba" (up), en el mundo, en la pose actual. */
+    headAxes(fwd, up) {
+      const hb = active.parts?.headBone || proc.parts?.head;
+      if (!hb) { fwd.set(0, 0, 1).applyQuaternion(root.quaternion); up.set(0, 1, 0).applyQuaternion(root.quaternion); return; }
+      hb.getWorldQuaternion(headQW);
+      if (active.parts?.headRestInv) headQW.multiply(active.parts.headRestInv);
+      fwd.set(0, 0, 1).applyQuaternion(headQW); up.set(0, 1, 0).applyQuaternion(headQW);
+    },
+    /** Radio del visor en unidades de mundo (para el encuadre y para que nada lo tape). */
+    visorRadius() { const a = active.parts?.visorAnchor; return (a ? a.radius : 0.24) * root.scale.x; },
+    /** Caja del astronauta tal como está ahora (incluye la pose animada si tiene piel). */
+    box(out = new THREE.Box3()) { root.updateMatrixWorld(true); return out.setFromObject(root, true); },
     update(dt, t) {
       if (pending && swapT >= 0) { // micro fundido: encoge → cambia → crece (≈ 0.18 s)
         swapT += dt;
@@ -90,6 +110,14 @@ export function createAstronaut({ suitColor, accentColor }) {
       if (!pending && swapT >= 0 && holder.scale.x >= 1) swapT = -1;
       if (active === proc) proc.update(dt, t);
       else { active.mixer?.update(dt); if (!active.actions || !Object.keys(active.actions).length) proceduralMotion(active.root, t, pose); }
-    }
+      // giro de la cabeza encima de la animación (suave): el casco mira hacia algo sin mover el cuerpo
+      headYaw += (headTarget - headYaw) * (1 - Math.exp(-3 * dt));
+      if (Math.abs(headYaw) > 0.002) {
+        const hb = active.parts?.headBone || proc.parts?.head;
+        if (hb) hb.quaternion.multiply(headQ.setFromAxisAngle(Y_AXIS, headYaw));
+      }
+    },
+    /** Giro de la cabeza (radianes, + = hacia la izquierda del astronauta) encima de la pose actual. */
+    setHeadYaw(a) { headTarget = Math.max(-0.9, Math.min(0.9, a)); }
   };
 }

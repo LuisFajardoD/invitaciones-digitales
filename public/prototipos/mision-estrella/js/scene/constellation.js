@@ -45,29 +45,47 @@ export function createConstellation({ age, name, width = 46 }) {
     fragmentShader: /* glsl */`
       uniform vec3 color; varying float vA; varying float vB;
       void main() { vec2 p = gl_PointCoord - 0.5; float d = length(p); float a = smoothstep(0.5, 0.0, d); a = a * a * (vA + vB);
+        // destello de 4 puntas (más visible en estrellas encendidas o tocadas)
+        float cross = (smoothstep(0.05, 0.0, abs(p.x)) + smoothstep(0.05, 0.0, abs(p.y))) * smoothstep(0.5, 0.05, d) * (vA - 0.3 + vB) * 0.8;
+        a = max(a, cross);
         vec3 c = mix(color, vec3(1.0), 0.5 * a + vB * 0.5); gl_FragColor = vec4(c * a, a);
         #include <colorspace_fragment>
       }`
   });
   const points = new THREE.Points(g, starMat); points.frustumCulled = false; group.add(points);
   // líneas de luz (quads finos por segmento, para que tengan grosor en móvil)
-  const lp = new Float32Array(segs.length * 4 * 3), side = new Float32Array(segs.length * 4), other = new Float32Array(segs.length * 4 * 3), index = [];
+  // (grosor variable: más gruesas al centro de cada tramo y afinadas en las estrellas; núcleo brillante, halo suave
+  // y un brillo que recorre el dibujo)
+  const lp = new Float32Array(segs.length * 4 * 3), side = new Float32Array(segs.length * 4), other = new Float32Array(segs.length * 4 * 3), along = new Float32Array(segs.length * 4), segK = new Float32Array(segs.length * 4), index = [];
   segs.forEach(([a, b], k) => {
     const A1 = stars[a], B1 = stars[b];
-    [[A1, B1, -1], [A1, B1, 1], [B1, A1, 1], [B1, A1, -1]].forEach(([p, q, s], j) => { lp.set([p.x, p.y, p.z], (k * 4 + j) * 3); other.set([q.x, q.y, q.z], (k * 4 + j) * 3); side[k * 4 + j] = s; });
+    [[A1, B1, -1, 0], [A1, B1, 1, 0], [B1, A1, 1, 1], [B1, A1, -1, 1]].forEach(([p, q, s, al], j) => { lp.set([p.x, p.y, p.z], (k * 4 + j) * 3); other.set([q.x, q.y, q.z], (k * 4 + j) * 3); side[k * 4 + j] = s; along[k * 4 + j] = al; segK[k * 4 + j] = k / segs.length; });
     const o = k * 4; index.push(o, o + 1, o + 2, o, o + 2, o + 3);
   });
   const lg = new THREE.BufferGeometry();
   lg.setAttribute("position", new THREE.BufferAttribute(lp, 3)); lg.setAttribute("other", new THREE.BufferAttribute(other, 3)); lg.setAttribute("side", new THREE.BufferAttribute(side, 1));
+  lg.setAttribute("along", new THREE.BufferAttribute(along, 1)); lg.setAttribute("segk", new THREE.BufferAttribute(segK, 1));
   lg.setIndex(index);
   const lineMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { width: { value: 0.09 }, alpha: { value: 0.8 }, color: { value: new THREE.Color("#FFE7B0") } },
+    uniforms: { width: { value: 0.16 }, alpha: { value: 0.85 }, color: { value: new THREE.Color("#FFE7B0") }, time: { value: 0 }, progress: { value: 0 } },
     vertexShader: /* glsl */`
-      attribute vec3 other; attribute float side; uniform float width; varying float vS;
-      void main() { vec3 dir = normalize(other - position); vec3 n = normalize(cross(dir, vec3(0.0, 0.0, 1.0))); vS = side;
+      attribute vec3 other; attribute float side; attribute float along; attribute float segk; uniform float width; varying float vS; varying float vA; varying float vK;
+      void main() { vec3 dir = normalize(other - position); vec3 n = normalize(cross(dir, vec3(0.0, 0.0, 1.0))); vS = side; vA = along; vK = segk;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position + n * side * width, 1.0); }`,
-    fragmentShader: "uniform vec3 color; uniform float alpha; varying float vS; void main(){ float a = (1.0 - abs(vS)) * 0.0 + smoothstep(1.0, 0.0, abs(vS)) * alpha; gl_FragColor = vec4(color * a, a);\n#include <colorspace_fragment>\n}"
+    fragmentShader: /* glsl */`
+      uniform vec3 color; uniform float alpha, time, progress; varying float vS; varying float vA; varying float vK;
+      void main() {
+        float taper = 0.35 + 0.65 * sin(3.14159 * clamp(vA, 0.0, 1.0));
+        float d = abs(vS) / max(0.001, taper);
+        float coreL = smoothstep(0.32, 0.0, d), glowL = exp(-d * d * 3.5) * 0.45;
+        float shimmer = 0.8 + 0.35 * smoothstep(0.93, 1.0, sin(vK * 40.0 - time * 2.4));
+        float fresh = smoothstep(0.06, 0.0, progress - vK) * 0.6; // el tramo recién dibujado brilla más
+        float a = (coreL + glowL) * alpha * shimmer * (1.0 + fresh);
+        vec3 c = mix(color, vec3(1.0), coreL * 0.5);
+        gl_FragColor = vec4(c * a, a);
+        #include <colorspace_fragment>
+      }`
   });
   const lines = new THREE.Mesh(lg, lineMat); lines.frustumCulled = false; group.add(lines);
   const flash = halo("#FFE7B0", width * 1.6, 0); flash.position.set(0, 0, -1); group.add(flash);
@@ -78,6 +96,7 @@ export function createConstellation({ age, name, width = 46 }) {
     /** progress 0–1: cuánto de la constelación está trazado. Devuelve true el frame en que se completa. */
     update(dt, t, progress, pixelRatio) {
       starMat.uniforms.time.value = t; starMat.uniforms.progress.value = progress; starMat.uniforms.pixelRatio.value = pixelRatio;
+      lineMat.uniforms.time.value = t; lineMat.uniforms.progress.value = progress;
       lg.setDrawRange(0, Math.floor(segs.length * Math.min(1, progress)) * 6);
       for (let i = 0; i < n; i++) if (boost[i] > 0) boost[i] = Math.max(0, boost[i] - dt * 0.9);
       g.attributes.boost.needsUpdate = true;

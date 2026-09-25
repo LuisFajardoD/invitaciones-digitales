@@ -2,7 +2,8 @@
 // con la cuenta regresiva; y la luna creciente de la portada. Ambas usan la superficie lunar procedural
 // (moon-surface.js: mares, cráteres con borde y pico central, rayos, relieve). Reemplazables desde models.js.
 import * as THREE from "three";
-import { vinyl, craterNormalMap, canvasTex, halo, addRim } from "./materials.js";
+import { vinyl, craterNormalMap, canvasTex, halo, addRim, pbr, solarTexture, foilNormal } from "./materials.js";
+import { roundedBox } from "./shapes.js";
 import { modelOrBuild } from "../characters/rocket.js";
 import { moonSurfaceReady } from "./moon-surface.js";
 import { eventInfo, eventPhase, splitDuration, pad2, clock } from "../util.js";
@@ -78,14 +79,19 @@ function numTexture() {
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
   return { cv, t, last: "" };
 }
+/** Pantalla del satélite: vidrio índigo con número dorado luminoso y etiqueta (se redibuja sólo si cambia). */
 function drawNum(n, value, label) {
   const key = value + label; if (n.last === key) return; n.last = key;
   const c = n.cv.getContext("2d"), w = n.cv.width, hh = n.cv.height;
   c.clearRect(0, 0, w, hh);
-  c.fillStyle = "rgba(30,27,75,.82)"; c.beginPath(); c.roundRect ? c.roundRect(6, 6, w - 12, hh - 12, 30) : c.rect(6, 6, w - 12, hh - 12); c.fill();
-  c.strokeStyle = "rgba(255,247,236,.35)"; c.lineWidth = 4; c.stroke();
-  c.textAlign = "center"; c.fillStyle = "#FFD27A"; c.font = "600 78px Fredoka, system-ui, sans-serif"; c.textBaseline = "alphabetic"; c.fillText(value, w / 2, 94);
-  c.fillStyle = "#FFF7EC"; c.font = "800 26px Figtree, system-ui, sans-serif"; c.fillText(label, w / 2, 134);
+  const g = c.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, "#2A2568"); g.addColorStop(1, "#1A1648");
+  c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(4, 4, w - 8, hh - 8, 26) : c.rect(4, 4, w - 8, hh - 8); c.fill();
+  c.strokeStyle = "rgba(111,214,232,.55)"; c.lineWidth = 3; c.stroke();
+  c.fillStyle = "rgba(255,255,255,.06)"; c.fillRect(10, 10, w - 20, (hh - 20) * 0.42); // reflejo del vidrio
+  c.textAlign = "center"; c.textBaseline = "alphabetic";
+  c.shadowColor = "rgba(255,190,110,.9)"; c.shadowBlur = 18;
+  c.fillStyle = "#FFD27A"; c.font = "600 84px Fredoka, system-ui, sans-serif"; c.fillText(value, w / 2, 96);
+  c.shadowBlur = 0; c.fillStyle = "#FFF7EC"; c.font = "800 26px Figtree, system-ui, sans-serif"; c.fillText(label, w / 2, 136);
   n.t.needsUpdate = true;
 }
 
@@ -104,21 +110,40 @@ export function createMoonSet() {
     transparent: true, opacity: 0, depthWrite: false, toneMapped: false
   }));
   const decalPivot = new THREE.Group(); decalPivot.add(decal); group.add(decalPivot);
-  // satélites con la cuenta regresiva
-  const satBody = new THREE.CapsuleGeometry(0.45, 0.5, 6, 12), panel = new THREE.BoxGeometry(1.5, 0.05, 0.6);
-  const satMat = vinyl("#FFF7EC"), panelMat = vinyl("#6FA8F0", { emissive: new THREE.Color("#1d3a7a"), emissiveIntensity: 0.4 }), accent = vinyl("#FF8FA3");
+  // satélites de la cuenta regresiva: cuerpo redondeado con lámina térmica dorada y franja blanca, alas solares con
+  // marco y brazo, antena con mini plato, luz que parpadea y pantalla con el número (de frente a la cámara).
+  // Flotan en arco delante de la Luna para que el número siempre se lea.
+  const bodyGeo = roundedBox(1.0, 0.82, 0.82, 0.14, 3), bandGeo = roundedBox(1.03, 0.2, 0.85, 0.06, 2);
+  const wingGeo = new THREE.BoxGeometry(1.15, 0.5, 0.03), wingFrame = new THREE.BoxGeometry(1.2, 0.035, 0.05), armGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.42, 8);
+  const screenFrameGeo = roundedBox(2.34, 1.5, 0.08, 0.12, 2);
+  const foil = pbr("#FFC96B", { rough: 0.28, metal: 0.85, normalMap: foilNormal(), normalScale: 0.9, env: 1.3, emissive: "#5a3c08", ei: 0.18, rim: 0.4 });
+  const white = pbr("#FFF7EC", { rough: 0.45, metal: 0.05, env: 0.6 });
+  const steel = pbr("#A49DCB", { rough: 0.36, metal: 0.6, env: 1, rim: 0.4 });
+  const cells = pbr("#ffffff", { rough: 0.28, metal: 0.35, map: solarTexture(), env: 1.3, emissive: "#1a2266", ei: 0.35, rim: 0.3 });
+  const pink = pbr("#FF8FA3", { rough: 0.4, env: 0.6 });
+  const dishGeo = new THREE.SphereGeometry(0.2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2.4);
   const labels = ["DÍAS", "HORAS", "MIN", "SEG"];
   const sats = labels.map((label, i) => {
     const g = new THREE.Group();
-    const b = new THREE.Mesh(satBody, satMat); b.rotation.z = Math.PI / 2; g.add(b);
-    [-1, 1].forEach((s) => { const p = new THREE.Mesh(panel, panelMat); p.position.x = s * 1.25; g.add(p); });
-    const dish = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), accent); dish.position.y = 0.45; g.add(dish);
+    const craft = new THREE.Group(); craft.position.y = 0.95; g.add(craft);
+    craft.add(new THREE.Mesh(bodyGeo, foil), new THREE.Mesh(bandGeo, white));
+    for (const s of [-1, 1]) {
+      const arm = new THREE.Mesh(armGeo, steel); arm.rotation.z = Math.PI / 2; arm.position.x = s * 0.62; craft.add(arm);
+      const wing = new THREE.Group(); wing.position.x = s * 1.12; wing.scale.set(0.72, 1, 1); craft.add(wing);
+      wing.add(new THREE.Mesh(wingGeo, cells));
+      for (const fy of [-0.26, 0.26]) { const f = new THREE.Mesh(wingFrame, steel); f.position.y = fy; wing.add(f); }
+    }
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.5, 6), steel); mast.position.set(0.25, 0.64, 0); craft.add(mast);
+    const dish = new THREE.Mesh(dishGeo, white); dish.rotation.x = Math.PI; dish.position.set(-0.22, 0.56, 0.1); craft.add(dish);
+    const light = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), pink); light.position.set(0.25, 0.9, 0); craft.add(light);
+    const blink = halo(i % 2 ? "#FF8FA3" : "#6FD6E8", 0.9, 0.8); blink.position.copy(light.position); craft.add(blink);
+    // pantalla con marco (número legible)
     const n = numTexture();
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 1.3), new THREE.MeshBasicMaterial({ map: n.t, transparent: true, depthWrite: false, toneMapped: false }));
-    sign.position.y = -1.3; g.add(sign);
-    const blink = halo("#6FD6E8", 1.2, 0.8); blink.position.y = 0.72; g.add(blink);
+    const frame = new THREE.Mesh(screenFrameGeo, steel); frame.position.set(0, -0.45, -0.05); g.add(frame);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.375), new THREE.MeshBasicMaterial({ map: n.t, transparent: true, toneMapped: false }));
+    sign.position.set(0, -0.45, 0.005); g.add(sign);
     group.add(g);
-    return { g, n, sign, blink, label, phase: (i / 4) * Math.PI * 2 };
+    return { g, craft, n, sign, blink, label, phase: i * 1.7 };
   });
   let shown = 0, flicker = 0;
   function tickNumbers() {
@@ -127,23 +152,38 @@ export function createMoonSet() {
     sats.forEach((s, i) => { s.g.visible = ph === "countdown" || (ph === "today" && now < ev.start); drawNum(s.n, pad2(left[keys[i]]), s.label); });
   }
   let acc = 1;
+  const tmpD = new THREE.Vector3(), tmpS = new THREE.Vector3(), tmpU = new THREE.Vector3(), UPV = new THREE.Vector3(0, 1, 0), low = new THREE.Vector3();
+  let anchor = null;
   return {
     group, decal, sats,
+    /** Cámara de reposo del capítulo (posición y objetivo en el mundo): los satélites se acomodan en su encuadre. */
+    setAnchor(pos, tgt) { anchor = { pos: pos.clone(), tgt: tgt.clone() }; },
     /** show: 0–1 (entrada de la fecha con parpadeo). camera: para orientar la fecha y los letreros. */
     update(dt, t, camera, show) {
       acc += dt; if (acc >= 0.5) { acc = 0; tickNumbers(); }
-      decalPivot.lookAt(camera.position); // el casquete (+Z) mira hacia la cámara del capítulo
+      decalPivot.lookAt(low.copy(camera.position).setY(camera.position.y - 9)); // el casquete mira a la cámara, un poco más abajo (deja lugar a los satélites)
       if (show > shown) flicker = Math.max(flicker, 0.4);
       shown = show;
       flicker = Math.max(0, flicker - dt);
       const f = flicker > 0 ? (Math.sin(t * 60) > 0 ? 1 : 0.35) : 1;
       decal.material.opacity = show * f;
       glow.material.opacity = 0.18 + show * 0.12;
+      // en fila, arriba del encuadre de reposo del capítulo (debajo del HUD y sobre la fecha), flotando;
+      // posición fija en el mundo calculada desde la cámara de reposo (anchor) y el tamaño de pantalla actual
+      if (anchor) {
+        const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), tanH = tanV * camera.aspect, D = 17;
+        tmpD.subVectors(anchor.tgt, anchor.pos).normalize(); tmpS.crossVectors(tmpD, UPV).normalize(); tmpU.crossVectors(tmpS, tmpD);
+        const scale = Math.min(0.55, (0.4 * D * tanH) / 2.2); // la pantalla ocupa ~20 % del ancho
+        sats.forEach((s, i) => {
+          const xn = (i - 1.5) * 0.47, yn = 0.46 + Math.sin(t * 0.7 + s.phase) * 0.012; // 0.46 + 0.32 del desplazamiento de la vista ≈ 11 % desde arriba
+          s.g.position.copy(anchor.pos).addScaledVector(tmpD, D).addScaledVector(tmpS, xn * D * tanH).addScaledVector(tmpU, yn * D * tanV).sub(group.position);
+          s.g.scale.setScalar(scale);
+        });
+      }
       sats.forEach((s, i) => {
-        const a = t * 0.18 + s.phase;
-        s.g.position.set(Math.cos(a) * 17, Math.sin(a * 1.3) * 3 + (i - 1.5) * 1.2, Math.sin(a) * 17);
         s.g.lookAt(camera.position);
-        s.blink.material.opacity = 0.4 + 0.5 * Math.max(0, Math.sin(t * 4 + i));
+        s.craft.rotation.set(Math.sin(t * 0.5 + s.phase) * 0.12, Math.sin(t * 0.35 + s.phase) * 0.35, Math.sin(t * 0.4 + s.phase) * 0.08);
+        s.blink.material.opacity = ((t * 0.8 + i * 0.25) % 1) < 0.15 ? 0.95 : 0.12;
       });
     }
   };

@@ -110,6 +110,88 @@ export function glassMaterial({ tint = "#B9D8FF", strength = 1 } = {}) {
   });
 }
 
+/* ---------- Acabado final compartido ("realismo estilizado") ---------- */
+/**
+ * Material PBR suave con reflejo de estudio y luz de borde (mismo acabado que el cohete y las lunas).
+ * Se usa para todos los recursos finales; reutilizar la instancia entre objetos del mismo acabado.
+ */
+export function pbr(color, { rough = 0.45, metal = 0.05, map = null, normalMap = null, normalScale = 1, roughnessMap = null, emissive = null, ei = 0, rim = 0.5, env = 1, side, transparent = false, opacity = 1 } = {}) {
+  const m = new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal, map, normalMap, roughnessMap, transparent, opacity });
+  if (normalMap) m.normalScale = new THREE.Vector2(normalScale, normalScale);
+  if (emissive) { m.emissive = new THREE.Color(emissive); m.emissiveIntensity = ei; }
+  if (side) m.side = side;
+  if (STUDIO.texture) { m.envMap = STUDIO.texture; m.envMapIntensity = env; }
+  return addRim(m, rim);
+}
+/** Pseudoaleatorio con semilla (texturas y formas reproducibles). */
+export function rng(seed = 1) { let s = seed % 2147483647 || 1; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+/** Normal map a partir de un canvas de altura en gris (se escribe en el mismo canvas y se devuelve la textura). */
+export function heightToNormal(cv, strength = 3, { wrap = true } = {}) {
+  const S = cv.width, T = cv.height, c = cv.getContext("2d", { willReadFrequently: true });
+  const src = c.getImageData(0, 0, S, T).data, out = c.createImageData(S, T);
+  const H = (x, y) => src[((((y % T) + T) % T) * S + (((x % S) + S) % S)) * 4] / 255;
+  for (let y = 0; y < T; y++) for (let x = 0; x < S; x++) {
+    const dx = (H(x + 1, y) - H(x - 1, y)) * strength, dy = (H(x, y + 1) - H(x, y - 1)) * strength;
+    const l = Math.hypot(dx, dy, 1), i = (y * S + x) * 4;
+    out.data[i] = (-dx / l * 0.5 + 0.5) * 255; out.data[i + 1] = (dy / l * 0.5 + 0.5) * 255; out.data[i + 2] = (1 / l * 0.5 + 0.5) * 255; out.data[i + 3] = 255;
+  }
+  c.putImageData(out, 0, 0);
+  const t = new THREE.CanvasTexture(cv);
+  if (wrap) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+/** Canvas de altura con ruido fino (fibras de papel, poro de pintura): base para normal maps de microdetalle. */
+export function grainCanvas(size = 256, { seed = 3, fibers = 900, speck = 2600, base = 128 } = {}) {
+  const cv = document.createElement("canvas"); cv.width = cv.height = size;
+  const c = cv.getContext("2d"), r = rng(seed);
+  c.fillStyle = `rgb(${base},${base},${base})`; c.fillRect(0, 0, size, size);
+  for (let i = 0; i < speck; i++) { const v = 100 + r() * 60; c.fillStyle = `rgba(${v},${v},${v},.5)`; c.fillRect(r() * size, r() * size, 1 + r() * 1.5, 1 + r() * 1.5); }
+  c.lineCap = "round";
+  for (let i = 0; i < fibers; i++) {
+    const x = r() * size, y = r() * size, a = r() * Math.PI, l = 3 + r() * 10, v = r() < 0.5 ? 150 : 108;
+    c.strokeStyle = `rgba(${v},${v},${v},.35)`; c.lineWidth = 0.6 + r() * 0.8;
+    for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) { c.beginPath(); c.moveTo(x + ox, y + oy); c.lineTo(x + ox + Math.cos(a) * l, y + oy + Math.sin(a) * l); c.stroke(); }
+  }
+  return cv;
+}
+let solarTex = null;
+/** Celdas solares (compartidas: estación y satélites): azul lavanda con rejilla plateada y reflejo en diagonal. */
+export function solarTexture() {
+  return (solarTex ??= canvasTex(512, 256, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, w, h); g.addColorStop(0, "#5B6FE0"); g.addColorStop(0.5, "#3E4FB8"); g.addColorStop(1, "#6B5FD0");
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    const cw = w / 8, ch = h / 4;
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 8; x++) {
+      const gg = c.createLinearGradient(x * cw, y * ch, (x + 1) * cw, (y + 1) * ch); gg.addColorStop(0, "rgba(255,255,255,.10)"); gg.addColorStop(1, "rgba(20,20,80,.12)");
+      c.fillStyle = gg; c.fillRect(x * cw + 3, y * ch + 3, cw - 6, ch - 6);
+      c.strokeStyle = "rgba(160,200,255,.35)"; c.lineWidth = 1; c.beginPath(); c.moveTo(x * cw + cw / 2, y * ch + 3); c.lineTo(x * cw + cw / 2, (y + 1) * ch - 3); c.stroke();
+    }
+    c.strokeStyle = "#D9E4FF"; c.lineWidth = 4;
+    for (let x = 0; x <= 8; x++) { c.beginPath(); c.moveTo(x * cw, 0); c.lineTo(x * cw, h); c.stroke(); }
+    for (let y = 0; y <= 4; y++) { c.beginPath(); c.moveTo(0, y * ch); c.lineTo(w, y * ch); c.stroke(); }
+  }));
+}
+let foilNrm = null;
+/** Normal map de lámina térmica arrugada (satélites, detalles dorados). */
+export function foilNormal() {
+  return (foilNrm ??= (() => {
+    const cv = document.createElement("canvas"); cv.width = cv.height = 256;
+    const c = cv.getContext("2d"), r = rng(31);
+    c.fillStyle = "#808080"; c.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 70; i++) {
+      const x = r() * 256, y = r() * 256, v = 90 + r() * 90;
+      c.fillStyle = `rgb(${v},${v},${v})`; c.beginPath(); c.moveTo(x, y);
+      for (let k = 0; k < 4; k++) c.lineTo(x + (r() - 0.5) * 90, y + (r() - 0.5) * 90);
+      c.closePath(); c.fill();
+    }
+    c.filter = "blur(1.2px)"; c.drawImage(cv, 0, 0); c.filter = "none";
+    return heightToNormal(cv, 2.6);
+  })());
+}
+let paperNrm = null;
+/** Normal map de papel (una sola vez, compartido: regalos, polaroids, mural). */
+export function paperNormal() { return (paperNrm ??= heightToNormal(grainCanvas(256, { seed: 11 }), 2.2)); }
+
 /* ---------- Texturas en canvas ---------- */
 export function canvasTex(w, h, draw, { srgb = true, mips = true } = {}) {
   const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
@@ -132,6 +214,22 @@ export function glowTexture() {
   });
   return glowTex;
 }
+/** Destello de 4 puntas con centro suave (puntos de la trayectoria, cometas, estrellas especiales). */
+let flareTex = null;
+export function flareTexture() {
+  if (flareTex) return flareTex;
+  flareTex = canvasTex(128, 128, (c, w) => {
+    const m = w / 2;
+    const g = c.createRadialGradient(m, m, 0, m, m, m * 0.5); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.3, "rgba(255,255,255,.5)"); g.addColorStop(1, "rgba(255,255,255,0)");
+    c.fillStyle = g; c.fillRect(0, 0, w, w);
+    for (const [sx, sy] of [[1, 0.06], [0.06, 1], [0.55, 0.035], [0.035, 0.55]]) {
+      c.save(); c.translate(m, m); if (sx < 0.6 && sy < 0.6) c.rotate(Math.PI / 4);
+      const gg = c.createRadialGradient(0, 0, 0, 0, 0, m); gg.addColorStop(0, "rgba(255,255,255,.95)"); gg.addColorStop(1, "rgba(255,255,255,0)");
+      c.scale(sx, sy); c.fillStyle = gg; c.beginPath(); c.arc(0, 0, m, 0, Math.PI * 2); c.fill(); c.restore();
+    }
+  });
+  return flareTex;
+}
 /** Halo aditivo (sprite barato). */
 export function halo(color, size, opacity = 0.8) {
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false }));
@@ -152,6 +250,42 @@ export function cloudTexture() {
     }
   });
   return cloudTex;
+}
+/**
+ * Nube/humo con volumen "iluminado": varias bolitas (domos de altura) → sombreado por píxel con la luz del amanecer
+ * arriba a la izquierda (crema/durazno) y sombra lavanda abajo; bordes suaves. Se genera una vez por semilla.
+ * Para que la luz sea coherente, los sprites que la usan casi no rotan.
+ */
+const litClouds = new Map();
+export function litCloudTexture(seed = 5, { light = [255, 244, 232], warm = [255, 206, 178], shade = [178, 160, 222] } = {}) {
+  if (litClouds.has(seed)) return litClouds.get(seed);
+  const S = 256, hgt = new Float32Array(S * S), r = rng(seed);
+  const blobs = Array.from({ length: 16 }, (_, i) => { const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 0.26 * (i < 5 ? 0.5 : 1); return { x: 0.5 + Math.cos(a) * d, y: 0.54 + Math.sin(a) * d * 0.8, r: (i < 5 ? 0.2 : 0.11) + r() * 0.09 }; });
+  for (const b of blobs) {
+    const cx = b.x * S, cy = b.y * S, rr = b.r * S;
+    for (let y = Math.max(0, Math.floor(cy - rr)); y < Math.min(S, cy + rr); y++) for (let x = Math.max(0, Math.floor(cx - rr)); x < Math.min(S, cx + rr); x++) {
+      const d = ((x - cx) ** 2 + (y - cy) ** 2) / (rr * rr);
+      if (d < 1) hgt[y * S + x] = Math.max(hgt[y * S + x], Math.sqrt(1 - d) * rr / S);
+    }
+  }
+  const cv = document.createElement("canvas"); cv.width = cv.height = S;
+  const c = cv.getContext("2d"), img = c.createImageData(S, S);
+  const L = new THREE.Vector3(-0.55, 0.6, 0.58).normalize();
+  for (let y = 1; y < S - 1; y++) for (let x = 1; x < S - 1; x++) {
+    const i = y * S + x, h = hgt[i];
+    if (h <= 0) continue;
+    const nx = (hgt[i - 1] - hgt[i + 1]) * 40, ny = (hgt[i - S] - hgt[i + S]) * 40;
+    const len = Math.hypot(nx, ny, 1), dl = Math.max(0, (nx * L.x - ny * L.y + L.z) / len);
+    const k = Math.min(1, dl * 1.15), rim = Math.pow(1 - Math.min(1, h * S / 30), 3);
+    const o = i * 4;
+    for (let ch = 0; ch < 3; ch++) img.data[o + ch] = shade[ch] + (light[ch] - shade[ch]) * k + (warm[ch] - light[ch]) * rim * k * 0.6;
+    img.data[o + 3] = Math.min(255, Math.pow(Math.min(1, h * S / 22), 0.8) * 255);
+  }
+  c.putImageData(img, 0, 0);
+  c.filter = "blur(1.5px)"; c.drawImage(cv, 0, 0); c.filter = "none";
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  litClouds.set(seed, t);
+  return t;
 }
 /** Mapa de normales de cráteres suaves (luna y media luna). */
 export function craterNormalMap(size = 512, seed = 7) {

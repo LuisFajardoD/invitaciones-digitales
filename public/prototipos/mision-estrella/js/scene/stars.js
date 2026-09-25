@@ -3,7 +3,7 @@
 // cualquier parte del mundo. Estrella fugaz ocasional.
 import * as THREE from "three";
 
-const PALETTE = ["#FFD27A", "#FFF7EC", "#FFF7EC", "#DCD2FF", "#BFEFFF", "#FFC9A0"];
+const PALETTE = ["#FFD27A", "#FFF7EC", "#FFF7EC", "#FFF7EC", "#DCD2FF", "#BFEFFF", "#FFC9A0", "#FFB3C6", "#9FF3FF"];
 
 export function createStars({ density = 1 } = {}) {
   const group = new THREE.Group();
@@ -20,7 +20,8 @@ export function createStars({ density = 1 } = {}) {
       const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, rr = L.r * (0.85 + Math.random() * 0.3), q = Math.sqrt(1 - u * u);
       pos.set([rr * q * Math.cos(th), rr * u, rr * q * Math.sin(th)], i * 3);
       c.set(PALETTE[(Math.random() * PALETTE.length) | 0]); col.set([c.r, c.g, c.b], i * 3);
-      seed[i] = Math.random() * 100; sz[i] = L.size * (0.5 + Math.pow(Math.random(), 3) * 1.6);
+      // tamaños variados: casi todas pequeñas, algunas "protagonistas" grandes con destello
+      seed[i] = Math.random() * 100; sz[i] = L.size * (0.5 + Math.pow(Math.random(), 3) * 1.6) * (Math.random() < 0.015 ? 2.4 : 1);
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
@@ -61,7 +62,8 @@ export function createStars({ density = 1 } = {}) {
   const trailMat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { a: { value: 0 } },
     vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-    fragmentShader: "uniform float a; varying vec2 vUv; void main(){ float t = pow(vUv.x, 2.5) * smoothstep(0.5, 0.0, abs(vUv.y - 0.5)); vec3 c = mix(vec3(1.0,0.82,0.48), vec3(1.0), vUv.x); gl_FragColor = vec4(c * t * a, t * a); }"
+    // cabeza brillante con halo + cola que se afina y pasa de dorado a blanco
+    fragmentShader: "uniform float a; varying vec2 vUv; void main(){ float y = abs(vUv.y - 0.5); float w = 0.06 + 0.4 * pow(vUv.x, 1.5); float tail = pow(vUv.x, 2.2) * smoothstep(w, 0.0, y); vec2 hd = vec2((vUv.x - 0.965) * 22.0, y * 2.0); float head = exp(-dot(hd, hd) * 3.0); float t = tail * 0.85 + head; vec3 c = mix(vec3(1.0,0.78,0.5), vec3(1.0), vUv.x * 0.7 + head * 0.3); gl_FragColor = vec4(c * t * a, min(1.0, t) * a); }"
   });
   const shoot = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), trailMat);
   shoot.visible = false; shoot.frustumCulled = false;
@@ -95,7 +97,7 @@ export function createStars({ density = 1 } = {}) {
         const vs = sh.v.clone().applyQuaternion(camera.quaternion.clone().invert());
         shoot.rotation.z = Math.atan2(vs.y, vs.x) + Math.PI; // la cola detrás
         shoot.quaternion.multiplyQuaternions(camera.quaternion, new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.atan2(vs.y, vs.x) + Math.PI));
-        shoot.scale.set(22, 0.5, 1);
+        shoot.scale.set(24, 0.9, 1);
         trailMat.uniforms.a.value = Math.sin(k * Math.PI) * 0.9;
       } else shoot.visible = false;
     }

@@ -53,10 +53,15 @@ function arcText(ctx, text, cx, cy, r, top, size) {
 export function drawPatch(ctx, S, { color = PATCH_COLORS[0], symbol = "star", top = "", bottom = "", you = false, stitch = 1 } = {}) {
   const c = S / 2, R = S * 0.47;
   ctx.clearRect(0, 0, S, S);
-  // borde bordado (merrow): anillo oscuro con puntadas radiales
+  // borde bordado (merrow): anillo oscuro con puntadas radiales de hilo (luz arriba a la izquierda, sombra abajo)
   ctx.fillStyle = shade(color, 0.55); ctx.beginPath(); ctx.arc(c, c, R, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = shade(color, 0.72); ctx.lineWidth = S * 0.012;
-  for (let i = 0; i < 110; i++) { const a = (i / 110) * Math.PI * 2; ctx.beginPath(); ctx.moveTo(c + Math.cos(a) * R * 0.92, c + Math.sin(a) * R * 0.92); ctx.lineTo(c + Math.cos(a + 0.03) * R * 0.995, c + Math.sin(a + 0.03) * R * 0.995); ctx.stroke(); }
+  ctx.lineCap = "round";
+  for (let i = 0; i < 120; i++) {
+    const a = (i / 120) * Math.PI * 2, lit = 0.5 + 0.5 * Math.cos(a + Math.PI * 0.75);
+    const x0 = c + Math.cos(a) * R * 0.915, y0 = c + Math.sin(a) * R * 0.915, x1 = c + Math.cos(a + 0.03) * R * 0.99, y1 = c + Math.sin(a + 0.03) * R * 0.99;
+    ctx.strokeStyle = shade(color, 0.6 + lit * 0.3); ctx.lineWidth = S * 0.014; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,255,255,${0.1 + lit * 0.25})`; ctx.lineWidth = S * 0.004; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  }
   // banda de texto
   ctx.fillStyle = shade(color, 0.78); ctx.beginPath(); ctx.arc(c, c, R * 0.9, 0, Math.PI * 2); ctx.fill();
   // tela central con trama sutil
@@ -80,6 +85,16 @@ export function drawPatch(ctx, S, { color = PATCH_COLORS[0], symbol = "star", to
       if (pass === 0) { ctx.save(); ctx.translate(0.5, 0.8); ctx.fillStyle = ctx.strokeStyle = "rgba(30,27,75,.35)"; ctx.lineWidth = (p.stroke || 0) + 0.6; ctx.lineCap = "round"; if (p.fill) ctx.fill(path, p.evenodd ? "evenodd" : "nonzero"); else ctx.stroke(path); ctx.restore(); continue; }
       ctx.fillStyle = ctx.strokeStyle = CREAM; ctx.lineWidth = p.stroke || 1; ctx.lineCap = "round";
       if (p.fill) ctx.fill(path, p.evenodd ? "evenodd" : "nonzero"); else ctx.stroke(path);
+      // relleno de satín: hilos diagonales con brillo y un contorno de hilo más oscuro
+      if (p.fill) {
+        ctx.save(); ctx.clip(path, p.evenodd ? "evenodd" : "nonzero");
+        ctx.lineWidth = 0.28;
+        for (let x = -24; x < 48; x += 0.55) { ctx.strokeStyle = x % 1.1 < 0.55 ? "rgba(255,255,255,.55)" : "rgba(170,150,190,.35)"; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 18, 24); ctx.stroke(); }
+        const sg = ctx.createLinearGradient(0, 0, 24, 24); sg.addColorStop(0, "rgba(255,255,255,.35)"); sg.addColorStop(0.5, "rgba(255,255,255,0)"); sg.addColorStop(1, "rgba(60,40,110,.18)");
+        ctx.fillStyle = sg; ctx.fillRect(0, 0, 24, 24);
+        ctx.restore();
+        ctx.strokeStyle = "rgba(120,100,150,.55)"; ctx.lineWidth = 0.45; ctx.stroke(path);
+      }
     }
   }
   ctx.restore();

@@ -88,6 +88,25 @@ export function adapt(gltf, { height = 1, suitColor, accentColor, visorPhoto = t
     parts.visor.renderOrder = 2;
     if (parts.glass) parts.glass.renderOrder = 3; // vidrio y reflejo siempre encima de la foto
   }
+  // hueso de la cabeza (para girar el casco hacia lo que mira, encima de la animación)
+  let headBone = null;
+  src.traverse((o) => { if (!headBone && o.isBone && /head/i.test(o.name)) headBone = o; });
+  parts.headBone = headBone;
+  // orientación de reposo de la cabeza (el modelo mira a +Z con +Y arriba): con ella se sabe hacia dónde mira el
+  // casco en cualquier pose (frente = +Z, arriba = +Y de la cabeza en reposo)
+  if (headBone) { root.updateMatrixWorld(true); parts.headRestInv = headBone.getWorldQuaternion(new THREE.Quaternion()).invert(); }
+  // Ancla del visor: con piel el nodo no se mueve con la cabeza; se mide su centro con los vértices YA deformados
+  // (getVertexPosition aplica el esqueleto igual que al dibujar) y se guarda relativo al hueso de la cabeza, con su
+  // radio, para saber dónde está en pantalla (Gloobi nunca lo tapa; el final lo centra en la ventana).
+  if (parts.visor) {
+    root.updateMatrixWorld(true);
+    const v = parts.visor, pos = v.geometry.attributes.position, box = new THREE.Box3(), p = new THREE.Vector3();
+    const step = Math.max(1, Math.floor(pos.count / 200));
+    for (let i = 0; i < pos.count; i += step) { if (v.isSkinnedMesh) v.getVertexPosition(i, p); else p.fromBufferAttribute(pos, i); box.expandByPoint(p.applyMatrix4(v.matrixWorld)); }
+    const c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
+    const bone = (v.isSkinnedMesh && headBone) || v;
+    parts.visorAnchor = { bone, offset: bone.worldToLocal(c.clone()), radius: Math.max(s.x, s.y) / 2 };
+  }
   // Animaciones: nombre exacto de la pose y, si no hay, palabras clave
   let mixer = null; const actions = {};
   if (gltf.animations?.length) {
