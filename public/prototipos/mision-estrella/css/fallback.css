@@ -1,0 +1,50 @@
+/* Misión Estrella — versión ilustrada (sin WebGL): la misma historia en una página vertical con SVG en capas,
+   parallax CSS por capítulo y el mismo contenido HTML. Debe verse intencional y bonita. */
+.is-fallback .stage, .is-fallback .scroller { display: none; }
+.is-fallback body { overflow-x: hidden; }
+.fb { position: relative; z-index: 1; width: min(100vw, 430px); margin: 0 auto; background: linear-gradient(180deg, #1E1B4B 0%, #2B2468 30%, #3B2A7A 60%, #1E1B4B 100%); overflow: hidden; }
+@media (min-width: 600px) { .fb { box-shadow: 0 0 0 1.5px rgba(255, 247, 236, .15), 0 30px 90px rgba(10, 6, 40, .6); } }
+.fb-hud { position: fixed; top: calc(var(--sat) + 12px); right: max(12px, calc(50vw - 215px + 12px)); z-index: 20; }
+.fb-cover { position: relative; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; justify-content: space-between; padding: calc(var(--sat) + 36px) 20px calc(var(--sab) + 30px); text-align: center; }
+.fb-cover .layer { position: absolute; inset: 0; pointer-events: none; will-change: transform; }
+.fb-cover .fb-art > svg { width: 100%; height: 100%; }
+.fb-cover-text, .fb-cover-bottom { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.fb-ch { position: relative; min-height: 92vh; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px; padding: 30px 14px 40px; }
+.fb-ch .fb-art { position: relative; flex: 1; min-height: 300px; margin: 0 -14px; transform: translateY(calc(var(--py, 0) * 36px)); transition: opacity .8s var(--soft); opacity: .35; }
+.fb-ch.is-in .fb-art { opacity: 1; }
+.fb-ch .fb-art > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fb-card { position: relative; opacity: 1; transform: none; pointer-events: auto; max-height: none; }
+.fb-ch .fb-card { opacity: 0; transform: translateY(24px); transition: opacity .7s var(--soft), transform .7s var(--soft); }
+.fb-ch.is-in .fb-card { opacity: 1; transform: none; }
+.tw { animation: tw 2.4s var(--d, 0s) ease-in-out infinite; }
+@keyframes tw { 50% { opacity: .3; } }
+.bob { animation: fbob 6s ease-in-out infinite; transform-origin: center; }
+@keyframes fbob { 50% { transform: translateY(-8px) rotate(-1.5deg); } }
+.fb-launch.is-in .rise { animation: rise 2.8s .3s var(--soft) both; }
+@keyframes rise { from { transform: translateY(40px); } to { transform: translateY(-60px); } }
+.flame { transform-origin: 100px 262px; animation: flick .12s steps(2) infinite; }
+@keyframes flick { 50% { transform: scaleY(1.12); } }
+.fb-launch.is-in .puffs circle { animation: puff 3s ease-out both; }
+@keyframes puff { from { transform: translateY(20px) scale(.6); opacity: 0; } }
+.const-svg .const-lines polyline { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.fb-const.is-in .const-lines polyline { animation: draw 3.2s .2s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.const-dots circle { filter: drop-shadow(0 0 3px #FFD27A); }
+.orbit { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.fb-plan.is-in .orbit { animation: draw 2.4s ease-out forwards; }
+.fb-final.is-in .away { animation: away 5s ease-in both; }
+@keyframes away { to { transform: translate(40px, -90px) scale(.7); } }
+.fb-polas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 12px; padding: 10px 6px 4px; }
+.fb-pola { padding: 8px 8px 30px; border: 0; border-radius: 4px; background: #FFFDF8; box-shadow: 0 12px 26px rgba(0, 0, 0, .35); transform: rotate(var(--r)) translateY(calc(var(--py, 0) * 20px)); cursor: zoom-in; position: relative; }
+.fb-pola img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; background: #E9E4F5; }
+.fb-pola span { position: absolute; left: 0; right: 0; bottom: 6px; color: var(--violet); font: 600 15px var(--f-title); }
+.fb-rocket-side { position: relative; height: 360px; margin: 0 -14px; }
+.fb-rocket-side > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fb-mural { position: absolute; left: 60px; right: 60px; top: 110px; display: grid; grid-template-columns: repeat(3, 1fr); justify-items: center; gap: 8px 4px; }
+.fb-patch svg { display: block; width: 78px; height: 78px; filter: drop-shadow(0 4px 6px rgba(30, 27, 75, .3)); }
+.fb-patch.is-mine svg { filter: drop-shadow(0 0 10px rgba(255, 210, 122, .9)); }
+.fb-patch.is-sewing { animation: sew-in 1.4s var(--spring) both; }
+@keyframes sew-in { 0% { transform: translateY(-160px) scale(2.2) rotate(-20deg); opacity: 0; } 55% { transform: translateY(0) scale(1.1); opacity: 1; } 100% { transform: none; } }
+.fb-comets { position: fixed; inset: 0; z-index: 80; pointer-events: none; overflow: hidden; }
+.fb-comets i { position: absolute; top: -40px; left: var(--x); width: 90px; height: 4px; border-radius: 4px; background: linear-gradient(90deg, transparent, var(--c)); transform: rotate(-35deg); animation: comet 1.6s var(--d) ease-in forwards; }
+@keyframes comet { to { transform: translate(-220px, 110vh) rotate(-35deg); } }

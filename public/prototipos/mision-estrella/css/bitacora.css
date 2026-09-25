@@ -1,0 +1,54 @@
+/* Misión Estrella — Bitácora: hoja clara y legible, encabezado fijo con fondo propio, chips, una tarjeta por sección
+   (franja de color + ícono), 26 px entre tarjetas, fondo de hoja distinto y barra fija de "Unirme". */
+.log-scrim { position: absolute; inset: 0; z-index: 60; background: rgba(20, 16, 56, .45); animation: fade .25s both; }
+.log-scrim.is-out { opacity: 0; transition: opacity .3s; }
+.log { --soft-bg: #F3EEFF; position: absolute; left: 8px; right: 8px; top: calc(var(--sat) + 8px); bottom: calc(var(--sab) + 8px); z-index: 61; display: flex; flex-direction: column; overflow: hidden; border-radius: 26px; background: var(--soft-bg); color: var(--ink); box-shadow: 0 20px 60px rgba(10, 6, 40, .55); animation: sheet-up .5s var(--soft) both; }
+.log.is-out { animation: sheet-down .3s ease-in both; }
+@keyframes sheet-up { from { transform: translateY(105%); } }
+@keyframes sheet-down { to { transform: translateY(108%); } }
+.log-head { position: relative; z-index: 2; flex: none; padding: 16px 0 0; background: #fff; transition: box-shadow .2s; }
+.log-head.is-scrolled { box-shadow: 0 6px 14px -4px rgba(30, 27, 75, .22); }
+.log-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 0 12px 0 18px; }
+.log-head .kicker { color: #B0306A; }
+.log-title { margin: 2px 0 0; font: 600 23px/1.1 var(--f-title); }
+.log-close { flex: none; background: var(--soft-bg); color: var(--ink); box-shadow: none; }
+.log-chips { display: flex; gap: 8px; margin-top: 10px; padding: 2px 14px 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.log-chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; min-height: 40px; padding: 0 16px; border: 1.5px solid rgba(30, 27, 75, .25); border-radius: 999px; background: #fff; color: var(--ink); font: 800 15px var(--f-body); white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
+.chip.is-on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.log-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 14px 32px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.log-body::-webkit-scrollbar { display: none; }
+.log-list { display: flex; flex-direction: column; gap: 26px; }
+.log-hero { text-align: center; }
+.log-mission { margin: 0 0 2px; font: 600 26px/1.1 var(--f-title); color: var(--violet); }
+.log-hero .muted { color: var(--ink2); }
+.log-card { --c: var(--teal); position: relative; overflow: hidden; border-radius: 24px; background: #fff; box-shadow: 0 1px 0 rgba(30, 27, 75, .06), 0 8px 24px rgba(59, 42, 122, .08); scroll-margin-top: 12px; }
+.log-card::before { content: ""; display: block; height: 8px; background: var(--c); }
+.log-card-t { display: flex; align-items: center; gap: 10px; margin: 0; padding: 16px 20px 0; font: 600 20px/1.15 var(--f-title); }
+.log-ic { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--c); color: var(--ink); }
+.log-card-b { display: flex; flex-direction: column; gap: 14px; padding: 14px 20px 20px; }
+.log-foot { position: relative; z-index: 2; flex: none; padding: 12px 14px 14px; background: #fff; box-shadow: 0 -6px 14px -4px rgba(30, 27, 75, .18); }
+/* versión clara de los bloques de contenido */
+.log .muted { color: var(--ink2); }
+.log .info-ic, .log .gift-ic { background: var(--soft-bg); color: var(--violet); }
+.log .gift { background: var(--soft-bg); }
+.log .gift.is-top { background: linear-gradient(135deg, #FFE3A3, var(--gold)); }
+.log .cd-u { background: var(--soft-bg); box-shadow: none; }
+.log .cd-n { color: var(--violet); }
+.log .date-tile { box-shadow: 0 0 0 1.5px rgba(30, 27, 75, .12); }
+.log .plan li { padding: 6px 0; }
+.log .plan-time { color: #B0306A; }
+.log .plan-dot { background: var(--pink); box-shadow: none; }
+.log .btn-cream { --bg: var(--soft-bg); }
+.log .btn { box-shadow: 0 3px 10px rgba(59, 42, 122, .16), inset 0 -3px 0 rgba(30, 27, 75, .1); }
+.album { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.album button { padding: 4px 4px 10px; border: 0; border-radius: 6px; background: #FFFDF8; box-shadow: 0 3px 10px rgba(59, 42, 122, .18); cursor: zoom-in; }
+.album button:nth-child(odd) { transform: rotate(-2deg); }
+.album button:nth-child(even) { transform: rotate(2deg); }
+.album img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 3px; background: #E9E4F5; }
+.faq { display: flex; flex-direction: column; gap: 8px; }
+.faq-item { border-radius: 16px; background: var(--soft-bg); overflow: hidden; }
+.faq-q { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 10px 14px; border: 0; background: none; color: var(--ink); font: 800 16px var(--f-body); text-align: left; cursor: pointer; }
+.faq-chev { flex: none; transition: transform .25s; }
+.faq-q[aria-expanded="true"] .faq-chev { transform: rotate(180deg); }
+.faq-a p { margin: 0; padding: 0 14px 14px; font-size: 16px; line-height: 1.45; }

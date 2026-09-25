@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es" class="me">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1E1B4B">
+  <!-- Metadatos estáticos: WhatsApp/Facebook no ejecutan JS. En la app real el servidor debe rellenarlos desde demoData. -->
+  <title>Misión Luis Arturo · ¡Cumple 8!</title>
+  <meta name="description" content="¡Estás invitado a la Misión Luis Arturo! Una película espacial para celebrar sus 8 años: fecha, lugar y confirmación de asistencia.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Misión Luis Arturo · ¡Cumple 8!">
+  <meta property="og:description" content="Mantén presionado para encender motores y únete a la tripulación.">
+  <meta property="og:image" content="assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" as="image" href="assets/poster.webp" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Figtree:wght@400;600;800&display=swap">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/overlay.css">
+  <link rel="stylesheet" href="css/bitacora.css">
+  <link rel="stylesheet" href="css/crew.css">
+  <link rel="stylesheet" href="css/fallback.css">
+  <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div class="space-bg" aria-hidden="true"></div>
+  <div id="stage" class="stage">
+    <img id="poster" class="poster" src="assets/poster.webp" alt="" decoding="async" fetchpriority="high" onerror="this.style.visibility='hidden'">
+    <canvas id="gl" class="gl" role="img" aria-label="Película espacial: el astronauta y Gloobi viajan por el espacio. Toda la información de la fiesta está en texto en las tarjetas y en la Bitácora."></canvas>
+    <div id="fade" class="fade" aria-hidden="true"></div>
+    <div id="ui" class="ui"></div>
+  </div>
+  <main id="scroller" class="scroller" aria-label="Capítulos de la misión"></main>
+  <noscript><p class="noscript">Esta invitación necesita JavaScript. Fiesta de Luis Arturo · Sábado 14 de noviembre, 4:00 pm · Jardín Diversión, Calle Moneda No. 24, Col. Anzures, CDMX.</p></noscript>
+</body>
+</html>

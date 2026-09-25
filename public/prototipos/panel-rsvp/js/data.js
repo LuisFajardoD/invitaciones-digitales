@@ -17,6 +17,7 @@ export const INVITATIONS = {
   "temporada-8": { id: "temporada-8-demo", path: "../temporada-8/index.html" },
   "isla-cubo": { id: "isla-cubo-demo", path: "../isla-cubo/index.html" },
   "el-circuito": { id: "el-circuito-demo", path: "../el-circuito/index.html" },
+  "mision-estrella": { id: "mision-estrella-demo", path: "../mision-estrella/index.html" },
   default: { id: "demo", path: "../temporada-8/index.html" }
 };
 
@@ -91,6 +92,8 @@ const EXTRA_NAMES = ["Familia Castro", "Andrea Vega", "Familia Morales", "Pablo 
 const COLORS = ["#FF6B6B", "#9BE564", "#B388FF", "#FFD23F", "#4CC9F0", "#FF9FCB"];
 const HAIRS = ["short", "long", "pigtails"];
 const SYMBOLS = ["heart", "star", "bolt", "ball", "flower", "paw"];
+const MISSION_SYMBOLS = ["star", "rocket", "planet", "heart", "moon", "comet"]; // parches de Misión Estrella
+const PATCH_COLORS = ["#FF8FA3", "#6FD6E8", "#B9A2FF", "#FFD27A", "#9BE5B4", "#FFB38A"];
 
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -111,7 +114,7 @@ export function sampleRsvps(style, { count = 18, invitationId = "demo", now = cl
     const t = new Date(now - (Math.floor(R() * 14 * 24) + 1) * 3600000 - Math.floor(R() * 59) * 60000).toISOString();
     return createRsvp({
       id: `demo-${i + 1}`, invitationId, guestName, attending, adults, children, message,
-      avatar: { style, color: COLORS[i % COLORS.length], hair: HAIRS[i % 3], symbol: SYMBOLS[(i * 5) % 6] },
+      avatar: { style, color: (style === "mission-patch" ? PATCH_COLORS : COLORS)[i % COLORS.length], hair: HAIRS[i % 3], symbol: (style === "mission-patch" ? MISSION_SYMBOLS : SYMBOLS)[(i * 5) % 6] },
       createdAt: t, updatedAt: t
     });
   });

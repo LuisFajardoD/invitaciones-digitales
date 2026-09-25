@@ -1,6 +1,6 @@
 // Carga y aplica un tema: tokens → variables CSS, fuentes → <link>, estilo de UI → data-atributos.
 // El panel y la hoja imprimible sólo leen estas variables; ningún color de tema vive en su código.
-export const THEMES = ["temporada-8", "isla-cubo", "el-circuito", "default"];
+export const THEMES = ["temporada-8", "isla-cubo", "el-circuito", "mision-estrella", "default"];
 
 export async function loadTheme(id) {
   const safe = THEMES.includes(id) ? id : "default";

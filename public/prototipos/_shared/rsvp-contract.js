@@ -2,17 +2,18 @@
  * Contrato de datos de una CONFIRMACIÓN (RSVP) de Gloobi.
  *
  * ⚠️ Este es el formato que la app real deberá guardar más adelante (tabla/colección de confirmaciones).
- * Hoy lo usan los prototipos (temporada-8, isla-cubo, el-circuito y panel-rsvp) guardando en localStorage.
+ * Hoy lo usan los prototipos (temporada-8, isla-cubo, el-circuito, mision-estrella y panel-rsvp) guardando en localStorage.
  * No incluye alergias, dietas ni restricciones alimentarias: el anfitrión sólo necesita saber
  * cuántos menús de adultos y cuántos de niños contratar.
  *
- * @typedef {"t8-character" | "isla-block" | "circuito-runner" | "default"} AvatarStyle
+ * @typedef {"t8-character" | "isla-block" | "circuito-runner" | "mission-patch" | "default"} AvatarStyle
  *
  * @typedef {Object} RsvpAvatar  Cómo se dibuja al invitado; depende de la plantilla.
  * @property {AvatarStyle} style
  * @property {string} color      Color hex (#RRGGBB).
  * @property {"short"|"long"|"pigtails"} [hair]   Sólo "t8-character" y "circuito-runner".
- * @property {"heart"|"star"|"bolt"|"ball"|"flower"|"paw"} [symbol]  Sólo "isla-block".
+ * @property {string} [symbol]  "isla-block": heart|star|bolt|ball|flower|paw.
+ *                               "mission-patch": star|rocket|planet|heart|moon|comet.
  *
  * @typedef {Object} Rsvp
  * @property {string}  id            UUID.
@@ -33,9 +34,10 @@
 
 export const MAX_PEOPLE = 10;
 export const MAX_MESSAGE = 140;
-export const AVATAR_STYLES = ["t8-character", "isla-block", "circuito-runner", "default"];
+export const AVATAR_STYLES = ["t8-character", "isla-block", "circuito-runner", "mission-patch", "default"];
 export const HAIRS = ["short", "long", "pigtails"];
 export const SYMBOLS = ["heart", "star", "bolt", "ball", "flower", "paw"];
+export const MISSION_SYMBOLS = ["star", "rocket", "planet", "heart", "moon", "comet"];
 
 export class RsvpError extends Error {}
 
@@ -73,6 +75,7 @@ export function createRsvp(input = {}, { previous } = {}) {
   const avatar = { style, color: isHex(a.color) ? a.color.toUpperCase() : "#9AA5B1" };
   if (style === "t8-character" || style === "circuito-runner") avatar.hair = HAIRS.includes(a.hair) ? a.hair : "short";
   if (style === "isla-block") avatar.symbol = SYMBOLS.includes(a.symbol) ? a.symbol : "star";
+  if (style === "mission-patch") avatar.symbol = MISSION_SYMBOLS.includes(a.symbol) ? a.symbol : "star";
 
   const createdAt = iso(previous?.createdAt ?? input.createdAt, now);
   return {

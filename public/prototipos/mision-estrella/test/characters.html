@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prueba de personajes · Misión Estrella</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&display=swap">
+  <style>html,body{margin:0;height:100%;background:#1E1B4B;overflow:hidden}canvas{display:block;width:100%;height:100%}#i{position:fixed;left:8px;top:8px;color:#FFF7EC;font:600 13px system-ui}</style>
+  <script type="importmap">{ "imports": { "three": "../vendor/three.module.min.js" } }</script>
+</head>
+<body>
+  <canvas id="c"></canvas><div id="i"></div>
+  <script type="module">
+    // Página de prueba (no forma parte de la invitación): ?pose=fly|wave|sleep|celebrate|sit &face=smile|wow|laugh|sleep &rot=0.4 &zoom=1
+    import * as THREE from "three";
+    import { createRenderer } from "../js/scene/renderer.js";
+    import { renderNebula } from "../js/scene/nebula.js";
+    import { createSky } from "../js/scene/sky.js";
+    import { createStars } from "../js/scene/stars.js";
+    import { ENV } from "../js/scene/materials.js";
+    import { createAstronaut } from "../js/characters/astronaut.js";
+    import { visorTexture } from "../js/characters/astronaut-procedural.js";
+    import { createGloobi } from "../js/characters/gloobi.js";
+    import { patchCanvas } from "../js/ui/patch.js";
+    import { demoData } from "../js/data.js";
+    const p = new URLSearchParams(location.search);
+    const R = createRenderer(document.getElementById("c"), { stage: document.body, level: p.get("q") || "high" });
+    const neb = renderNebula(R.renderer); ENV.envMap.value = neb;
+    const sky = createSky(neb); R.scene.add(sky.mesh);
+    const stars = createStars(); R.scene.add(stars.group); stars.setPixelRatio(R.dpr);
+    const astro = createAstronaut(demoData.child); R.scene.add(astro.root);
+    const img = new Image(); img.src = "../" + demoData.child.visorPhoto; img.onload = () => astro.setVisorTexture(visorTexture(img));
+    await document.fonts.load("600 20px Fredoka").catch(() => {});
+    const pt = new THREE.CanvasTexture(patchCanvas(256, { color: demoData.child.accentColor, symbol: "star", top: demoData.child.name, bottom: "Misión" })); pt.colorSpace = THREE.SRGBColorSpace;
+    astro.setPatchTexture(pt);
+    const pose = p.get("pose") || "wave"; astro.snapPose(pose);
+    const gl = createGloobi({ size: 0.16 }); R.scene.add(gl.root);
+    if (p.get("face")) { gl.setMode(p.get("face") === "sleep" ? "sleep" : "awake"); if (p.get("face") !== "sleep") gl.setExpression(p.get("face")); } else gl.setMode("awake");
+    gl.teleport(new THREE.Vector3(0.48, 0.42, 0.15));
+    const rot = Number(p.get("rot") || 0.35), zoom = Number(p.get("zoom") || 1);
+    R.camera.position.set(0, 0.25, 2.6 / zoom); R.camera.lookAt(0.12, 0.08, 0);
+    const clock = new THREE.Clock(); let t = Number(p.get("t") || 0);
+    function frame() {
+      const dt = Math.min(0.05, clock.getDelta()); t += dt;
+      astro.root.rotation.y = rot + Math.sin(t * 0.4) * 0.1 * (p.get("still") ? 0 : 1);
+      astro.update(dt, t); gl.update(dt, t, R.camera); sky.update(R.camera); stars.update(dt, t, R.camera);
+      R.render(); requestAnimationFrame(frame);
+    }
+    frame();
+    document.getElementById("i").textContent = `pose ${pose} · ${R.level}`;
+    window.__ready = true;
+  </script>
+</body>
+</html>

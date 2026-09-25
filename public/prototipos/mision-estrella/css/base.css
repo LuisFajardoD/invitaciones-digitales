@@ -1,0 +1,77 @@
+/* Misión Estrella — base: tokens, escenario tipo teléfono, tipografía y botones. Espacio de cuento (nada de negro). */
+.me {
+  --indigo: #1E1B4B; --violet: #3B2A7A; --pink: #FF8FA3; --peach: #FFC9A0; --teal: #6FD6E8; --gold: #FFD27A;
+  --cream: #FFF7EC; --lav: #B9A2FF; --mint: #9BE5B4; --ink: #1E1B4B; --ink2: #4B4680;
+  --card-bg: rgba(30, 27, 75, .74); --card-line: rgba(255, 247, 236, .2);
+  --f-title: "Fredoka", "Figtree", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
+  --soft: cubic-bezier(.2, .8, .2, 1); --spring: cubic-bezier(.34, 1.4, .64, 1);
+  -webkit-text-size-adjust: 100%;
+  background: var(--indigo);
+  scroll-snap-type: y proximity;
+  scrollbar-width: none;
+}
+.me::-webkit-scrollbar, .me body::-webkit-scrollbar { display: none; }
+.me *, .me *::before, .me *::after { box-sizing: border-box; }
+.me [hidden] { display: none !important; }
+.me body {
+  margin: 0; min-height: 100%; font-family: var(--f-body); font-size: 16px; color: var(--cream);
+  background: var(--indigo); -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none;
+}
+.me.is-locked, .me.is-locked body { overflow: hidden; scroll-snap-type: none; }
+:where(.me) :where(button, input, textarea) { font: inherit; color: inherit; } /* especificidad 0: no pisa a .btn */
+.me :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.sr-only { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Fondo (desktop): nebulosa alrededor del marco */
+.space-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(60% 45% at 20% 25%, rgba(255, 143, 163, .28), transparent 70%), radial-gradient(55% 50% at 80% 70%, rgba(111, 214, 232, .22), transparent 70%), radial-gradient(40% 35% at 70% 15%, rgba(255, 201, 160, .18), transparent 70%), linear-gradient(180deg, #1E1B4B, #3B2A7A);
+}
+.space-bg::after { content: ""; position: absolute; inset: 0; opacity: .7;
+  background-image: radial-gradient(1.4px 1.4px at 12% 18%, #FFF7EC, transparent 60%), radial-gradient(1.2px 1.2px at 32% 62%, #FFD27A, transparent 60%), radial-gradient(1.6px 1.6px at 72% 28%, #FFF7EC, transparent 60%), radial-gradient(1px 1px at 88% 82%, #FFF7EC, transparent 60%), radial-gradient(1.3px 1.3px at 54% 88%, #FFD27A, transparent 60%), radial-gradient(1px 1px at 8% 76%, #FFF7EC, transparent 60%);
+}
+
+/* Escenario tipo teléfono */
+.stage { position: fixed; top: 0; left: 50%; z-index: 1; width: min(100vw, 430px); height: 100vh; height: 100dvh; transform: translateX(-50%); overflow: hidden; background: var(--indigo); isolation: isolate; }
+@media (min-width: 600px) {
+  .stage { top: 50%; height: min(100dvh - 40px, 900px); transform: translate(-50%, -50%); border-radius: 36px; box-shadow: 0 0 0 1.5px rgba(255, 247, 236, .18), 0 30px 90px rgba(10, 6, 40, .6), 0 0 120px rgba(255, 143, 163, .15); }
+}
+.gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+.poster { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; object-fit: cover; transition: opacity .9s var(--soft); pointer-events: none; }
+.poster.is-out { opacity: 0; }
+.fade { position: absolute; inset: 0; z-index: 4; background: var(--indigo); opacity: 0; pointer-events: none; }
+.ui { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+.ui > * { pointer-events: auto; }
+.scroller { position: relative; z-index: 0; width: min(100vw, 430px); margin: 0 auto; }
+.chap { position: relative; }
+.snap { position: absolute; left: 0; width: 1px; height: 1px; scroll-snap-align: start; }
+.noscript { position: fixed; inset: auto 16px 40% 16px; z-index: 99; padding: 16px; border-radius: 20px; background: var(--cream); color: var(--ink); text-align: center; }
+
+/* ---------- Botones: redondeados crema y rosa, sombra suave; brillo SIEMPRE detrás del texto ---------- */
+.btn {
+  --bg: var(--cream); --fg: var(--ink);
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 10px 20px; border: 0; border-radius: 999px; background: var(--bg); color: var(--fg);
+  font: 600 17px/1.1 var(--f-title); letter-spacing: .01em; text-decoration: none; text-align: center; white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(10, 6, 40, .35), inset 0 -3px 0 rgba(30, 27, 75, .12); cursor: pointer;
+  transition: transform .12s var(--soft), box-shadow .12s;
+}
+.btn::before { content: ""; position: absolute; z-index: -1; left: 18%; right: 18%; top: 4px; height: 24%; max-height: 12px; border-radius: 999px; background: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)); pointer-events: none; }
+.btn:active { transform: translateY(2px) scale(.98); box-shadow: 0 2px 8px rgba(10, 6, 40, .3); }
+.btn svg { flex: none; }
+.btn-pink { --bg: var(--pink); --fg: var(--ink); }
+.btn-cream { --bg: var(--cream); --fg: var(--ink); }
+.btn-ghost { --bg: rgba(255, 247, 236, .08); --fg: var(--cream); box-shadow: inset 0 0 0 1.5px rgba(255, 247, 236, .4); }
+.btn-ghost::before { display: none; }
+.btn-lg { min-height: 58px; font-size: 20px; padding: 12px 24px; }
+.btn-sm { min-height: 44px; font-size: 16px; padding: 8px 16px; }
+.btn-xs { min-height: 40px; font-size: 16px; padding: 6px 16px; }
+.btn-block { width: 100%; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn-row > .btn { flex: 1 1 140px; }
+.icon-btn { display: inline-grid; place-items: center; width: 46px; height: 46px; padding: 0; border: 0; border-radius: 50%; background: rgba(30, 27, 75, .62); color: var(--cream); box-shadow: inset 0 0 0 1.5px rgba(255, 247, 236, .25), 0 6px 16px rgba(10, 6, 40, .3); cursor: pointer; font: 600 22px var(--f-title); }
+.icon-btn.sm { width: 44px; height: 44px; }
+.link { min-height: 44px; padding: 0 12px; border: 0; background: none; color: inherit; font: 600 16px var(--f-body); text-decoration: underline; text-underline-offset: 4px; opacity: .85; cursor: pointer; }
+
+.rm *, .rm *::before, .rm *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

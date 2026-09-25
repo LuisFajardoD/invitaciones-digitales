@@ -1,0 +1,9 @@
+Dependencias vendorizadas (sin CDN en tiempo de ejecución). Versión fija: three@0.169.0 (r169).
+
+three.module.min.js                 three@0.169.0  build/three.module.min.js           Licencia MIT (three.LICENSE.txt)
+loaders/GLTFLoader.js               three@0.169.0  examples/jsm/loaders/                 Licencia MIT
+utils/BufferGeometryUtils.js        three@0.169.0  examples/jsm/utils/ (lo usa GLTFLoader) Licencia MIT
+libs/meshopt_decoder.module.js      three@0.169.0  examples/jsm/libs/ (meshoptimizer)    Licencia MIT (meshoptimizer, Arseny Kapoulkine)
+postprocessing/*.js, shaders/*.js   three@0.169.0  examples/jsm/ (bloom, sólo calidad alta) Licencia MIT
+
+DRACOLoader no se incluye: los modelos se comprimen con meshopt.
