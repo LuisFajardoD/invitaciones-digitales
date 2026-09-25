@@ -1,46 +1,57 @@
 // La Luna (capítulo 4) con la fecha proyectada como luz cálida sobre su superficie y 4 satélites en órbita
-// con la cuenta regresiva; y la media luna de la portada. Luna y media luna son PROVISIONALES (models.js).
+// con la cuenta regresiva; y la luna creciente de la portada. Ambas usan la superficie lunar procedural
+// (moon-surface.js: mares, cráteres con borde y pico central, rayos, relieve). Reemplazables desde models.js.
 import * as THREE from "three";
-import { vinyl, craterNormalMap, canvasTex, halo } from "./materials.js";
+import { vinyl, craterNormalMap, canvasTex, halo, addRim } from "./materials.js";
 import { modelOrBuild } from "../characters/rocket.js";
+import { moonSurfaceReady } from "./moon-surface.js";
 import { eventInfo, eventPhase, splitDuration, pad2, clock } from "../util.js";
 
-const CREAM = "#F3E6CF";
-let normals = null;
-const moonMaterial = (strength = 0.55, repeat = 1) => {
-  normals ??= craterNormalMap(512);
-  const m = vinyl(CREAM, { rim: 0.8 });
-  const n = repeat === 1 ? normals : normals.clone();
-  if (repeat !== 1) { n.repeat.set(repeat, repeat); n.needsUpdate = true; }
-  m.normalMap = n; m.normalScale = new THREE.Vector2(strength, strength);
-  return m;
-};
+/** Material lunar: superficie procedural si ya está generada; si no, el crema con cráteres suaves. */
+function moonMaterial(normalScale = 1) {
+  const s = moonSurfaceReady();
+  if (!s) { const m = vinyl("#F3E6CF", { rim: 0.8 }); m.normalMap = craterNormalMap(512); m.normalScale = new THREE.Vector2(0.5, 0.5); return m; }
+  const m = new THREE.MeshStandardMaterial({ map: s.map, normalMap: s.normalMap, roughness: 0.96, metalness: 0, color: "#FFF6EA" });
+  m.normalScale = new THREE.Vector2(normalScale, normalScale);
+  m.emissive = new THREE.Color("#2A2250"); m.emissiveIntensity = 0.35; // el lado oscuro no queda negro
+  return addRim(m, 0.6);
+}
 
-/** Media luna de juguete (extruida con bisel). Tamaño ≈ 2.2 de alto. */
+/**
+ * Luna creciente de la portada: volumen orgánico (grueso al centro, puntas afiladas) sobre un arco, con la
+ * superficie lunar proyectada desde su centro (el polo de la proyección mira a la cámara: sin deformar el borde).
+ * Tamaño ≈ 2.3 de alto; la abertura queda hacia +X.
+ */
 export function createCrescent() {
   return modelOrBuild("crescent", () => {
-    const R = 1, r = 0.84, c2 = new THREE.Vector2(0.46, 0.12);
-    const d = c2.length(), a = (R * R - r * r + d * d) / (2 * d), hh = Math.sqrt(R * R - a * a);
-    const u = c2.clone().normalize(), perp = new THREE.Vector2(-u.y, u.x);
-    const P1 = u.clone().multiplyScalar(a).addScaledVector(perp, hh), P2 = u.clone().multiplyScalar(a).addScaledVector(perp, -hh);
-    const ang = (p, c) => Math.atan2(p.y - c.y, p.x - c.x);
-    const pts = [];
-    // arco exterior de P1 a P2 pasando por el lado opuesto a c2
-    let a0 = ang(P1, new THREE.Vector2()), a1 = ang(P2, new THREE.Vector2());
-    const away = Math.atan2(-u.y, -u.x);
-    const norm = (x) => { while (x < 0) x += Math.PI * 2; return x % (Math.PI * 2); };
-    const ccwOK = norm(away - a0) < norm(a1 - a0); // ¿el camino antihorario pasa por "away"?
-    const span = ccwOK ? norm(a1 - a0) : -norm(a0 - a1);
-    for (let i = 0; i <= 48; i++) { const t = a0 + span * (i / 48); pts.push(new THREE.Vector2(Math.cos(t) * R, Math.sin(t) * R)); }
-    // arco interior de P2 a P1 (del círculo desplazado), por el lado que queda dentro
-    const b0 = ang(P2, c2), b1 = ang(P1, c2);
-    const bSpanCcw = norm(b1 - b0), mid = b0 + bSpanCcw / 2;
-    const inside = Math.hypot(c2.x + Math.cos(mid) * r, c2.y + Math.sin(mid) * r) < R;
-    const bSpan = inside ? bSpanCcw : -norm(b0 - b1);
-    for (let i = 1; i < 48; i++) { const t = b0 + bSpan * (i / 48); pts.push(new THREE.Vector2(c2.x + Math.cos(t) * r, c2.y + Math.sin(t) * r)); }
-    const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: 0.36, bevelEnabled: true, bevelThickness: 0.2, bevelSize: 0.16, bevelSegments: 6, curveSegments: 32 });
-    geo.center();
-    const mesh = new THREE.Mesh(geo, moonMaterial(0.25, 0.35)); // la extrusión usa UV en unidades: menos repetición
+    const RC = 0.8, RMAX = 0.36, TUB = 140, RAD = 40, A0 = THREE.MathUtils.degToRad(38), A1 = THREE.MathUtils.degToRad(322);
+    const pos = [], nor = [], uv = [], idx = [];
+    const P = new THREE.Vector3(), N = new THREE.Vector3();
+    // UV sin estirar: u a lo largo del arco, v alrededor de la sección (proporcional a su grosor);
+    // la costura de v queda atrás (-Z), fuera de la vista de la cámara
+    const RT = 1.2, arcLen = RC * (A1 - A0);
+    for (let i = 0; i <= TUB; i++) {
+      const t = i / TUB, a = A0 + (A1 - A0) * t;
+      const r = Math.max(0.004, RMAX * Math.pow(Math.sin(Math.PI * t), 0.72));
+      const cx = Math.cos(a) * RC, cy = Math.sin(a) * RC, rx = Math.cos(a), ry = Math.sin(a);
+      for (let j = 0; j <= RAD; j++) {
+        const s = (j / RAD) * 2 - 1, f = Math.PI / 2 + s * Math.PI; // f = π/2 mira a la cámara (+Z)
+        const cf = Math.cos(f), sf = Math.sin(f) * 0.9; // sección un poco aplanada
+        N.set(rx * cf, ry * cf, Math.sin(f)).normalize();
+        P.set(cx + rx * r * cf, cy + ry * r * cf, r * sf);
+        pos.push(P.x, P.y, P.z); nor.push(N.x, N.y, N.z);
+        uv.push(0.2 + (t * arcLen) / (2 * Math.PI * RT), 0.5 + (s * r) / RT);
+      }
+    }
+    for (let i = 0; i < TUB; i++) for (let j = 0; j < RAD; j++) { const a = i * (RAD + 1) + j, b = a + RAD + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    geo.setIndex(idx);
+    geo.computeVertexNormals(); // suaviza las puntas
+    const mesh = new THREE.Mesh(geo, moonMaterial(0.8));
+    mesh.position.x = -0.12; // centra el volumen (la abertura deja el arco corrido a la izquierda)
     const root = new THREE.Group(); root.add(mesh);
     return { root };
   });
@@ -50,6 +61,11 @@ export function createCrescent() {
 function dateTexture(text) {
   return canvasTex(1024, 512, (c, w, hh) => {
     c.textAlign = "center"; c.textBaseline = "middle";
+    // sombra suave detrás del texto: se lee sobre los cráteres
+    c.save(); c.translate(w / 2, hh / 2); c.scale(1.85, 1); // elipse que se desvanece antes del borde
+    const sh = c.createRadialGradient(0, 0, 10, 0, 0, hh * 0.49);
+    sh.addColorStop(0, "rgba(40,28,70,.55)"); sh.addColorStop(0.6, "rgba(40,28,70,.3)"); sh.addColorStop(1, "rgba(40,28,70,0)");
+    c.fillStyle = sh; c.fillRect(-w, -hh, w * 2, hh * 2); c.restore();
     const glow = (fn) => { c.shadowColor = "rgba(255,190,120,.95)"; c.shadowBlur = 38; fn(); c.shadowBlur = 14; fn(); c.shadowBlur = 0; fn(); };
     c.fillStyle = "#FFE7C2";
     c.font = "600 64px Fredoka, system-ui, sans-serif"; glow(() => c.fillText(text.top, w / 2, 96));
@@ -76,7 +92,7 @@ function drawNum(n, value, label) {
 export function createMoonSet() {
   const group = new THREE.Group(); group.name = "moon-set";
   const { holder } = modelOrBuild("moon", () => {
-    const root = new THREE.Mesh(new THREE.SphereGeometry(12, 64, 48), moonMaterial());
+    const root = new THREE.Mesh(new THREE.SphereGeometry(12, 128, 80), moonMaterial(1));
     return { root };
   });
   group.add(holder);
@@ -85,7 +101,7 @@ export function createMoonSet() {
   const info = eventInfo();
   const decal = new THREE.Mesh(new THREE.SphereGeometry(12.08, 48, 32, Math.PI / 2 - 0.62, 1.24, Math.PI / 2 - 0.4, 0.8), new THREE.MeshBasicMaterial({
     map: dateTexture({ top: info.weekday.toUpperCase(), mid: String(info.dayNum), bottom: info.month.toUpperCase() }),
-    transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false
+    transparent: true, opacity: 0, depthWrite: false, toneMapped: false
   }));
   const decalPivot = new THREE.Group(); decalPivot.add(decal); group.add(decalPivot);
   // satélites con la cuenta regresiva

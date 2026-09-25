@@ -7,6 +7,7 @@ import { clamp, smooth, easeInOut, easeIn, invLerp, lerp, prefersReduced, vibrat
 import { V, samplePath, blendShots, camSpace, shake, shot } from "./camera-path.js";
 import { ENV, glowTexture, createStudioEnv } from "./materials.js";
 import { renderNebula } from "./nebula.js";
+import { moonSurface } from "./moon-surface.js";
 import { createSky, createNebulaClouds } from "./sky.js";
 import { createStars } from "./stars.js";
 import { createEarth } from "./earth.js";
@@ -50,6 +51,7 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   const neb = renderNebula(R.renderer, { w: q.nebula, h: q.nebula / 2 });
   ENV.envMap.value = neb;
   try { createStudioEnv(R.renderer); } catch { /* sin reflejos de estudio */ }
+  try { moonSurface(R.renderer, q.name === "high" ? 2048 : 1024); } catch { /* luna sencilla */ }
   const sky = createSky(neb); scene.add(sky.mesh);
   const clouds = createNebulaClouds(showcase ? 6 : 10); scene.add(clouds);
   const stars = createStars({ density: q.stars }); scene.add(stars.group);
