@@ -92,9 +92,10 @@ export function countdown() {
   const t = setInterval(tick, 1000);
   return { el, stop: () => clearInterval(t), tick };
 }
+/** "Agregar al calendario": una línea de texto y los dos botones (sin caja anidada). */
 export function calendarRow(audio) {
-  return h("div.box.stack",
-    h("div.info", h("span.info-ic", { html: icon("calendar", { size: 26 }) }), h("div", h("p.info-k", { text: "Agregar al calendario" }), h("p.info-v", { text: "Te recordamos un día antes." }))),
+  return h("div.cal-add",
+    h("p.cal-add-t", h("b", { text: "Agregar al calendario" }), " · Te recordamos un día antes."),
     h("div.row",
       h("button.fl.fl-white.fl-sm", { type: "button", onclick: () => { audio.tap(); downloadICS(); } }, h("span", { text: "iPhone / .ics" })),
       h("a.fl.fl-white.fl-sm", { href: googleCalUrl(), target: "_blank", rel: "noopener", onclick: () => audio.tap() }, h("span", { text: "Google Calendar" }))));
@@ -109,8 +110,9 @@ export function mapsRow(audio) {
     h("a.fl.fl-blue", { href: ev.googleMapsUrl, target: "_blank", rel: "noopener", onclick: () => audio.tap(), html: `${icon("map", { stroke: "#fff" })}<span>Google Maps</span>` }),
     h("a.fl.fl-lime", { href: ev.wazeUrl, target: "_blank", rel: "noopener", onclick: () => audio.tap(), html: `${icon("nav")}<span>Waze</span>` }));
 }
+/** Uniforme de carrera: una línea con ícono (va dentro de la tarjeta de Lugar). */
 export function dressBlock() {
-  return h("div.box.dress", h("span.info-ic", { html: icon("shirt", { size: 28 }) }), h("div", h("p.info-k", { text: demoData.dressCode.title }), h("p.info-v", { text: demoData.dressCode.text })));
+  return h("p.dress-line", h("span.dress-ic", { html: icon("shirt", { size: 20 }) }), h("span", h("b", { text: `${demoData.dressCode.title}:` }), ` ${demoData.dressCode.text}`));
 }
 export function itineraryList() {
   const i = eventInfo(), now = clock.now(), items = demoData.itinerary;
@@ -130,9 +132,6 @@ export function giftsList(audio) {
     : h("article.gift", h("span.gift-ic", { html: icon(GIFT_ICONS[k++ % 3], { size: 24 }) }), h("div.grow", h("p.gift-name", { text: g.name }), g.note ? h("p.gift-note", { text: g.note }) : null),
       g.url ? h("a.fl.fl-white.fl-sm", { href: g.url, target: "_blank", rel: "noopener", "aria-label": `Ver ${g.name}`, onclick: () => audio.tap() }, h("span", { text: "Ver" })) : null)));
 }
-export function hostsBlock() {
-  return h("div.info", h("span.info-ic", { html: icon("heart", { size: 26, fill: "#FF9FCB" }) }), h("div", h("p.info-k", { text: "Anfitriones" }), h("p.info-v", { text: demoData.hosts })));
-}
 /** Cuadrícula del álbum (las recogidas llevan "¡Encontrada!"). */
 export function albumGrid(found, onOpen) {
   return h("div.album", ...demoData.gallery.map((p, i) => {
@@ -143,21 +142,38 @@ export function albumGrid(found, onOpen) {
   }));
 }
 
+/* ---------- Tarjetas de sección (hoja de info y puntos de control) ---------- */
+export const SECTIONS = {
+  fecha: { label: "Fecha", title: "Fecha y hora", emoji: "📅", icon: "calendar", color: "#3D5AFE", light: true },
+  lugar: { label: "Lugar", title: "Lugar", emoji: "📍", icon: "pin", color: "#FF5A5F", light: true },
+  programa: { label: "Programa", title: "Programa de la carrera", emoji: "🏁", icon: "flag", color: "#FFC93C" },
+  regalos: { label: "Regalos", title: "Mesa de regalos", emoji: "🎁", icon: "gift", color: "#9BE564" },
+  fotos: { label: "Fotos", title: "Álbum de fotos", emoji: "📷", icon: "camera", color: "#2EC4B6", light: true }
+};
+/** Tarjeta blanca con franja superior de color y título con ícono en círculo. */
+export function sectionCard(key, children, { titled = true } = {}) {
+  const s = SECTIONS[key];
+  return h(`section.icard#sec-${key}`, { style: { "--c": s.color }, "aria-labelledby": titled ? `sec-${key}-t` : null, "data-sec": key },
+    titled ? h("h3.icard-t", { id: `sec-${key}-t` }, h("span.icard-ic", { html: icon(s.icon, { size: 20, stroke: s.light ? "#fff" : "#1B1F3B" }) }), s.title) : null,
+    h("div.icard-b", ...[children].flat()));
+}
+
 /* ---------- Tarjeta inferior ---------- */
 /**
- * Tarjeta blanca con franja de color. opts: { kicker, title, body, foot, stripe, cls, onClose }.
+ * Tarjeta blanca con franja de color. opts: { kicker, title, headExtra, body, foot, stripe, cls, onClose }.
  * Se ajusta a su contenido (máx. 50 %, o más con cls "is-tall"/"is-finish").
  */
-export function sheet(root, { kicker = "", title = "", body, foot = null, stripe = "var(--blue)", cls = "", label } = {}) {
+export function sheet(root, { kicker = "", title = "", headExtra = null, body, foot = null, stripe = "var(--blue)", cls = "", label } = {}) {
   const fade = h("div.sheet-fade");
   const bodyEl = h("div.sheet-body", body);
+  const head = kicker || title ? h("header.sheet-head", kicker ? h("p.sheet-kicker", { text: kicker }) : null, title ? h("h2.sheet-title", { text: title }) : null, headExtra) : null;
   const el = h(`section.sheet${cls ? "." + cls : ""}`, { role: "dialog", "aria-label": label || title, style: { "--stripe": stripe } },
-    kicker || title ? h("header.sheet-head", kicker ? h("p.sheet-kicker", { text: kicker }) : null, title ? h("h2.sheet-title", { text: title }) : null) : null,
-    bodyEl, fade, foot ? h("div.sheet-foot", foot) : null);
+    head, bodyEl, fade, foot ? h("div.sheet-foot", foot) : null);
   const placeFade = () => {
     const more = bodyEl.scrollHeight - bodyEl.clientHeight - bodyEl.scrollTop > 4;
     fade.classList.toggle("is-on", more);
     fade.style.top = `${bodyEl.offsetTop + bodyEl.clientHeight - 26}px`;
+    head?.classList.toggle("is-scrolled", bodyEl.scrollTop > 2); // sombra inferior del encabezado
   };
   bodyEl.addEventListener("scroll", placeFade, { passive: true });
   root.append(el);

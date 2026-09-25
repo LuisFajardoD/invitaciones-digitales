@@ -58,10 +58,11 @@
   font: 400 19px/1 var(--f-title); letter-spacing: .02em; text-decoration: none; text-align: center;
   box-shadow: 0 5px 0 var(--ink); cursor: pointer; transition: transform .08s, box-shadow .08s;
   -webkit-tap-highlight-color: transparent;
+  isolation: isolate; /* el reflejo (z-index -1) queda sobre el fondo pero detrás del texto */
 }
-.fl::before { /* reflejo superior */
-  content: ""; position: absolute; left: 14%; right: 14%; top: 4px; height: 32%; border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .75), rgba(255, 255, 255, .1)); pointer-events: none;
+.fl::before { /* reflejo superior: delgado, tenue y siempre detrás del texto */
+  content: ""; position: absolute; z-index: -1; left: 16%; right: 16%; top: 3px; height: 26%; max-height: 14px; border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, 0)); pointer-events: none;
 }
 .fl > * { position: relative; }
 .fl:active, .fl.is-press { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
@@ -74,9 +75,10 @@
 .fl-lg { min-height: 64px; font-size: 24px; padding: 12px 26px 14px; }
 .fl-sm { min-height: 44px; font-size: 16px; padding: 8px 16px 10px; box-shadow: 0 4px 0 var(--ink); }
 .fl-block { width: 100%; }
+.ec .fl { color: var(--ink-c); } /* ".ec button { color: inherit }" tapaba el color del texto del botón */
 .fl-coral, .fl-blue, .fl-water { text-shadow: 0 2px 0 rgba(27, 31, 59, .35); }
 .fl-round { width: 46px; height: 46px; min-height: 46px; padding: 0; box-shadow: 0 4px 0 var(--ink); }
-.fl-round::before { left: 20%; right: 20%; top: 4px; height: 36%; }
+.fl-round::before { left: 22%; right: 22%; top: 4px; height: 28%; }
 .fl svg { flex: none; }
 
 .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

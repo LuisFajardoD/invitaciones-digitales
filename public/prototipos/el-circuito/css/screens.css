@@ -72,4 +72,4 @@
 .debug-row { display: flex; flex-wrap: wrap; gap: 4px; }
 .debug button { min-height: 28px; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 8px; background: #fff; font: 700 11px var(--f-body); cursor: pointer; }
 .debug button.is-on { background: var(--yellow); }
-.debug-perf { margin-top: 6px; font-family: ui-monospace, Consolas, monospace; font-size: 11px; }
+.debug-perf { margin-top: 6px; font-family: ui-monospace, Consolas, monospace; font-size: 11px; white-space: pre-line; }
