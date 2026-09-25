@@ -1,6 +1,10 @@
 /* Misión Estrella — base: tokens, escenario tipo teléfono, tipografía y botones. Espacio de cuento (nada de negro). */
 .me {
-  --indigo: #1E1B4B; --violet: #3B2A7A; --pink: #FF8FA3; --peach: #FFC9A0; --teal: #6FD6E8; --gold: #FFD27A;
+  --indigo: #1E1B4B; --violet: #3B2A7A; --peach: #FFC9A0; --teal: #6FD6E8; --gold: #FFD27A;
+  /* tema de color (js/themes.js → applyThemeCss los reemplaza; aquí el de la demo, "azul-cohete"). --pink es el
+     color principal del tema (se conserva el nombre por compatibilidad: botones .btn-pink, etc.) */
+  --pink: #3D6BE0; --theme: #3D6BE0; --theme-rgb: 61, 107, 224; --on-theme: #FFFFFF; --theme-hi: #92ADEE; --theme-lo: #3558B6;
+  --theme-ink: #293676; --theme-2: #45C4D9; --theme-accent: #FF9A4D; --theme-gold: #F2C94C; --theme-gold-rgb: 242, 201, 76;
   --cream: #FFF7EC; --lav: #B9A2FF; --mint: #9BE5B4; --ink: #1E1B4B; --ink2: #4B4680;
   --card-bg: rgba(30, 27, 75, .74); --card-line: rgba(255, 247, 236, .2);
   --f-title: "Fredoka", "Figtree", system-ui, sans-serif;
@@ -35,10 +39,13 @@
 /* Escenario tipo teléfono */
 .stage { position: fixed; top: 0; left: 50%; z-index: 1; width: min(100vw, 430px); height: 100vh; height: 100dvh; transform: translateX(-50%); overflow: hidden; background: var(--indigo); isolation: isolate; }
 @media (min-width: 600px) {
-  .stage { top: 50%; height: min(100dvh - 40px, 900px); transform: translate(-50%, -50%); border-radius: 36px; box-shadow: 0 0 0 1.5px rgba(255, 247, 236, .18), 0 30px 90px rgba(10, 6, 40, .6), 0 0 120px rgba(255, 143, 163, .15); }
+  .stage { top: 50%; height: min(100dvh - 40px, 900px); transform: translate(-50%, -50%); border-radius: 36px; box-shadow: 0 0 0 1.5px rgba(255, 247, 236, .18), 0 30px 90px rgba(10, 6, 40, .6), 0 0 120px rgba(var(--theme-rgb), .15); }
 }
-.gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
-.poster { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; object-fit: cover; object-position: var(--focus, 50% 50%); transition: opacity .4s ease; pointer-events: none; }
+.gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; transition: opacity .8s ease-out; }
+/* la escena se dibuja en segundo plano (invisible) hasta estar 100 % lista; luego aparece desde el índigo oscuro */
+.gl.is-hidden { opacity: 0; }
+/* póster: sólo en la vitrina (?showcase=1), como fondo mientras carga; la escena lo reemplaza con un fundido */
+.poster { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; object-fit: cover; object-position: var(--focus, 50% 50%); transition: opacity .8s ease; pointer-events: none; }
 .poster.is-out { opacity: 0; }
 .fade { position: absolute; inset: 0; z-index: 4; background: var(--indigo); opacity: 0; pointer-events: none; }
 .ui { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
@@ -60,7 +67,7 @@
 .btn::before { content: ""; position: absolute; z-index: -1; left: 18%; right: 18%; top: 4px; height: 24%; max-height: 12px; border-radius: 999px; background: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)); pointer-events: none; }
 .btn:active { transform: translateY(2px) scale(.98); box-shadow: 0 2px 8px rgba(10, 6, 40, .3); }
 .btn svg { flex: none; }
-.btn-pink { --bg: var(--pink); --fg: var(--ink); }
+.btn-pink { --bg: var(--pink); --fg: var(--on-theme); }
 .btn-cream { --bg: var(--cream); --fg: var(--ink); }
 .btn-ghost { --bg: rgba(255, 247, 236, .08); --fg: var(--cream); box-shadow: inset 0 0 0 1.5px rgba(255, 247, 236, .4); }
 .btn-ghost::before { display: none; }

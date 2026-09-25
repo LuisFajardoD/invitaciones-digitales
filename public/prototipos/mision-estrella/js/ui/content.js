@@ -14,6 +14,41 @@ export function dateBlock() {
     h("div", h("p.date-day", { text: i.dateLong }), h("p.date-time", { html: `${icon("clock", { size: 18 })} <span>${i.startTime} – ${i.endTime}</span>` })));
 }
 
+/** Fecha y horario en una sola línea: "Sábado 14 de noviembre · 4:00 pm – 8:00 pm". */
+export function dateLine() {
+  const i = eventInfo();
+  const el = h("p.date-line", { html: `${icon("calendar", { size: 18 })}<span>${i.dateLong} · ${i.startTime} – ${i.endTime}</span>` });
+  // en una sola línea: la letra se ajusta al ancho de la tarjeta (19 px → mínimo 13 px) al mostrarse y al cambiar
+  // el tamaño de la ventana
+  const fit = () => {
+    if (!el.isConnected || !el.clientWidth) return;
+    let s = 19; el.style.fontSize = `${s}px`;
+    while (el.scrollWidth > el.clientWidth + 0.5 && s > 13) { s -= 0.5; el.style.fontSize = `${s}px`; }
+  };
+  requestAnimationFrame(function wait() { if (el.isConnected && el.clientWidth) fit(); else requestAnimationFrame(wait); });
+  addEventListener("resize", () => requestAnimationFrame(fit));
+  document.fonts?.ready.then(() => requestAnimationFrame(fit)); // con la fuente ya cargada (cambia el ancho)
+  return el;
+}
+
+/**
+ * Cuenta regresiva sólo para lectores de pantalla (oculta a la vista): la versión visual está en los satélites 3D.
+ * Se actualiza cada minuto (sin aria-live: no interrumpe; se lee al llegar a la tarjeta). Devuelve { el, stop }.
+ */
+export function countdownText() {
+  const el = h("p.sr-only");
+  function tick() {
+    const ev = eventInfo(), now = clock.now(), ph = eventPhase(now);
+    if (ph === "countdown" || (ph === "today" && now < ev.start)) {
+      const l = splitDuration(ev.start - now), u = (n, a, b) => `${n} ${n === 1 ? a : b}`;
+      el.textContent = `${ph === "today" ? "¡La misión es hoy! " : ""}Faltan ${u(l.d, "día", "días")}, ${u(l.h, "hora", "horas")} y ${u(l.m, "minuto", "minutos")} para la misión.`;
+    } else el.textContent = ph === "today" ? "¡La misión es hoy!" : "¡Gracias por venir a la misión!";
+  }
+  tick();
+  const t = setInterval(tick, 60000);
+  return { el, stop: () => clearInterval(t), tick };
+}
+
 /** Cuenta regresiva en vivo. Devuelve { el, stop }. */
 export function countdown({ compact = false } = {}) {
   const el = h(`div.cd-wrap${compact ? ".is-compact" : ""}`, { role: "timer", "aria-label": "Cuenta regresiva para la misión" });
@@ -33,9 +68,9 @@ export function countdown({ compact = false } = {}) {
   return { el, stop: () => clearInterval(t), tick };
 }
 
-export function calendarButtons(audio) {
+export function calendarButtons(audio, { note = true } = {}) {
   return h("div.cal-add",
-    h("p.muted", { text: "Agregar al calendario · te recordamos un día antes." }),
+    note ? h("p.muted", { text: "Agregar al calendario · te recordamos un día antes." }) : null,
     h("div.btn-row",
       h("button.btn.btn-cream.btn-sm", { type: "button", onclick: () => { audio?.tap(); downloadICS(); }, html: btnHtml("calendar", "iPhone / .ics") }),
       h("a.btn.btn-cream.btn-sm", { href: googleCalUrl(), target: "_blank", rel: "noopener", onclick: () => audio?.tap(), html: btnHtml("calendar", "Google Calendar") })));

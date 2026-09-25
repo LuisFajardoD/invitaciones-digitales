@@ -5,14 +5,16 @@ import { models } from "../models.js";
 import { createProceduralRocket } from "./rocket-procedural.js";
 import { loadGLB, adapt } from "./model-adapter.js";
 
-export function createRocket({ accentColor }) {
+export function createRocket() { // (colores: tema en vivo, ver materials.js → THEME3D)
   const holder = new THREE.Group(); holder.name = "rocket-holder";
-  const proc = createProceduralRocket({ accentColor });
+  const proc = createProceduralRocket();
   holder.add(proc.root);
   const api = {
     root: holder, kind: "procedural",
     slots: proc.slots, boosters: proc.boosters,
     windowWorld: (o) => proc.windowWorld(o), setHatch: (k) => proc.setHatch(k), setInterior: (v) => proc.setInterior(v),
+    hatchWorld: (c, n) => proc.hatchWorld(c, n),
+    update: (t) => proc.update(t),
     cabinVisible: true
   };
   const cfg = models.rocket;
@@ -44,13 +46,16 @@ export function createRocket({ accentColor }) {
       }));
       if (slots.length >= 6) api.slots.splice(0, api.slots.length, ...slots);
       api.cabinVisible = false;
-      api.setHatch = () => {}; api.setInterior = () => {};
+      api.setHatch = () => {}; api.setInterior = () => {}; api.update = () => {};
       // ventana: pieza "window"/"hatch" del GLB (si no, la parte frontal superior)
       let win = null; m.root.traverse((o) => { if (!win && o.isMesh && /window|hatch|ventana|cockpit/i.test(o.name)) win = o; });
       const wb = new THREE.Box3().setFromObject(win || m.root);
       const wp = win ? wb.getCenter(new THREE.Vector3()) : new THREE.Vector3(0, wb.min.y + (wb.max.y - wb.min.y) * 0.72, wb.max.z);
       const wLocal = holder.worldToLocal(wp.clone());
       api.windowWorld = (o = new THREE.Vector3()) => holder.localToWorld(o.copy(wLocal));
+      // escotilla del GLB: centro de la ventana, normal +Z del cohete, radio según el tamaño de la pieza
+      const wr = Math.max(0.3, Math.min(wb.max.x - wb.min.x, wb.max.y - wb.min.y) / 2);
+      api.hatchWorld = (c = new THREE.Vector3(), n = new THREE.Vector3()) => { api.windowWorld(c); n.set(0, 0, 1).transformDirection(holder.matrixWorld); return wr; };
       api.onSwap?.();
     }).catch((e) => console.warn("[modelos] cohete:", e.message));
   }

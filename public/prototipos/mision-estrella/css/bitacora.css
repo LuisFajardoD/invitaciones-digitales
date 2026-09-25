@@ -9,7 +9,7 @@
 .log-head { position: relative; z-index: 2; flex: none; padding: 16px 0 0; background: #fff; transition: box-shadow .2s; }
 .log-head.is-scrolled { box-shadow: 0 6px 14px -4px rgba(30, 27, 75, .22); }
 .log-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 0 12px 0 18px; }
-.log-head .kicker { color: #B0306A; }
+.log-head .kicker { color: var(--theme-ink); }
 .log-title { margin: 2px 0 0; font: 600 23px/1.1 var(--f-title); }
 .log-close { flex: none; background: var(--soft-bg); color: var(--ink); box-shadow: none; }
 .log-chips { display: flex; gap: 8px; margin-top: 10px; padding: 2px 14px 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
@@ -37,7 +37,7 @@
 .log .cd-n { color: var(--violet); }
 .log .date-tile { box-shadow: 0 0 0 1.5px rgba(30, 27, 75, .12); }
 .log .plan li { padding: 6px 0; }
-.log .plan-time { color: #B0306A; }
+.log .plan-time { color: var(--theme-ink); }
 .log .plan-dot { background: var(--pink); box-shadow: none; }
 .log .btn-cream { --bg: var(--soft-bg); }
 .log .btn { box-shadow: 0 3px 10px rgba(59, 42, 122, .16), inset 0 -3px 0 rgba(30, 27, 75, .1); }

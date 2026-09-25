@@ -15,8 +15,9 @@ const PROTO = path.resolve(HERE, ".."), PUB = path.resolve(PROTO, "..", ".."), R
 const require = createRequire(path.join(ROOT, "package.json"));
 const { chromium } = require("playwright");
 
-// [nombre, ancho CSS, alto CSS, escala, modo]: vertical = invitación normal; 16x9 = vitrina (?showcase=1)
-const VARIANTS = [["9x19.5", 390, 845, 2, ""], ["9x16", 360, 640, 2, ""], ["3x4", 430, 573, 2, ""], ["16x9", 1280, 720, 1, "&showcase=1"]];
+// [nombre, ancho CSS, alto CSS, escala, modo]: el póster sólo se usa en la vitrina (?showcase=1, sin textos), así que
+// todas las variantes se capturan con el encuadre de la vitrina
+const VARIANTS = [["9x19.5", 390, 845, 2, "&showcase=1"], ["9x16", 360, 640, 2, "&showcase=1"], ["3x4", 430, 573, 2, "&showcase=1"], ["16x9", 1280, 720, 1, "&showcase=1"]];
 const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".glb": "model/gltf-binary", ".json": "application/json" };
 const srv = http.createServer((req, res) => {
   const p = path.join(PUB, decodeURIComponent(req.url.split("?")[0]));
@@ -32,7 +33,7 @@ async function open(w, h, extra) {
   page.on("pageerror", (e) => console.log("  error en la página:", e.message));
   await page.goto(base + extra);
   await page.waitForFunction(() => window.__ready && window.__exportPoster && window.__film?.astro.kind !== "procedural", null, { timeout: 60000 });
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(1600); // (la entrada acerca la cámara ~1.2 s: capturar ya en el encuadre final)
   return page;
 }
 const list = [];

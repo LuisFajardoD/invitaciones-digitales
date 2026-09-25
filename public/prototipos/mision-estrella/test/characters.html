@@ -24,6 +24,7 @@
     import { patchCanvas } from "../js/ui/patch.js";
     import { demoData, visorPhotos } from "../js/data.js";
     import { loadPhoto } from "../js/util.js";
+    import { themeOf } from "../js/themes.js";
     const p = new URLSearchParams(location.search);
     const R = createRenderer(document.getElementById("c"), { stage: document.body, level: p.get("q") || "high" });
     const neb = renderNebula(R.renderer); ENV.envMap.value = neb;
@@ -33,7 +34,7 @@
     const ph = visorPhotos();
     Promise.all([loadPhoto("../" + ph.sleeping), loadPhoto("../" + ph.awake)]).then(([s, a]) => astro.setVisorPhotos(visorTexture(s), visorTexture(a)));
     await document.fonts.load("600 20px Fredoka").catch(() => {});
-    const pt = new THREE.CanvasTexture(patchCanvas(256, { color: demoData.child.accentColor, symbol: "star", top: demoData.child.name, bottom: "Misión" })); pt.colorSpace = THREE.SRGBColorSpace;
+    const pt = new THREE.CanvasTexture(patchCanvas(256, { color: themeOf(demoData.child).primary, symbol: "star", top: demoData.child.name, bottom: "Misión" })); pt.colorSpace = THREE.SRGBColorSpace;
     astro.setPatchTexture(pt);
     const pose = p.get("pose") || "wave"; astro.snapPose(pose);
     const gl = createGloobi({ size: 0.16 }); R.scene.add(gl.root);

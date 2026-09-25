@@ -5,15 +5,15 @@
 // denso junto a la tobera y en la base; nubes de humo grandes que se esparcen por el piso). Nubes del ascenso con
 // volumen, bordes suaves y luz del amanecer. Llama estilizada. La secuencia por tiempo vive en timeline.js.
 import * as THREE from "three";
-import { vinyl, halo, pbr, canvasTex, litCloudTexture, rng } from "./materials.js";
+import { vinyl, halo, pbr, canvasTex, litCloudTexture, rng, THEME3D, onTheme, themed } from "./materials.js";
 import { createSprites } from "./particles.js";
 
 export const PAD_Y = -260; // altura del suelo
 export const CLOUD_Y = -195;
 
-/** Cubierta de la plataforma: concreto crema con franjas de seguridad rosa/crema en el borde y juntas. */
+/** Cubierta de la plataforma: concreto crema con franjas de seguridad (acento del tema)/crema en el borde y juntas. */
 function padTexture() {
-  return canvasTex(512, 512, (c, w) => {
+  const paint = (c, w) => {
     const r = rng(4), cx = w / 2;
     c.fillStyle = "#EDE6F4"; c.fillRect(0, 0, w, w);
     for (let i = 0; i < 2600; i++) { const v = 215 + r() * 30; c.fillStyle = `rgba(${v},${v - 6},${v + 6},.5)`; c.fillRect(r() * w, r() * w, 2, 2); }
@@ -21,7 +21,7 @@ function padTexture() {
     const R0 = w * 0.42, R1 = w * 0.5;
     for (let k = 0; k < 36; k++) {
       const a0 = (k / 36) * Math.PI * 2, a1 = ((k + 0.5) / 36) * Math.PI * 2;
-      c.fillStyle = "#FF8FA3"; c.beginPath(); c.arc(cx, cx, R1, a0, a1); c.arc(cx, cx, R0, a1, a0, true); c.closePath(); c.fill();
+      c.fillStyle = THEME3D.hex.accent; c.beginPath(); c.arc(cx, cx, R1, a0, a1); c.arc(cx, cx, R0, a1, a0, true); c.closePath(); c.fill();
     }
     // juntas y marcas
     c.strokeStyle = "rgba(90,80,140,.25)"; c.lineWidth = 3;
@@ -30,33 +30,106 @@ function padTexture() {
     // hollín suave alrededor del foso
     const g = c.createRadialGradient(cx, cx, w * 0.08, cx, cx, w * 0.3); g.addColorStop(0, "rgba(70,55,100,.45)"); g.addColorStop(1, "rgba(70,55,100,0)");
     c.fillStyle = g; c.fillRect(0, 0, w, w);
-  });
+  };
+  const tex = canvasTex(512, 512, paint);
+  onTheme(() => { paint(tex.image.getContext("2d"), 512); tex.needsUpdate = true; });
+  return tex;
 }
 
 export function createLaunchSet({ particles = 1, low = false } = {}) {
   const group = new THREE.Group(); group.name = "launch";
   const base = new THREE.Group(); base.name = "launch-base"; group.add(base); // todo lo que está a nivel del suelo
-  // suelo: disco con degradado pradera → horizonte durazno
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(420, 64), new THREE.ShaderMaterial({
-    uniforms: { a: { value: new THREE.Color("#9FD9B0") }, b: { value: new THREE.Color("#F4C2B0") }, c: { value: new THREE.Color("#B9A2FF") } },
+  // suelo: pasto estilizado (variación de tono con ruido, franjas de corte suaves), anillo de grava alrededor de la
+  // plataforma, camino de tierra hacia la cámara, manchas de tierra, y a lo lejos se funde con el horizonte del amanecer
+  const PATH = new THREE.Vector2(0.46, 0.89); // dirección del camino (mundo x, z): hacia la cámara del despegue
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(420, 96), new THREE.ShaderMaterial({
+    uniforms: {
+      grassA: { value: new THREE.Color("#8FD39B") }, grassB: { value: new THREE.Color("#62B98A") }, grassWarm: { value: new THREE.Color("#C9E39A") },
+      dirt: { value: new THREE.Color("#E6C7A0") }, gravel: { value: new THREE.Color("#DCD3E6") }, far: { value: new THREE.Color("#F2C7B8") }, far2: { value: new THREE.Color("#C3B1EA") },
+      pathDir: { value: new THREE.Vector2(PATH.x, -PATH.y) } // (en coordenadas del disco: y local = −z del mundo)
+    },
     vertexShader: "varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-    fragmentShader: "uniform vec3 a,b,c; varying vec2 vP; void main(){ float d = length(vP) / 420.0; vec3 col = mix(a, b, smoothstep(0.05, 0.55, d)); col = mix(col, c, smoothstep(0.55, 1.0, d)); float stripes = 0.03 * sin(vP.x * 0.4) * sin(vP.y * 0.4); gl_FragColor = vec4(col + stripes, 1.0);\n#include <colorspace_fragment>\n}"
+    fragmentShader: /* glsl */`
+      uniform vec3 grassA, grassB, grassWarm, dirt, gravel, far, far2; uniform vec2 pathDir; varying vec2 vP;
+      float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float n(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+      float fbm(vec2 p) { return n(p) * 0.55 + n(p * 2.1) * 0.28 + n(p * 4.3) * 0.17; }
+      void main() {
+        float r = length(vP), d = r / 420.0;
+        // pasto: dos verdes + zonas cálidas iluminadas por el amanecer + franjas de corte muy suaves
+        float g = fbm(vP * 0.16), w = smoothstep(0.55, 0.85, fbm(vP * 0.05 + 7.0));
+        vec3 col = mix(grassB, grassA, g); col = mix(col, grassWarm, w * 0.45);
+        col *= 0.96 + 0.05 * sin(dot(vP, vec2(0.7, 0.7)) * 1.6 + g * 3.0);
+        col *= 0.93 + 0.14 * n(vP * 3.1); // briznas
+        // manchas de tierra
+        float patchD = smoothstep(0.72, 0.8, fbm(vP * 0.11 + 3.0)) * smoothstep(8.0, 12.0, r);
+        col = mix(col, dirt, patchD * 0.8);
+        // camino de tierra de la plataforma hacia la cámara (bordes irregulares)
+        float along = dot(vP, pathDir), side = abs(vP.x * pathDir.y - vP.y * pathDir.x);
+        float edge = 0.75 + 0.18 * fbm(vP * 1.3);
+        float path = step(2.4, along) * (1.0 - smoothstep(edge - 0.12, edge + 0.12, side)) * (1.0 - smoothstep(40.0, 70.0, along));
+        col = mix(col, dirt * (0.95 + 0.1 * n(vP * 4.0)), path);
+        // grava alrededor de la plataforma
+        float ring = smoothstep(2.5, 2.65, r) * (1.0 - smoothstep(3.35, 3.6 + 0.2 * fbm(vP * 2.0), r));
+        col = mix(col, gravel * (0.92 + 0.12 * n(vP * 9.0)), ring);
+        // perspectiva atmosférica: se aclara hacia el durazno y la lavanda del horizonte
+        col = mix(col, far, smoothstep(0.03, 0.42, d) * 0.8);
+        col = mix(col, far2, smoothstep(0.45, 1.0, d));
+        gl_FragColor = vec4(col, 1.0);
+        #include <colorspace_fragment>
+      }`
   }));
   ground.rotation.x = -Math.PI / 2; ground.position.y = PAD_Y;
   base.add(ground);
-  // colinas suaves al fondo
-  const hillMat = vinyl("#B7A6E6", { rim: 0.4 });
-  for (let i = 0; i < 9; i++) {
-    const a = (i / 9) * Math.PI * 2, r = 150 + (i % 3) * 40;
-    const hill = new THREE.Mesh(new THREE.SphereGeometry(40 + (i % 4) * 12, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), hillMat);
-    hill.scale.y = 0.45; hill.position.set(Math.cos(a) * r, PAD_Y, Math.sin(a) * r - 40);
-    base.add(hill);
+  // colinas suaves en dos filas, con profundidad atmosférica (las lejanas más claras y lavanda) y luz del amanecer
+  const hillGeo = new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2);
+  const hr = rng(31);
+  for (const [n, r0, r1, col, rim] of [[10, 70, 110, "#9ACC9F", 0.45], [12, 150, 230, "#C6B6E8", 0.35], [9, 260, 330, "#E3C4D6", 0.25]]) {
+    const mat = vinyl(col, { rim, emissive: new THREE.Color(col).multiplyScalar(0.18) });
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + hr() * 0.4, r = r0 + hr() * (r1 - r0), s = 24 + hr() * 30 + r * 0.08;
+      if (Math.abs(Math.atan2(Math.sin(a) - PATH.y, Math.cos(a) - PATH.x)) < 0.3 && r < 120) continue; // el camino queda despejado
+      const hill = new THREE.Mesh(hillGeo, mat); hill.scale.set(s * (1.2 + hr() * 0.6), s * (0.28 + hr() * 0.14), s);
+      hill.position.set(Math.cos(a) * r, PAD_Y - 0.5, Math.sin(a) * r); hill.rotation.y = hr() * Math.PI;
+      base.add(hill);
+    }
   }
+  // detalles: luces de pista a los lados del camino, conos (acento del tema), vallas bajas y arbustos redondeados
+  const dr = rng(47), inst = (geo, mat, list) => { const m = new THREE.InstancedMesh(geo, mat, list.length); list.forEach((mm, i) => m.setMatrixAt(i, mm)); base.add(m); return m; };
+  const at = (x, y, z, sx = 1, sy = sx, sz = sx, ry = 0) => new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry), new THREE.Vector3(sx, sy, sz));
+  const perp = new THREE.Vector2(-PATH.y, PATH.x), lightsM = [], conesM = [], postsM = [], railsM = [], bushM = [], bushC = [];
+  for (let k = 0; k < 9; k++) for (const s of [-1, 1]) { const t = 4 + k * 1.6, w = 1.05; lightsM.push(at(PATH.x * t + perp.x * w * s, PAD_Y + 0.06, PATH.y * t + perp.y * w * s)); }
+  for (const [t, s] of [[3.3, -1], [3.3, 1], [2.9, -1.6], [2.9, 1.6]]) conesM.push(at(PATH.x * t + perp.x * 1.05 * s, PAD_Y + 0.16, PATH.y * t + perp.y * 1.05 * s));
+  const FR = 5.4, pathA = Math.atan2(PATH.y, PATH.x);
+  for (let k = 0; k < 44; k++) {
+    const a = (k / 44) * Math.PI * 2; if (Math.abs(Math.atan2(Math.sin(a - pathA), Math.cos(a - pathA))) < 0.28) continue; // puerta del camino
+    const x = Math.cos(a) * FR, z = Math.sin(a) * FR; postsM.push(at(x, PAD_Y + 0.18, z));
+    const a2 = ((k + 1) / 44) * Math.PI * 2; if (Math.abs(Math.atan2(Math.sin(a2 - pathA), Math.cos(a2 - pathA))) < 0.28) continue;
+    const mx = (x + Math.cos(a2) * FR) / 2, mz = (z + Math.sin(a2) * FR) / 2, len = FR * 2 * Math.sin(Math.PI / 44);
+    for (const y of [0.14, 0.28]) railsM.push(at(mx, PAD_Y + y, mz, len, 1, 1, -(a + a2) / 2 + Math.PI / 2));
+  }
+  const greens = ["#6DBE7E", "#86CF8E", "#5BAE78", "#9BD68F"];
+  for (let k = 0; k < 70; k++) {
+    const a = dr() * Math.PI * 2, r = 6.5 + Math.pow(dr(), 0.7) * 32;
+    if (Math.abs(Math.atan2(Math.sin(a - pathA), Math.cos(a - pathA))) < 0.22 || (r < 7.5 && dr() < 0.5)) continue;
+    const s = 0.35 + dr() * 0.55, x = Math.cos(a) * r, z = Math.sin(a) * r;
+    for (let j = 0; j < 3; j++) { const ss = s * (0.65 + dr() * 0.45); bushM.push(at(x + (dr() - 0.5) * s * 1.4, PAD_Y + ss * 0.45, z + (dr() - 0.5) * s * 1.4, ss, ss * 0.85, ss)); bushC.push(greens[Math.floor(dr() * greens.length)]); }
+  }
+  inst(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshBasicMaterial({ color: "#FFE6A8", toneMapped: false }), lightsM);
+  const coneMat = themed(pbr("#FF9A4D", { rough: 0.45, env: 0.5 }), "accent"); // conos de seguridad: acento del tema
+  inst(new THREE.ConeGeometry(0.11, 0.32, 14), coneMat, conesM);
+  const fenceMat = pbr("#EEF1F8", { rough: 0.5, metal: 0.15, env: 0.6 });
+  inst(new THREE.BoxGeometry(0.06, 0.36, 0.06), fenceMat, postsM);
+  inst(new THREE.BoxGeometry(1, 0.035, 0.035), fenceMat, railsM);
+  const bushes = inst(new THREE.IcosahedronGeometry(1, 2), vinyl("#ffffff", { rim: 0.5 }), bushM);
+  bushC.forEach((c, i) => bushes.setColorAt(i, new THREE.Color(c)));
   // --- plataforma: cubierta con franjas, foso de llama y deflector
   const steel = pbr("#B3ACD6", { rough: 0.38, metal: 0.6, env: 1, rim: 0.4 });
   const white = pbr("#FFF7EC", { rough: 0.45, metal: 0.05, env: 0.6 });
   const dark = pbr("#4A4278", { rough: 0.6, metal: 0.3 });
-  const gold = pbr("#FFC96B", { rough: 0.3, metal: 0.7, emissive: "#6a4a10", ei: 0.12, env: 1, rim: 0.4 });
+  const gold = themed(pbr("#FFC96B", { rough: 0.3, metal: 0.7, emissive: "#6a4a10", ei: 0.12, env: 1, rim: 0.4 }), "gold");
+  const stripeMat = themed(pbr("#FF9A4D", { rough: 0.4, env: 0.6 }), "accent"); // detalles de seguridad: acento del tema
   const deck = pbr("#ffffff", { rough: 0.7, map: padTexture(), env: 0.35 });
   const padGeo = new THREE.CylinderGeometry(2.3, 2.6, 0.5, low ? 32 : 64);
   const pad = new THREE.Mesh(padGeo, [white, deck, dark]); pad.position.y = PAD_Y + 0.25; base.add(pad);
@@ -64,7 +137,10 @@ export function createLaunchSet({ particles = 1, low = false } = {}) {
   const trench = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.04, 32), dark); trench.position.y = PAD_Y + 0.51; base.add(trench);
   const deflector = new THREE.Mesh(new THREE.ConeGeometry(0.55, 0.35, 4), steel); deflector.position.y = PAD_Y + 0.62; deflector.rotation.y = Math.PI / 4; base.add(deflector);
   // --- torre de servicio: 4 patas + travesaños y diagonales instanciados, plataformas, pararrayos
-  const tower = new THREE.Group(); tower.position.set(-2.9, PAD_Y, -0.6); base.add(tower);
+  // (al frente a la izquierda: la pasarela baja pasa por delante de la escotilla, que mira a +Z, a la altura de su
+  // borde inferior; así el astronauta camina por ella, da un saltito y entra. Va por delante del borde de la tapa
+  // abierta —que se abre hacia la izquierda y afuera, hasta z ≈ 2.36— y lejos de las aletas)
+  const tower = new THREE.Group(); tower.position.set(-2.05, PAD_Y, 2.6); base.add(tower);
   const TH = 6.4, hw = 0.42, strut = new THREE.BoxGeometry(0.07, 1, 0.07), bars = [];
   const M = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), d = new THREE.Vector3(), mid = new THREE.Vector3();
   const bar = (a, b) => { d.subVectors(b, a); const len = d.length(); q.setFromUnitVectors(Y, d.normalize()); bars.push(M.compose(mid.addVectors(a, b).multiplyScalar(0.5), q, new THREE.Vector3(1, len, 1)).clone()); };
@@ -75,13 +151,15 @@ export function createLaunchSet({ particles = 1, low = false } = {}) {
     const y0 = (k / levels) * TH, y1 = ((k + 1) / levels) * TH;
     for (let s = 0; s < 4; s++) { const [x0, z0] = C[s], [x1, z1] = C[(s + 1) % 4]; bar(V3(x0, y1, z0), V3(x1, y1, z1)); bar(V3(x0, k % 2 ? y0 : y1, z0), V3(x1, k % 2 ? y1 : y0, z1)); }
   }
-  const lattice = new THREE.InstancedMesh(strut, pbr("#FF9DAF", { rough: 0.45, metal: 0.35, env: 0.8, rim: 0.4 }), bars.length);
+  // estructura de metal blanco / gris azulado (no depende del tema: sin tonos rosados)
+  const lattice = new THREE.InstancedMesh(strut, pbr("#D3DAEA", { rough: 0.4, metal: 0.45, env: 0.9, rim: 0.4 }), bars.length);
   bars.forEach((m, i) => lattice.setMatrixAt(i, m)); tower.add(lattice);
   const platGeo = new THREE.BoxGeometry(1.2, 0.07, 1.2);
   for (const y of [1.6, 3.0, 4.4, TH]) { const pl = new THREE.Mesh(platGeo, steel); pl.position.y = y; tower.add(pl); }
   const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.035, 1.3, 6), steel); rod.position.y = TH + 0.65; tower.add(rod);
-  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), new THREE.MeshBasicMaterial({ color: "#FF6F86", toneMapped: false })); beacon.position.y = TH + 1.32; tower.add(beacon);
-  const beaconGlow = halo("#FF8FA3", 1.6, 0.8); beaconGlow.position.y = TH + 1.32; tower.add(beaconGlow);
+  // baliza (luz de la torre): acento del tema
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), themed(new THREE.MeshBasicMaterial({ color: "#FF9A4D", toneMapped: false }), "accent")); beacon.position.y = TH + 1.32; tower.add(beacon);
+  const beaconGlow = halo("#FF9A4D", 1.6, 0.8); themed(beaconGlow.material, "accent"); beaconGlow.position.y = TH + 1.32; tower.add(beaconGlow);
   // reflectores cálidos apuntando al cohete
   const floods = [];
   for (const y of [1.7, 4.5]) {
@@ -96,7 +174,7 @@ export function createLaunchSet({ particles = 1, low = false } = {}) {
     const hinge = new THREE.Group(); hinge.position.set(hw, y, 0.25); tower.add(hinge);
     const beam = new THREE.Mesh(new THREE.BoxGeometry(len, 0.14, 0.34), white); beam.position.x = len / 2; hinge.add(beam);
     for (const z of [-0.16, 0.16]) { const rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.025, 0.025), steel); rail.position.set(len / 2, 0.24, z); hinge.add(rail); }
-    const stripe = new THREE.Mesh(new THREE.BoxGeometry(len * 0.98, 0.04, 0.35), pbr("#FF8FA3", { rough: 0.4, env: 0.6 })); stripe.position.set(len / 2, -0.07, 0); hinge.add(stripe);
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(len * 0.98, 0.04, 0.35), stripeMat); stripe.position.set(len / 2, -0.07, 0); hinge.add(stripe);
     if (cab) { const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.42, 0.42), white); cabin.position.set(len - 0.1, 0.25, 0); hinge.add(cabin); const w = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({ color: "#FFE3B0", toneMapped: false })); w.position.set(len - 0.1, 0.3, 0.215); hinge.add(w); }
     arms.push(hinge);
   }
@@ -154,6 +232,8 @@ export function createLaunchSet({ particles = 1, low = false } = {}) {
   return {
     group, base, flame, ground, clouds,
     padTop: new THREE.Vector3(0, PAD_Y + 0.5, 0),
+    // pasarela de abordaje (brazo bajo de la torre): de la torre a la punta, sobre la cubierta (mundo)
+    walkway: { from: tower.position.clone().add(new THREE.Vector3(hw + 0.2, 2.35 + 0.09, 0.25)), to: tower.position.clone().add(new THREE.Vector3(hw + 1.35 - 0.12, 2.35 + 0.09, 0.25)) },
     /** Emite humo en `origin` (mundo) con intensidad 0–1; en el piso se esparce más denso. */
     emit(origin, rate, dt, { spread = 1, down = 1 } = {}) {
       const onGround = origin.y < PAD_Y + 3;

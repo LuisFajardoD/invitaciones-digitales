@@ -119,8 +119,11 @@ export function createGloobi({ size = 0.18 } = {}) {
   const st = {
     mode: "sleep", expr: "sleep", laughT: -1, spinT: -1, pointDir: 0, blinkAt: 3 + Math.random() * 3, blinkT: -1,
     look: null, lookV: new THREE.Vector3(), lookQ: new THREE.Quaternion(), vel: new THREE.Vector3(), prev: new THREE.Vector3(), target: null, hasPrev: false,
-    wowT: -1, faceLocked: null
+    wowT: -1, faceLocked: null,
+    hist: [], lookDir: new THREE.Vector3(0, 0, 1), lookVel: new THREE.Vector3(), lookInit: false
   };
+  // imitación de la mirada: retraso (s) y resorte (rigidez, amortiguación → ζ ≈ 0.45: un rebote leve)
+  const LOOK_DELAY = 0.22, LOOK_K = 110, LOOK_C = 9.5;
   const tmpM = new THREE.Matrix4(), tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
   const eyeLook = new THREE.Vector3(0, 0, 1), eyeN = new THREE.Vector3(), eyeTo = new THREE.Vector3();
   const setFace = (k) => { if (faceMat.map !== faces[k]) { faceMat.map = faces[k]; faceMat.needsUpdate = true; } st.expr = k; };
@@ -133,6 +136,8 @@ export function createGloobi({ size = 0.18 } = {}) {
     laugh() { st.laughT = 0; },
     spin() { st.spinT = 0; },
     wow(ms = 1200) { st.wowT = ms / 1000; },
+    /** Gesto tierno al voltear hacia la cámara: un parpadeo (ahora mismo, sin esperar al parpadeo automático). */
+    blink() { if (st.mode !== "sleep" && st.laughT < 0 && !st.faceLocked && st.wowT <= 0) st.blinkAt = 0; },
     /** -1 = abajo, 0 = nada. */
     point(dir) { st.pointDir = dir; },
     /** Punto del mundo al que mira (null = a la cámara). */
@@ -168,12 +173,19 @@ export function createGloobi({ size = 0.18 } = {}) {
       // giro de felicidad
       let spinY = 0;
       if (st.spinT >= 0) { st.spinT += dt; const k = Math.min(1, st.spinT / 1.4); spinY = (1 - Math.pow(1 - k, 3)) * Math.PI * 4; wobble.position.y += Math.sin(k * Math.PI) * r * 1.4; if (k >= 1) st.spinT = -1; }
-      // mirar (a la cámara o a un punto), con giro limitado y suavizado
+      // mirar (a la cámara o a un punto) imitando al astronauta: la dirección deseada llega con un retraso de ~0.22 s
+      // y la sigue un resorte poco amortiguado (un leve rebote al terminar de voltear)
       const lookPt = st.look || camera?.position;
       if (lookPt) {
-        tmpM.lookAt(lookPt, root.position, up); // +Z hacia el objetivo
-        tmpQ.setFromRotationMatrix(tmpM);
-        st.lookQ.slerp(tmpQ, 1 - Math.exp(-4 * dt));
+        st.hist.push({ t, d: tmpV.subVectors(lookPt, root.position).normalize().clone() });
+        while (st.hist.length > 2 && st.hist[1].t <= t - LOOK_DELAY) st.hist.shift();
+        const want = st.hist[0].d;
+        if (!st.lookInit) { st.lookDir.copy(want); st.lookInit = true; }
+        const h = Math.min(dt, 1 / 30); // resorte estable aun con cuadros lentos
+        st.lookVel.addScaledVector(tmpV.subVectors(want, st.lookDir), LOOK_K * h).multiplyScalar(Math.max(0, 1 - LOOK_C * h));
+        st.lookDir.addScaledVector(st.lookVel, h).normalize();
+        tmpM.lookAt(tmpV.copy(root.position).add(st.lookDir), root.position, up); // +Z hacia el objetivo
+        st.lookQ.setFromRotationMatrix(tmpM);
       }
       root.quaternion.copy(st.lookQ);
       wobble.rotation.set(sleeping ? 0.25 : Math.sin(t * 1.3) * 0.06, spinY, sleeping ? 0.18 : Math.sin(t * 0.9) * 0.08);

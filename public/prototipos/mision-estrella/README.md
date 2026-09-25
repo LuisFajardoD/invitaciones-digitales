@@ -29,7 +29,8 @@ maneja el editor). Plantillas en textos: `{name}`, `{age}`, `{missionName}`.
 | `child.name`, `child.age` | Título, insignia, constelación (cap. 3), tarjetas, parches, WhatsApp |
 | `child.visorPhotoSleeping` | Foto del niño **dormido** (ojos cerrados) en el visor: portada 3D (acurrucado en la luna con Gloobi), `?showcase=1`, póster/OG y portada de la versión ilustrada |
 | `child.visorPhotoAwake` | Foto del niño **despierto** (ojos abiertos, sonriendo): al mantener presionado el botón de despegue (fundido cruzado de 0.35 s con destello, al mismo tiempo que Gloobi abre los ojos; si se suelta antes, regresa a dormido) y en todo el resto (despegue, caminata, constelación, recorrido, tripulación, final, versión ilustrada, panel) |
-| `child.suitColor`, `child.accentColor` | Traje del astronauta; parche, detalles del traje y cohete |
+| `child.suitColor` | Traje del astronauta |
+| `child.colorTheme` | Tema de color (el editor lo ofrece como opción): `"azul-cohete"` (demo), `"turquesa"`, `"naranja"`, `"verde"`, `"morado"`, `"rosa"`. Ver abajo |
 | `missionName` | "Misión {name}" si es `null`; parches y mensaje de WhatsApp |
 | `tagline` | Tarjeta de la caminata espacial (cap. 2) |
 | `event.*` | Fecha en la Luna y cuenta regresiva (cap. 4), .ics y Google Calendar, lugar y mapa (cap. 5), Bitácora |
@@ -42,6 +43,15 @@ maneja el editor). Plantillas en textos: `{name}`, `{age}`, `{missionName}`.
 | `hosts` | .ics / Google Calendar |
 | `rsvp.*` | Formulario de tripulación, mural (`mockGuests`), mensajes de WhatsApp, `deadlineText` |
 | `sound.enabledByDefault` | Sonido inicial (luego se recuerda la elección) |
+
+Tema de color (`js/themes.js`, sirve igual para niños y niñas): cada preset trae `primary`, `secondary`, `accent`,
+`gold`, `body` y `onPrimary` (texto sobre el primario, con buen contraste). Tiñe el cohete (punta, aletas, franja baja y
+emblema con la edad = primario; franja alta y marco del mural = secundario; filetes y remates = dorado), la torre y la
+plataforma del despegue (estructura de metal blanco/gris azulado; franjas de seguridad, conos y baliza = acento), el
+parche del niño, la luz de borde de la escena y los reflejos de estudio, y la interfaz (botón "Mantén presionado",
+insignia, guía de capítulos, botones `.btn-pink`, textos de la Bitácora: variables CSS `--pink`/`--theme-*`).
+NO cambian: los parches de los invitados, Gloobi y la nebulosa. En `?debug=1` hay un selector para cambiarlo en vivo
+(`film.setTheme(key)`). El panel RSVP (`panel-rsvp/themes/mision-estrella.js`) usa el mismo `colorTheme`.
 
 Fotos del visor (el editor pedirá dos: dormido y despierto): cuadradas, cara centrada ocupando casi todo el alto,
 fondo oscuro, ≤ 512 px. Formato `.avif` con una copia `.webp` al lado (mismo nombre) que se usa si el navegador no
@@ -65,7 +75,7 @@ ruido 3D).
 | Recurso | Archivo | Qué tiene |
 |---|---|---|
 | Portada | `timeline.js`, `moon.js` | Encuadre automático (caja real del grupo luna + astronauta + Gloobi: ~85 % del ancho entre título y botón, se recalcula al cambiar tamaño o modelo), deriva que oscila alrededor del centro |
-| Despegue | `launch.js` | Plataforma con franjas y deflector, torre de vigas con reflectores y brazos que se retiran, humo en dos capas con volumen iluminado, nubes con luz de amanecer |
+| Despegue | `launch.js` | Suelo de pasto estilizado (variación de tono, camino de tierra, grava, manchas) con luces de pista, conos, vallas bajas, arbustos y colinas con profundidad atmosférica; plataforma con franjas y deflector, torre de vigas con reflectores y brazos que se retiran (el astronauta camina por la pasarela baja, da un saltito y entra por la escotilla, que se cierra antes del conteo), humo en dos capas con volumen iluminado, nubes con luz de amanecer |
 | Tierra | `earth.js` | Océanos con reflejo del sol, continentes estilizados, nubes en capa aparte con sombra, atmósfera fresnel turquesa |
 | Caminata | `rocket-procedural.js`, `timeline.js` | Escotilla con aro, cierre y bisagra; cabina con tablero; abertura real en el casco; cordón con franja en espiral y conectores |
 | Constelación / plan de vuelo | `constellation.js`, `flightplan.js` | Líneas de luz con grosor variable, núcleo brillante, halo, brillo que recorre el trazo y destellos de 4 puntas |
@@ -136,7 +146,7 @@ export const models = {
 | Visor (foto) | `visor`, `faceplate`, `face_plate` | Su material se reemplaza por la foto del niño (CanvasTexture circular). Si no existe, se crea un casquete curvo dentro del casco (`helmet`/`casco`/`head`, o el 45 % superior). |
 | Vidrio del casco | `helmet_glass`, `glass`, `cristal`, `vidrio` | Vidrio con fresnel, reflejo de la nebulosa y brillo especular (sin transmisión física). |
 | Traje | `suit`, `body`, `traje` | Se tiñe con `suitColor`. |
-| Parche | `patch`, `parche`, `badge`, `emblem` | Se tiñe con `accentColor`; muestra el parche del invitado si ya confirmó. |
+| Parche | `patch`, `parche`, `badge`, `emblem` | Muestra el parche del niño (primario del tema) o el del invitado si ya confirmó. |
 | Cohete: ventana | `window`, `hatch`, `ventana`, `cockpit` | Punto donde se ve al astronauta en el capítulo final. |
 | Cohete: propulsores | `booster`, `engine`, `nozzle`, `thruster` | De ahí sale el humo y la llama del despegue. |
 | Cohete: mural | `mural`, `tank`, `tanque` | Los parches de la tripulación se proyectan sobre su superficie (lado +X). |

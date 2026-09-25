@@ -1,7 +1,7 @@
 // Datos de la invitación "Misión Estrella". Misma estructura base que temporada-8, isla-cubo y el-circuito
 // (child, event, itinerary, dressCode, gifts, gallery, hosts, rsvp, sound) + los campos que ya maneja el editor
 // de Gloobi (checklist, faq, liveStream, transport, lodging, contact) + los propios (missionName, tagline,
-// child.visorPhotoSleeping / child.visorPhotoAwake, child.suitColor, child.accentColor, avatar "mission-patch").
+// child.visorPhotoSleeping / child.visorPhotoAwake, child.suitColor, child.colorTheme, avatar "mission-patch").
 // Todo texto o dato variable de la invitación sale de aquí. Plantillas: {name}, {age}, {missionName}.
 // Las confirmaciones usan el contrato común: ../../_shared/rsvp-contract.js
 export const demoData = {
@@ -14,7 +14,9 @@ export const demoData = {
     visorPhotoSleeping: "assets/placeholders/visor-dormido.avif",
     visorPhotoAwake: "assets/placeholders/visor-despierto.avif",
     suitColor: "#F4F1FA",
-    accentColor: "#FF8FA3" // parche, detalles del traje y cohete
+    // tema de color (js/themes.js): "azul-cohete" | "turquesa" | "naranja" | "verde" | "morado" | "rosa". Tiñe el
+    // cohete, la torre y la plataforma, el parche del niño, la luz de borde y los acentos de la interfaz.
+    colorTheme: "azul-cohete"
   },
   missionName: null, // si es null → "Misión {name}"
   tagline: "Hola, soy {name} y estoy por cumplir…",

@@ -64,13 +64,59 @@ function pass(renderer, w, h, frag) {
   return rt.texture;
 }
 
-let cached = null;
+/**
+ * Igual que pass(), pero sin bloquear: el shader se compila en paralelo (compileAsync) y se dibuja por franjas, una
+ * por cuadro. Antes, compilar y dibujar todo de una vez congelaba la página ~3.5 s al abrir (no se podía ni mostrar la
+ * pantalla de carga).
+ */
+async function passAsync(renderer, w, h, frag, strips) {
+  const rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.UnsignedByteType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, wrapS: THREE.RepeatWrapping });
+  const mat = new THREE.RawShaderMaterial({
+    vertexShader: "attribute vec3 position; varying vec2 vUv; void main(){ vUv = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+    fragmentShader: `${SURFACE}\nvarying vec2 vUv;\n${frag}`, depthTest: false, depthWrite: false
+  });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat), scene = new THREE.Scene(), cam = new THREE.Camera(); scene.add(quad);
+  try { if (renderer.compileAsync) await renderer.compileAsync(scene, cam); } catch { /* se compila al dibujar */ }
+  const frame = () => new Promise((r) => requestAnimationFrame(() => r()));
+  for (let i = 0; i < strips; i++) {
+    await frame();
+    const y0 = Math.floor((i * h) / strips), y1 = Math.floor(((i + 1) * h) / strips);
+    const prev = renderer.getRenderTarget();
+    rt.scissor.set(0, y0, w, y1 - y0); rt.scissorTest = true;
+    renderer.setRenderTarget(rt); renderer.render(scene, cam); renderer.setRenderTarget(prev);
+  }
+  rt.scissorTest = false;
+  quad.geometry.dispose(); mat.dispose();
+  rt.texture.wrapS = THREE.RepeatWrapping; rt.texture.anisotropy = 4;
+  return rt.texture;
+}
+
+let cached = null, pending = null;
+/** Versión sin bloqueos (la que usa la escena): resuelve con { map, normalMap }. */
+export function moonSurfaceAsync(renderer, w = 1024) {
+  if (cached) return Promise.resolve(cached);
+  pending ??= (async () => {
+    const h = w / 2;
+    const map = await passAsync(renderer, w, h, COLOR_FRAG, 4);
+    map.colorSpace = THREE.SRGBColorSpace;
+    const normalMap = await passAsync(renderer, w, h, NORMAL_FRAG, 8);
+    cached = { map, normalMap };
+    return cached;
+  })();
+  return pending;
+}
 /** Genera { map, normalMap } (una vez). w = ancho (alto = w/2). */
 export function moonSurface(renderer, w = 1024) {
   if (cached) return cached;
   const h = w / 2;
   // color (valores en espacio sRGB: la textura se marca como sRGB)
-  const map = pass(renderer, w, h, /* glsl */`
+  const map = pass(renderer, w, h, COLOR_FRAG);
+  map.colorSpace = THREE.SRGBColorSpace;
+  const normalMap = pass(renderer, w, h, NORMAL_FRAG);
+  cached = { map, normalMap };
+  return cached;
+}
+const COLOR_FRAG = /* glsl */`
     void main() {
       vec3 d = dirFromUv(vUv);
       float m = maria(d);
@@ -94,10 +140,9 @@ export function moonSurface(renderer, w = 1024) {
       }
       col += vec3(0.1, 0.09, 0.07) * rays + vec3(0.06) * (c2.y + c3.y) * 0.5;
       gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
-    }`);
-  map.colorSpace = THREE.SRGBColorSpace;
-  // normal map (espacio tangente de SphereGeometry: T = este (+u), B = norte (+v))
-  const normalMap = pass(renderer, w, h, /* glsl */`
+    }`;
+// normal map (espacio tangente de SphereGeometry: T = este (+u), B = norte (+v))
+const NORMAL_FRAG = /* glsl */`
     void main() {
       vec3 d = dirFromUv(vUv);
       float phi = vUv.x * 6.2831853, theta = (1.0 - vUv.y) * 3.1415926;
@@ -108,9 +153,6 @@ export function moonSurface(renderer, w = 1024) {
       float dN = heightAt(normalize(d + N * e)) - heightAt(normalize(d - N * e));
       vec3 n = normalize(vec3(-dE * 18.0, -dN * 18.0, 1.0));
       gl_FragColor = vec4(n * 0.5 + 0.5, 1.0);
-    }`);
-  cached = { map, normalMap };
-  return cached;
-}
+    }`;
 /** Ya generada (o null si aún no). */
 export const moonSurfaceReady = () => cached;

@@ -4,8 +4,8 @@ import * as THREE from "three";
 
 /** Uniforms globales de la luz de borde: todos los materiales vinil los comparten. */
 export const RIM = {
-  rimA: { value: new THREE.Color("#FF8FA3") }, // rosa (lado izquierdo)
-  rimB: { value: new THREE.Color("#6FD6E8") }, // turquesa (lado derecho)
+  rimA: { value: new THREE.Color("#FF8FA3") }, // lado izquierdo: primario del tema, aclarado (setTheme3D)
+  rimB: { value: new THREE.Color("#6FD6E8") }, // lado derecho: secundario del tema (setTheme3D)
   rimStrength: { value: 0.55 },
   rimPower: { value: 2.6 }
 };
@@ -13,11 +13,38 @@ export const ENV = { envMap: { value: null } }; // textura equirectangular del c
 export const STUDIO = { texture: null }; // reflejo "de estudio" para materiales PBR (cohete)
 
 /**
+ * Tema de color en vivo (js/themes.js → setTheme3D): colores compartidos y avisos a quien los usa (materiales con
+ * `themed`, texturas en canvas con `onTheme`). Al cambiar de tema (modo debug) todo se actualiza sin recargar.
+ */
+// (valores iniciales = tema de la demo, "azul-cohete": quien se crea antes de setTheme3D ya tiene colores válidos)
+export const THEME3D = {
+  key: "azul-cohete", primary: new THREE.Color("#3D6BE0"), secondary: new THREE.Color("#45C4D9"), accent: new THREE.Color("#FF9A4D"), gold: new THREE.Color("#F2C94C"),
+  hex: { key: "azul-cohete", primary: "#3D6BE0", secondary: "#45C4D9", accent: "#FF9A4D", gold: "#F2C94C", body: "#FFF7EC", onPrimary: "#FFFFFF" }
+};
+const themeFns = new Set();
+/** Llama fn(THEME3D) ahora y cada vez que cambie el tema. */
+export function onTheme(fn) { themeFns.add(fn); fn(THEME3D); return () => themeFns.delete(fn); }
+/** Material cuyo color sigue un token del tema ("primary" | "secondary" | "accent" | "gold"); `k` lo aclara (+) u oscurece (−). */
+export function themed(mat, role, k = 0) {
+  onTheme((T) => { mat.color.copy(T[role]); if (k > 0) mat.color.lerp(WHITE, k); else if (k < 0) mat.color.multiplyScalar(1 + k); });
+  return mat;
+}
+const WHITE = new THREE.Color(1, 1, 1);
+/** Aplica un tema (objeto de themes.js): colores, luz de borde de la escena y avisos. */
+export function setTheme3D(t) {
+  THEME3D.key = t.key; THEME3D.hex = t;
+  THEME3D.primary.set(t.primary); THEME3D.secondary.set(t.secondary); THEME3D.accent.set(t.accent); THEME3D.gold.set(t.gold);
+  // luz de borde: el primario del tema (aclarado, como el rosa pastel de antes) a un lado y el secundario al otro
+  RIM.rimA.value.set(t.primary).lerp(WHITE, 0.3); RIM.rimB.value.set(t.secondary).lerp(WHITE, 0.15);
+  themeFns.forEach((fn) => fn(THEME3D));
+}
+
+/**
  * Entorno de estudio para reflejos (una sola vez, PMREM): cúpula lavanda → índigo, luz cálida principal y
  * luces de borde rosa y turquesa. Da brillo de juguete de colección a metales y pintura sin verse frío.
  */
-export function createStudioEnv(renderer) {
-  if (STUDIO.texture) return STUDIO.texture;
+export function createStudioEnv(renderer, { force = false } = {}) {
+  if (STUDIO.texture && !force) return STUDIO.texture;
   const scene = new THREE.Scene();
   const dome = new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), new THREE.ShaderMaterial({
     side: THREE.BackSide,
@@ -28,14 +55,21 @@ export function createStudioEnv(renderer) {
   scene.add(dome);
   const panel = (color, intensity, pos, w, h) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity), side: THREE.DoubleSide })); m.position.copy(pos); m.lookAt(0, 0, 0); scene.add(m); };
   panel("#FFE3C4", 1.25, new THREE.Vector3(5, 6, 5), 5, 3.5);   // principal cálida
-  panel("#FF8FA3", 0.9, new THREE.Vector3(-7, 1, 2), 2.5, 6);  // borde rosa
-  panel("#6FD6E8", 0.9, new THREE.Vector3(6, 0, -5), 2.5, 6);  // borde turquesa
+  panel(RIM.rimA.value, 0.9, new THREE.Vector3(-7, 1, 2), 2.5, 6);  // borde: color del tema
+  panel(RIM.rimB.value, 0.9, new THREE.Vector3(6, 0, -5), 2.5, 6);  // borde: secundario del tema
   panel("#FFFFFF", 0.7, new THREE.Vector3(0, 9, 0), 4, 4);     // cenital suave
   const pm = new THREE.PMREMGenerator(renderer);
   STUDIO.texture = pm.fromScene(scene, 0.02).texture;
   pm.dispose();
   scene.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); });
   return STUDIO.texture;
+}
+/** Al cambiar de tema en vivo: rehace el entorno de estudio (bordes del tema) y lo cambia en los materiales. */
+export function refreshStudioEnv(renderer, root) {
+  const old = STUDIO.texture; if (!old) return;
+  const tex = createStudioEnv(renderer, { force: true });
+  root.traverse((o) => { for (const m of [].concat(o.material || [])) if (m.envMap === old) { m.envMap = tex; m.needsUpdate = true; } });
+  old.dispose();
 }
 
 /** Inyecta la luz de borde en cualquier material con iluminación (Lambert, Standard, Toon). */

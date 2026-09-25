@@ -3,7 +3,7 @@
 import { h, tpl, eventInfo, missionName } from "../util.js";
 import { demoData } from "../data.js";
 import { icon } from "./icons.js";
-import { dateBlock, countdown, calendarButtons, venueBlock, mapsButtons, transportBlock, itineraryList, giftsList, dressBlock } from "./content.js";
+import { dateLine, countdownText, calendarButtons, venueBlock, mapsButtons, transportBlock, itineraryList, giftsList, dressBlock } from "./content.js";
 import { peopleLabel } from "../../../_shared/rsvp-contract.js";
 
 export const CHAPTER_LABELS = ["Despegue", "Caminata espacial", "La constelación", "La Luna", "Estación espacial", "Cinturón de recuerdos", "Plan de vuelo", "Tripulación", "Te esperamos a bordo"];
@@ -11,7 +11,7 @@ export const CHAPTER_LABELS = ["Despegue", "Caminata espacial", "La constelació
 export function createChapters(root, { audio, onJoin, onDecline, onEdit, onResend, onLog, onReplay, onGiftFocus, getRsvp, crewCount }) {
   const wrap = h("div.cards"); root.append(wrap);
   const card = (n, kicker, ...body) => h(`section.card.card-${n}`, { "aria-label": CHAPTER_LABELS[n - 1], "aria-hidden": "true" }, kicker ? h("p.kicker", { text: kicker }) : null, ...body);
-  const cd = countdown({ compact: true });
+  const cd = countdownText();
   const planList = h("div"), setPlan = (i) => planList.replaceChildren(itineraryList(i));
   setPlan(-1);
   const crewBody = h("div.stack");
@@ -19,7 +19,9 @@ export function createChapters(root, { audio, onJoin, onDecline, onEdit, onResen
   const cards = {
     2: card(2, "Caminata espacial", h("p.big", { text: tpl(demoData.tagline) })),
     3: card(3, "La constelación", h("p.big", { text: `¡${demoData.child.name} cumple ${demoData.child.age}!` }), h("p.hint", { html: `${icon("star", { size: 16 })} Toca una estrella` })),
-    4: card(4, "Fecha de lanzamiento", dateBlock(), cd.el, calendarButtons(audio)),
+    // (la cuenta regresiva está en los satélites 3D y la fecha grande en la Luna: aquí sólo fecha + horario y los
+    // botones; la cuenta regresiva queda en texto para lectores de pantalla)
+    4: card(4, "Fecha de lanzamiento", dateLine(), cd.el, calendarButtons(audio, { note: false })),
     5: card(5, "Punto de encuentro", venueBlock(), mapsButtons(audio), transportBlock()),
     6: card(6, "Cinturón de recuerdos", h("p.big.big-sm", { text: "Nuestros momentos favoritos" }), h("p.hint", { html: `${icon("photo", { size: 16 })} Toca una foto para verla` })),
     7: [

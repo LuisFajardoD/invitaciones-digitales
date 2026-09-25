@@ -2,6 +2,7 @@
 // parallax CSS por capítulo. Mismo contenido HTML, misma Bitácora y misma confirmación con parche (animación CSS).
 import { h, $, $$, tpl, missionName, eventInfo, prefersReduced, waUrl, loadPhoto } from "../util.js";
 import { demoData, visorPhotos, VISOR_FALLBACK } from "../data.js";
+import { themeOf } from "../themes.js";
 import { state, DEMO } from "../state.js";
 import { icon } from "../ui/icons.js";
 import { gloobiSVG, astronautSVG, rocketSVG, moonSVG, crescentSVG, starsSVG, stationSVG } from "../ui/illustrations.js";
@@ -14,7 +15,8 @@ import { openViewer } from "../ui/viewer.js";
 import { whatsappText, peopleLabel } from "../../../_shared/rsvp-contract.js";
 
 const kid = demoData.child;
-const PH = visorPhotos(kid); // dormido en la portada, despierto en el resto
+const PH = visorPhotos(kid);
+const TH = themeOf(kid); // tema de color (cohete y detalles del traje) // dormido en la portada, despierto en el resto
 const svg = (vb, body, cls = "") => `<svg class="${cls}" viewBox="${vb}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${body}</svg>`;
 
 function constellationSVG() {
@@ -46,16 +48,16 @@ export function startFallback({ audio }) {
   const els = [
     h("header.fb-cover",
       h("div.fb-art.layer", { "data-depth": "0.25", html: svg("0 0 400 700", `${starsSVG(400, 700, 90)}`, "fb-stars") }),
-      h("div.fb-art.layer", { "data-depth": "0.1", html: svg("0 0 400 700", `<g class="bob">${crescentSVG(200, 380, 110)}${astronautSVG(205, 420, 0.95, { pose: "sleep", photo: PH.sleeping, accent: kid.accentColor })}${gloobiSVG(235, 330, 22, { face: "sleep" })}</g>`) }),
+      h("div.fb-art.layer", { "data-depth": "0.1", html: svg("0 0 400 700", `<g class="bob">${crescentSVG(200, 380, 110)}${astronautSVG(205, 420, 0.95, { pose: "sleep", photo: PH.sleeping, accent: TH.primary })}${gloobiSVG(235, 330, 22, { face: "sleep" })}</g>`) }),
       h("div.fb-cover-text",
         h("h1.cover-title", { text: missionName() }),
         h("p.badge", { html: `${icon("star", { size: 18 })}<span>¡Cumple ${kid.age}!</span>` })),
       h("div.fb-cover-bottom",
         h("button.btn.btn-pink.btn-lg", { type: "button", onclick: () => { startAudio(); $(".fb-ch", root).scrollIntoView({ behavior: prefersReduced() ? "auto" : "smooth" }); }, html: `${icon("rocket", { size: 22 })}<span>Comenzar la misión</span>` }),
         h("button.link", { type: "button", onclick: () => openLog() }, "Ver solo la información"))),
-    chapter("fb-launch", svg("0 0 400 520", `<defs><linearGradient id="dawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2A7A"/><stop offset=".55" stop-color="#B9A2FF"/><stop offset="1" stop-color="#FFC9A0"/></linearGradient></defs><rect width="400" height="520" fill="url(#dawn)"/>${starsSVG(400, 200, 30, 9)}<g class="rise">${rocketSVG(200, 400, 0.95, { accent: kid.accentColor, flame: true })}</g><g class="puffs">${[60, 110, 170, 230, 290, 340].map((x, i) => `<circle cx="${x}" cy="${470 + (i % 2) * 14}" r="${40 + (i % 3) * 12}" fill="#FFF1E6" opacity=".9"/>`).join("")}</g>`),
+    chapter("fb-launch", svg("0 0 400 520", `<defs><linearGradient id="dawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2A7A"/><stop offset=".55" stop-color="#B9A2FF"/><stop offset="1" stop-color="#FFC9A0"/></linearGradient></defs><rect width="400" height="520" fill="url(#dawn)"/>${starsSVG(400, 200, 30, 9)}<g class="rise">${rocketSVG(200, 400, 0.95, { accent: TH.primary, flame: true })}</g><g class="puffs">${[60, 110, 170, 230, 290, 340].map((x, i) => `<circle cx="${x}" cy="${470 + (i % 2) * 14}" r="${40 + (i % 3) * 12}" fill="#FFF1E6" opacity=".9"/>`).join("")}</g>`),
       card(null, h("p.big", { text: "¡DESPEGUE!" }), h("p.muted", { text: "La misión comienza. Desliza para seguir el viaje." }))),
-    chapter("fb-walk", svg("0 0 400 460", `${starsSVG(400, 460, 40, 5)}<circle cx="200" cy="900" r="560" fill="#3E8FD6"/><circle cx="200" cy="900" r="575" fill="none" stroke="#6FD6E8" stroke-width="14" opacity=".35"/><g class="bob">${astronautSVG(190, 360, 1.1, { pose: "wave", photo: PH.awake, accent: kid.accentColor })}${gloobiSVG(300, 150, 26)}</g>`),
+    chapter("fb-walk", svg("0 0 400 460", `${starsSVG(400, 460, 40, 5)}<circle cx="200" cy="900" r="560" fill="#3E8FD6"/><circle cx="200" cy="900" r="575" fill="none" stroke="#6FD6E8" stroke-width="14" opacity=".35"/><g class="bob">${astronautSVG(190, 360, 1.1, { pose: "wave", photo: PH.awake, accent: TH.primary })}${gloobiSVG(300, 150, 26)}</g>`),
       card("Caminata espacial", h("p.big", { text: tpl(demoData.tagline) }))),
     chapter("fb-const", svg("0 0 400 400", `${starsSVG(400, 400, 70, 11)}${constellationSVG()}`, "const-svg"),
       card("La constelación", h("p.big", { text: `¡${kid.name} cumple ${kid.age}!` }))),
@@ -70,7 +72,7 @@ export function startFallback({ audio }) {
       card("Plan de vuelo", itineraryList()), card("Carga de la misión", giftsList(audio)), card(null, dressBlock())),
     h("section.fb-ch.fb-crew", h("div.fb-rocket-side", { html: svg("0 0 400 360", `${starsSVG(400, 360, 30, 23)}<rect x="40" y="30" width="320" height="300" rx="150" fill="#FFF7EC"/><rect x="40" y="30" width="320" height="300" rx="150" fill="none" stroke="#D9D2F0" stroke-width="8"/><text x="200" y="90" text-anchor="middle" font-family="Fredoka, system-ui" font-weight="600" font-size="20" fill="#3B2A7A">TRIPULACIÓN</text>`) }, mural),
       h("div.card.is-on.fb-card", h("p.kicker", { text: missionName() }), crewBody)),
-    chapter("fb-final", svg("0 0 400 420", `<defs><radialGradient id="nb" cx="50%" cy="30%" r="70%"><stop offset="0" stop-color="#FF8FA3" stop-opacity=".55"/><stop offset=".5" stop-color="#6FD6E8" stop-opacity=".25"/><stop offset="1" stop-color="#1E1B4B" stop-opacity="0"/></radialGradient></defs><rect width="400" height="420" fill="url(#nb)"/>${starsSVG(400, 420, 60, 29)}<g class="away">${rocketSVG(220, 300, 0.6, { accent: kid.accentColor, flame: true, photo: PH.awake })}${gloobiSVG(300, 140, 16)}</g>`),
+    chapter("fb-final", svg("0 0 400 420", `<defs><radialGradient id="nb" cx="50%" cy="30%" r="70%"><stop offset="0" stop-color="#FF8FA3" stop-opacity=".55"/><stop offset=".5" stop-color="#6FD6E8" stop-opacity=".25"/><stop offset="1" stop-color="#1E1B4B" stop-opacity="0"/></radialGradient></defs><rect width="400" height="420" fill="url(#nb)"/>${starsSVG(400, 420, 60, 29)}<g class="away">${rocketSVG(220, 300, 0.6, { accent: TH.primary, flame: true, photo: PH.awake })}${gloobiSVG(300, 140, 16)}</g>`),
       h("div.card.is-on.fb-card", h("p.big", { text: `Te esperamos a bordo, ${info.dateShort}` }), h("div.btn-row.fb-final-row")))
   ];
   root.append(...els);

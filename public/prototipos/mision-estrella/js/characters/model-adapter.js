@@ -13,12 +13,13 @@ function getLoader() {
   return loaderP;
 }
 const cache = new Map();
-/** Carga un GLB (con caché). Rechaza si falla o tarda más de `timeout` ms. */
-export function loadGLB(url, timeout = 20000) {
+/** Carga un GLB (con caché). Rechaza si falla o tarda más de `timeout` ms. onProgress(0–1): bytes descargados. */
+export function loadGLB(url, timeout = 20000, onProgress = null) {
   if (!cache.has(url)) {
     cache.set(url, getLoader().then((loader) => new Promise((res, rej) => {
       const to = setTimeout(() => rej(new Error(`Tiempo agotado: ${url}`)), timeout);
-      loader.load(url, (g) => { clearTimeout(to); res(g); }, undefined, (e) => { clearTimeout(to); rej(e); });
+      const prog = onProgress ? (e) => { if (e.lengthComputable && e.total) onProgress(e.loaded / e.total); } : undefined;
+      loader.load(url, (g) => { clearTimeout(to); onProgress?.(1); res(g); }, prog, (e) => { clearTimeout(to); rej(e); });
     })));
   }
   return cache.get(url);
@@ -43,7 +44,8 @@ export function findPart(root, key) {
 
 /**
  * Normaliza un GLTF: escala por bounding box a `height`, centra el pivote, suaviza materiales (coherencia con
- * la escena: sin brillo plástico duro, luz de borde rosa/turquesa) y aplica suitColor/accentColor.
+ * la escena: sin brillo plástico duro, luz de borde con los colores del tema) y aplica suitColor (y accentColor si
+ * quien llama lo pasa; el astronauta ya no: su parche lleva la textura con el color del tema).
  * Devuelve { root, mixer, actions: { fly, wave, ... }, parts: { visor, glass, suit, patch } }.
  */
 export function adapt(gltf, { height = 1, suitColor, accentColor, visorPhoto = true } = {}) {

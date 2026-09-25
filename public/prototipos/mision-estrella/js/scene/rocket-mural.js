@@ -5,7 +5,7 @@
 // su borde.
 import * as THREE from "three";
 import { drawPatch } from "../ui/patch.js";
-import { halo, pbr, heightToNormal, canvasTex } from "./materials.js";
+import { halo, pbr, heightToNormal, canvasTex, THEME3D, onTheme, themed } from "./materials.js";
 import { easeInOut, missionName } from "../util.js";
 import { bodyRadiusAt } from "../characters/rocket-procedural.js";
 
@@ -81,16 +81,19 @@ function muralPlaque() {
   }
   for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) { const a = j * (NU + 1) + i, b = a + NU + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }
   const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
-  const map = canvasTex(512, 512, (c, w) => {
+  // (puntada del marco: secundario del tema; estrellitas: dorado del tema; se repinta al cambiar de tema)
+  const paint = (c, w) => {
     const gr = c.createLinearGradient(0, 0, 0, w); gr.addColorStop(0, "#FFFBF4"); gr.addColorStop(1, "#F3ECFA"); c.fillStyle = gr; c.fillRect(0, 0, w, w);
-    c.strokeStyle = "rgba(185,162,255,.9)"; c.lineWidth = 5; c.setLineDash([12, 9]); c.strokeRect(22, 22, w - 44, w - 44); c.setLineDash([]);
+    c.strokeStyle = THEME3D.hex.secondary; c.lineWidth = 5; c.setLineDash([12, 9]); c.strokeRect(22, 22, w - 44, w - 44); c.setLineDash([]);
     c.fillStyle = "#3B2A7A"; c.font = "600 44px Fredoka, system-ui, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
     c.fillText("TRIPULACIÓN", w / 2, 58);
-    c.fillStyle = "#FFD27A"; for (const x of [70, w - 70]) { c.beginPath(); for (let k = 0; k < 10; k++) { const aa = (k / 10) * Math.PI * 2 - Math.PI / 2, rr = k % 2 ? 6 : 14; c.lineTo(x + Math.cos(aa) * rr, 58 + Math.sin(aa) * rr); } c.fill(); }
-  });
+    c.fillStyle = THEME3D.hex.gold; for (const x of [70, w - 70]) { c.beginPath(); for (let k = 0; k < 10; k++) { const aa = (k / 10) * Math.PI * 2 - Math.PI / 2, rr = k % 2 ? 6 : 14; c.lineTo(x + Math.cos(aa) * rr, 58 + Math.sin(aa) * rr); } c.fill(); }
+  };
+  const map = canvasTex(512, 512, paint);
+  onTheme(() => { paint(map.image.getContext("2d"), 512); map.needsUpdate = true; });
   g.add(new THREE.Mesh(geo, pbr("#ffffff", { map, rough: 0.3, metal: 0.05, env: 0.9, rim: 0.4 })));
   // marco dorado (tubo por el borde) y remaches en las esquinas
-  const gold = pbr("#FFC96B", { rough: 0.3, metal: 0.7, emissive: "#6a4a10", ei: 0.12, env: 1, rim: 0.4 });
+  const gold = themed(pbr("#FFC96B", { rough: 0.3, metal: 0.7, emissive: "#6a4a10", ei: 0.12, env: 1, rim: 0.4 }), "gold");
   const P = (u, v) => { const y = y0 + (y1 - y0) * v, a = a0 + (a1 - a0) * u, r = bodyRadiusAt(y) + 0.012; return new THREE.Vector3(Math.sin(a) * r, y, Math.cos(a) * r); };
   const border = [];
   for (let k = 0; k <= 20; k++) border.push(P(k / 20, 0)); for (let k = 1; k <= 14; k++) border.push(P(1, k / 14));

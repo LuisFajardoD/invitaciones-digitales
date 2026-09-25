@@ -8,7 +8,11 @@ import { icon } from "./icons.js";
 
 const HOLD = 1.5;
 
-export function showCover(root, { audio, returning = false, onHold, onIgnite, onInfo }) {
+/**
+ * intro: "play" = la entrada escalonada empieza ya (la escena está a la vista); "pending" = todo oculto hasta que
+ * la escena esté 100 % lista (main.js llama playIntro()).
+ */
+export function showCover(root, { audio, returning = false, onHold, onIgnite, onInfo, intro = "play" }) {
   const R = 46, C = 2 * Math.PI * R;
   const ring = h("span.hold-ring", { "aria-hidden": "true", html: `<svg viewBox="0 0 110 110"><circle class="hold-track" cx="55" cy="55" r="${R}"/><circle class="hold-fill" cx="55" cy="55" r="${R}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/></svg>` });
   const fill = ring.querySelector(".hold-fill");
@@ -16,17 +20,21 @@ export function showCover(root, { audio, returning = false, onHold, onIgnite, on
     ring, h("span.hold-core", { html: icon("rocket", { size: 34 }) }));
   const label = h("p.hold-label", { text: "Mantén presionado para encender motores" });
   const hand = h("div.hand", { "aria-hidden": "true", html: '<svg viewBox="0 0 64 64" width="56" height="56"><path d="M26 30V12a4 4 0 018 0v14l12 3c3 .8 5 3.6 4.6 6.6L48 50H28L18 38a3.5 3.5 0 015-5z" fill="#FFF7EC" stroke="#1E1B4B" stroke-width="3" stroke-linejoin="round"/></svg>' });
-  const el = h("section.cover", { "aria-label": "Portada" },
-    h("div.cover-top",
-      returning ? h("p.welcome", { text: "¡Bienvenido de vuelta, tripulante!" }) : null,
-      h("h1.cover-title", { text: missionName() }),
-      h("p.badge", { html: `${icon("star", { size: 18 })}<span>¡Cumple ${demoData.child.age}!</span>` })),
+  // orden de la entrada (--i × 120 ms): (bienvenida) título → insignia → botón (con su texto) → enlace
+  let n = 0; const ci = (node) => { node.classList.add("ci"); node.style.setProperty("--i", n++); return node; };
+  const top = h("div.cover-top",
+    returning ? ci(h("p.welcome", { text: "¡Bienvenido de vuelta, tripulante!" })) : null,
+    ci(h("h1.cover-title", { text: missionName() })),
+    ci(h("p.badge", { html: `${icon("star", { size: 18 })}<span>¡Cumple ${demoData.child.age}!</span>` })));
+  const holdWrap = ci(h("div.hold-wrap", btn, hand)); label.classList.add("ci"); label.style.setProperty("--i", n - 1);
+  const el = h(`section.cover.${intro === "pending" ? "is-pending" : "is-intro"}`, { "aria-label": "Portada" },
+    top,
     h("div.cover-bottom",
-      h("div.hold-wrap", btn, hand), label,
+      holdWrap, label,
       // visita repetida: un solo botón secundario; primera visita: sólo el enlace discreto (hacen lo mismo)
-      returning
+      ci(returning
         ? h("button.btn.btn-ghost.btn-sm", { type: "button", onclick: () => { audio.unlock(); onInfo?.(); }, html: `${icon("log", { size: 20 })}<span>Ver la bitácora</span>` })
-        : h("button.link", { type: "button", onclick: () => { audio.unlock(); onInfo?.(); } }, "Ver solo la información")));
+        : h("button.link", { type: "button", onclick: () => { audio.unlock(); onInfo?.(); } }, "Ver solo la información"))));
   root.append(el);
 
   let holding = false, prog = 0, done = false, raf = 0, last = performance.now(), idle = 0;
@@ -54,16 +62,18 @@ export function showCover(root, { audio, returning = false, onHold, onIgnite, on
       btn.style.setProperty("--p", prog.toFixed(3));
       el.style.setProperty("--shake", prefersReduced() ? "0" : String(prog * prog));
       onHold?.(prog);
-      idle += dt;
+      if (!el.classList.contains("is-pending")) idle += dt; // (la manita cuenta desde que la portada se ve)
       if (idle > 4 && !holding) hand.classList.add("is-on");
       if (prog >= 1) { done = true; holding = false; onIgnite?.(); }
     }
     raf = requestAnimationFrame(frame);
   }
   raf = requestAnimationFrame(frame);
-  setTimeout(() => btn.focus({ preventScroll: true }), 60);
+  if (intro !== "pending") setTimeout(() => btn.focus({ preventScroll: true }), 60);
   return {
     el,
+    /** Entrada escalonada (cuando la escena ya está a la vista). */
+    playIntro() { if (!el.classList.contains("is-pending")) return; el.classList.replace("is-pending", "is-intro"); setTimeout(() => btn.focus({ preventScroll: true }), 400); },
     hide() { cancelAnimationFrame(raf); removeEventListener("keydown", onKey); removeEventListener("keyup", onKey); el.classList.add("is-out"); setTimeout(() => el.remove(), 500); onHold?.(0); }
   };
 }

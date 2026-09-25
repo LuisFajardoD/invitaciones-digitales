@@ -4,8 +4,11 @@
 import { demoData, visorPhotos } from "../../mision-estrella/js/data.js";
 import { astronautSVG, gloobiSVG, starsSVG } from "../../mision-estrella/js/ui/illustrations.js";
 import { patchSVG } from "../../mision-estrella/js/ui/patch.js";
+import { themeOf, hexRgb } from "../../mision-estrella/js/themes.js";
 
 const kid = demoData.child;
+const TH = themeOf(kid); // mismo tema de color que la invitación (child.colorTheme)
+const rgb = (hex) => hexRgb(hex).join(", ");
 const asset = (p) => `../mision-estrella/${p}`;
 
 export default {
@@ -20,15 +23,16 @@ export default {
   tokens: {
     bg: "#F3EEFF", surface: "#FFFFFF", surfaceAlt: "#FBF8FF",
     text: "#1E1B4B", muted: "#4B4680",
-    primary: "#FF8FA3", onPrimary: "#1E1B4B", accent: "#6FD6E8",
+    primary: TH.primary, onPrimary: TH.onPrimary, accent: TH.secondary,
     success: "#2F9E6B", warn: "#D23F63",
     line: "#DCD4F5", lineStrong: "#B9A2FF",
     radius: "24px", radiusSm: "16px",
     borderWidth: "1.5px", shadow: "0 8px 24px rgba(59, 42, 122, .14)", pressShadow: "0 2px 8px rgba(59, 42, 122, .14)",
-    heroBg: "radial-gradient(60% 70% at 18% 20%, rgba(255, 143, 163, .45), transparent 70%), radial-gradient(55% 60% at 85% 80%, rgba(111, 214, 232, .35), transparent 70%), linear-gradient(180deg, #1E1B4B 0%, #3B2A7A 100%)",
+    heroBg: `radial-gradient(60% 70% at 18% 20%, rgba(${rgb(TH.primary)}, .45), transparent 70%), radial-gradient(55% 60% at 85% 80%, rgba(${rgb(TH.secondary)}, .35), transparent 70%), linear-gradient(180deg, #1E1B4B 0%, #3B2A7A 100%)`,
     heroText: "#FFF7EC",
     // mural: el costado crema del cohete, con una costura punteada alrededor
-    wallBg: "repeating-linear-gradient(90deg, rgba(185, 162, 255, .5) 0 8px, transparent 8px 14px) top / 100% 2px no-repeat, repeating-linear-gradient(90deg, rgba(185, 162, 255, .5) 0 8px, transparent 8px 14px) bottom / 100% 2px no-repeat, radial-gradient(120% 90% at 30% 15%, #FFFFFF, #FFF7EC 55%, #E9E2F7 100%)",
+    // (costura del mural: el secundario del tema, como el marco del mural del cohete)
+    wallBg: `repeating-linear-gradient(90deg, rgba(${rgb(TH.secondary)}, .6) 0 8px, transparent 8px 14px) top / 100% 2px no-repeat, repeating-linear-gradient(90deg, rgba(${rgb(TH.secondary)}, .6) 0 8px, transparent 8px 14px) bottom / 100% 2px no-repeat, radial-gradient(120% 90% at 30% 15%, #FFFFFF, #FFF7EC 55%, #E9E2F7 100%)`,
     wallText: "#1E1B4B", noteBg: "#FFFFFF"
   },
   vocabulary: { guests: "Tripulantes", list: "Tripulación de la misión", confirmed: "A bordo", guest: "tripulante", wallHint: "Toca un parche para ver su respuesta" },
@@ -38,7 +42,7 @@ export default {
     container.innerHTML = `<svg viewBox="0 0 320 170" role="img" aria-label="${ev.childName} flota en el espacio con Gloobi">
       ${starsSVG(320, 170, 40, 7)}
       <circle cx="262" cy="150" r="70" fill="#FFE7C2" opacity=".14"/>
-      <g class="hero-float">${astronautSVG(150, 168, 0.72, { pose: "float", photo: asset(visorPhotos(kid).awake), accent: kid.accentColor, suit: kid.suitColor })}</g>
+      <g class="hero-float">${astronautSVG(150, 168, 0.72, { pose: "float", photo: asset(visorPhotos(kid).awake), accent: TH.primary, suit: kid.suitColor })}</g>
       ${gloobiSVG(236, 58, 17)}
     </svg>`;
   },

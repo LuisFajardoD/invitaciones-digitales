@@ -3,7 +3,7 @@
 // busca model-adapter.js: "visor" (foto del niño), "helmet_glass" (vidrio fresnel), "suit", "patch".
 // Altura total = 1 unidad; pivote en el centro del cuerpo.
 import * as THREE from "three";
-import { vinyl, glassMaterial } from "../scene/materials.js";
+import { vinyl, glassMaterial, themed } from "../scene/materials.js";
 import { shade } from "../ui/patch.js";
 
 /** Poses (ángulos en radianes). Se mezclan suavemente entre sí. */
@@ -82,9 +82,9 @@ export function frontCap(radius, angle, seg = 40) {
   return geo;
 }
 
-export function createProceduralAstronaut({ suitColor = "#F4F1FA", accentColor = "#FF8FA3" } = {}) {
+export function createProceduralAstronaut({ suitColor = "#F4F1FA" } = {}) {
   const root = new THREE.Group(); root.name = "astronaut";
-  const suit = vinyl(suitColor), dark = vinyl(new THREE.Color(shade(suitColor, 0.72))), accent = vinyl(accentColor);
+  const suit = vinyl(suitColor), dark = vinyl(new THREE.Color(shade(suitColor, 0.72))), accent = themed(vinyl("#3D6BE0"), "primary"); // detalles: primario del tema
   suit.name = "suit"; dark.name = "suit_dark"; accent.name = "accent";
   const mesh = (geo, mat, name) => { const m = new THREE.Mesh(geo, mat); m.name = name; return m; };
   const pelvis = new THREE.Group(); pelvis.position.y = -0.02; root.add(pelvis);

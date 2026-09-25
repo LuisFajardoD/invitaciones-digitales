@@ -2,7 +2,7 @@
 // con la cuenta regresiva; y la luna creciente de la portada. Ambas usan la superficie lunar procedural
 // (moon-surface.js: mares, cráteres con borde y pico central, rayos, relieve). Reemplazables desde models.js.
 import * as THREE from "three";
-import { vinyl, craterNormalMap, canvasTex, halo, addRim, pbr, solarTexture, foilNormal } from "./materials.js";
+import { vinyl, craterNormalMap, canvasTex, halo, addRim, pbr, solarTexture, foilNormal, themed } from "./materials.js";
 import { roundedBox } from "./shapes.js";
 import { modelOrBuild } from "../characters/rocket.js";
 import { moonSurfaceReady } from "./moon-surface.js";
@@ -51,11 +51,17 @@ export function createCrescent() {
     geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
     geo.setIndex(idx);
     geo.computeVertexNormals(); // suaviza las puntas
-    const mesh = new THREE.Mesh(geo, moonMaterial(0.8));
+    const mesh = new THREE.Mesh(geo, moonMaterial(0.8)); mesh.userData.moonNS = 0.8; // (ver refreshMoonMaterials)
     mesh.position.x = -0.12; // centra el volumen (la abertura deja el arco corrido a la izquierda)
     const root = new THREE.Group(); root.add(mesh);
     return { root };
   });
+}
+
+/** La superficie lunar se genera sin bloquear (moonSurfaceAsync): al terminar, las lunas ya creadas con el material
+ *  provisional pasan al definitivo (antes de mostrarse la escena). */
+export function refreshMoonMaterials(root) {
+  root.traverse((o) => { if (o.isMesh && o.userData.moonNS != null) { o.material.dispose?.(); o.material = moonMaterial(o.userData.moonNS); } });
 }
 
 /** Textura emisiva con la fecha (día de la semana, día y mes). */
@@ -95,10 +101,14 @@ function drawNum(n, value, label) {
   n.t.needsUpdate = true;
 }
 
+// Fila de satélites, en fracciones de la media vista (sin el desplazamiento de la tarjeta): y = altura (con el
+// desplazamiento del cap. 4, 0.1 de la altura → +0.2, su centro queda a ~19 % desde arriba, bajo el HUD),
+// x = corrimiento de la fila (a la izquierda, lejos de la guía de capítulos), gap = separación, w = ancho de pantalla.
+const SAT = { y: 0.42, x: -0.04, gap: 0.34, w: 0.26 };
 export function createMoonSet() {
   const group = new THREE.Group(); group.name = "moon-set";
   const { holder } = modelOrBuild("moon", () => {
-    const root = new THREE.Mesh(new THREE.SphereGeometry(12, 128, 80), moonMaterial(1));
+    const root = new THREE.Mesh(new THREE.SphereGeometry(12, 128, 80), moonMaterial(1)); root.userData.moonNS = 1;
     return { root };
   });
   group.add(holder);
@@ -120,7 +130,7 @@ export function createMoonSet() {
   const white = pbr("#FFF7EC", { rough: 0.45, metal: 0.05, env: 0.6 });
   const steel = pbr("#A49DCB", { rough: 0.36, metal: 0.6, env: 1, rim: 0.4 });
   const cells = pbr("#ffffff", { rough: 0.28, metal: 0.35, map: solarTexture(), env: 1.3, emissive: "#1a2266", ei: 0.35, rim: 0.3 });
-  const pink = pbr("#FF8FA3", { rough: 0.4, env: 0.6 });
+  const pink = themed(pbr("#3D6BE0", { rough: 0.4, env: 0.6 }), "primary"); // luz del satélite: primario del tema
   const dishGeo = new THREE.SphereGeometry(0.2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2.4);
   const labels = ["DÍAS", "HORAS", "MIN", "SEG"];
   const sats = labels.map((label, i) => {
@@ -136,7 +146,7 @@ export function createMoonSet() {
     const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.5, 6), steel); mast.position.set(0.25, 0.64, 0); craft.add(mast);
     const dish = new THREE.Mesh(dishGeo, white); dish.rotation.x = Math.PI; dish.position.set(-0.22, 0.56, 0.1); craft.add(dish);
     const light = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), pink); light.position.set(0.25, 0.9, 0); craft.add(light);
-    const blink = halo(i % 2 ? "#FF8FA3" : "#6FD6E8", 0.9, 0.8); blink.position.copy(light.position); craft.add(blink);
+    const blink = halo("#ffffff", 0.9, 0.8); themed(blink.material, i % 2 ? "primary" : "secondary", 0.25); blink.position.copy(light.position); craft.add(blink);
     // pantalla con marco (número legible)
     const n = numTexture();
     const frame = new THREE.Mesh(screenFrameGeo, steel); frame.position.set(0, -0.45, -0.05); g.add(frame);
@@ -173,9 +183,11 @@ export function createMoonSet() {
       if (anchor) {
         const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), tanH = tanV * camera.aspect, D = 17;
         tmpD.subVectors(anchor.tgt, anchor.pos).normalize(); tmpS.crossVectors(tmpD, UPV).normalize(); tmpU.crossVectors(tmpS, tmpD);
-        const scale = Math.min(0.55, (0.4 * D * tanH) / 2.2); // la pantalla ocupa ~20 % del ancho
+        // la pantalla ocupa ~13 % del ancho; con las alas, la fila va de −0.75 a +0.68 del medio ancho: queda libre
+        // la guía de capítulos de la derecha (a partir de ~0.83 en 360 px) y, en altura, bajo los botones del HUD
+        const scale = Math.min(0.38, (SAT.w * D * tanH) / 2.2);
         sats.forEach((s, i) => {
-          const xn = (i - 1.5) * 0.47, yn = 0.46 + Math.sin(t * 0.7 + s.phase) * 0.012; // 0.46 + 0.32 del desplazamiento de la vista ≈ 11 % desde arriba
+          const xn = SAT.x + (i - 1.5) * SAT.gap, yn = SAT.y + Math.sin(t * 0.7 + s.phase) * 0.012;
           s.g.position.copy(anchor.pos).addScaledVector(tmpD, D).addScaledVector(tmpS, xn * D * tanH).addScaledVector(tmpU, yn * D * tanV).sub(group.position);
           s.g.scale.setScalar(scale);
         });

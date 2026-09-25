@@ -7,10 +7,10 @@ import { models } from "../models.js";
 import { createProceduralAstronaut, visorUniforms } from "./astronaut-procedural.js";
 import { loadGLB, adapt, proceduralMotion } from "./model-adapter.js";
 
-export function createAstronaut({ suitColor, accentColor }) {
+export function createAstronaut({ suitColor }) {
   const root = new THREE.Group(); root.name = "astronaut-root";
   const holder = new THREE.Group(); root.add(holder);
-  const proc = createProceduralAstronaut({ suitColor, accentColor });
+  const proc = createProceduralAstronaut({ suitColor });
   holder.add(proc.root);
   let visorSleep = null, visorAwake = null, patchTex = null;
   // Visor: foto dormido (map) y despierto (map2) con fundido cruzado; estos uniforms se comparten entre todos los
@@ -45,7 +45,7 @@ export function createAstronaut({ suitColor, accentColor }) {
     if (patchTex && target.parts?.patch) { const m = target.parts.patch.material; if (m) { m.map = patchTex; m.needsUpdate = true; } }
   }
   function modelFor(p) { return glb[p] || glb.all || null; }
-  function show(p) {
+  function show(p, fade = FADE) {
     const m = modelFor(p);
     const want = m ? (glb[p] ? p : "all") : "procedural";
     if (want !== activeKey) {
@@ -59,19 +59,24 @@ export function createAstronaut({ suitColor, accentColor }) {
     else if (active.actions) {
       const A = active.actions, a = A[p] || A.float || A.fly;
       if (!a || a === active.current) return;
-      Object.values(A).forEach((x) => { if (x !== a && x.isRunning()) x.fadeOut(FADE); });
-      a.reset().setEffectiveWeight(1).fadeIn(active.current ? FADE : 0).play();
+      Object.values(A).forEach((x) => { if (x !== a && x.isRunning()) x.fadeOut(fade); });
+      a.reset().setEffectiveWeight(1).fadeIn(active.current ? fade : 0).play();
       active.current = a;
     }
   }
   async function loadAll() {
-    const common = { height: cfg.height, suitColor, accentColor };
+    const common = { height: cfg.height, suitColor };
     const jobs = [];
-    if (cfg.url) jobs.push(loadGLB(cfg.url).then((g) => { glb.all = adapt(g, common); applyTextures(glb.all); }).catch((e) => console.warn("[modelos] astronauta:", e.message)));
+    if (cfg.url) jobs.push(loadGLB(cfg.url, 20000, (f) => { glbProgress = f; }).then((g) => { glb.all = adapt(g, common); applyTextures(glb.all); }).catch((e) => console.warn("[modelos] astronauta:", e.message)));
     for (const [p, url] of Object.entries(cfg.poses || {})) if (url) jobs.push(loadGLB(url).then((g) => { glb[p] = adapt(g, common); applyTextures(glb[p]); }).catch((e) => console.warn(`[modelos] pose ${p}:`, e.message)));
     await Promise.all(jobs);
+    glbProgress = 1; loaded = true;
     if (Object.keys(glb).length) { pending = pose; swapT = 0; }
   }
+  // carga y "asentado" (para no mostrar nunca al astronauta a medio cargar ni en una pose fija): la descarga del
+  // GLB (0–1) y cuántos cuadros seguidos lleva con el modelo definitivo, sin cambio pendiente, a tamaño completo y con
+  // la animación de su pose ya aplicada por el mixer
+  let glbProgress = cfg.url ? 0 : 1, loaded = false, settledFrames = 0;
   applyTextures(proc);
   const ready = loadAll(); // se resuelve al terminar de cargar (o fallar) los GLB: el procedural queda de respaldo
   let headYaw = 0, headTarget = 0;
@@ -82,12 +87,16 @@ export function createAstronaut({ suitColor, accentColor }) {
     root, ready,
     get pose() { return pose; },
     get kind() { return activeKey; },
+    /** Descarga del modelo (0–1). */
+    get loadProgress() { return glbProgress; },
+    /** Cuadros seguidos con el modelo definitivo en su pose animada (0 = aún no: no mostrarlo). */
+    get settledFrames() { return settledFrames; },
     /** Cambia de pose. `safe` = la escena garantiza que el cambio no se ve (transición o fuera de cuadro). */
-    setPose(p, { safe = true } = {}) {
+    setPose(p, { safe = true, fade } = {}) {
       if (p === pose && !pending) return;
       pose = p;
       const needsSwap = (modelFor(p) ? (glb[p] ? p : "all") : "procedural") !== activeKey;
-      if (!needsSwap) { show(p); return; }
+      if (!needsSwap) { show(p, fade ?? FADE); return; }
       if (safe) { pending = p; swapT = 0; } else pending = p;
     },
     /** Llamar cuando la cámara está en transición o el astronauta está fuera de cuadro. */
@@ -143,6 +152,11 @@ export function createAstronaut({ suitColor, accentColor }) {
       if (headApplied.bone) { headApplied.bone.quaternion.multiply(headQ.copy(headApplied.q).invert()); headApplied.bone = null; }
       if (active === proc) proc.update(dt, t);
       else { active.mixer?.update(dt); if (!active.actions || !Object.keys(active.actions).length) proceduralMotion(active.root, t, pose); }
+      // asentado: modelo definitivo (el GLB; el procedural sólo si el GLB falló), sin cambio pendiente, a tamaño completo
+      // y con la acción de su pose corriendo (el mixer ya la aplicó en este cuadro)
+      const final = loaded && (active !== proc || !Object.keys(glb).length);
+      const anim = active === proc || !active.actions || !Object.keys(active.actions).length || (active.current && active.current === (active.actions[pose] || active.actions.float || active.actions.fly) && active.current.isRunning());
+      settledFrames = final && !pending && swapT < 0 && holder.scale.x >= 1 && anim ? settledFrames + 1 : 0;
       headYaw += (headTarget - headYaw) * (1 - Math.exp(-3 * dt));
       if (Math.abs(headYaw) > 0.002) {
         const hb = active.parts?.headBone || proc.parts?.head;

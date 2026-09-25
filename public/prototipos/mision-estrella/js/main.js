@@ -9,6 +9,10 @@ import { icon } from "./ui/icons.js";
 import { toast, openWhatsApp } from "./ui/toasts.js";
 import { openViewer } from "./ui/viewer.js";
 import { whatsappText } from "../../_shared/rsvp-contract.js";
+import { themeOf, applyThemeCss } from "./themes.js";
+
+// colores de la interfaz según el tema del niño (antes de pintar nada; también en la versión ilustrada)
+applyThemeCss(themeOf(demoData.child));
 
 const SHOWCASE = flag("showcase"), DEBUG = flag("debug");
 const stage = $("#stage"), ui = $("#ui"), poster = $("#poster"), fadeEl = $("#fade");
@@ -20,26 +24,31 @@ function hasWebGL() {
 }
 async function fallback(reason) {
   console.info("[misión] versión ilustrada:", reason);
+  window.__loader?.remove();
   document.documentElement.classList.add("is-fallback");
   const { startFallback } = await import("./fallback/fallback.js");
   startFallback({ audio, debug: DEBUG });
 }
 
+// Entrada de la portada: la escena se dibuja invisible hasta estar 100 % lista (reveal); la portada HTML espera
+// oculta (is-pending) y entra escalonada después del fundido de la escena.
+const intro = { revealed: false, cover: null };
+const loaderSet = (p) => window.__loader?.set(p);
+
 async function boot() {
   if (!hasWebGL()) return fallback("sin WebGL");
-  // título sobre el póster desde el primer instante (mientras carga el 3D)
-  const pre = SHOWCASE ? null : h("div.precover", { "aria-hidden": "true" }, h("p.cover-title", { text: missionName() }), h("p.badge", { html: `${icon("star", { size: 18 })}<span>¡Cumple ${demoData.child.age}!</span>` }));
-  if (pre) ui.append(pre);
-  window.__removePre = () => pre?.remove();
-  let mods;
+  let mods, nMods = 0;
+  const mod = (p) => p.then((m) => { loaderSet(0.03 + 0.04 * ++nMods); return m; }); // barra: módulos (Three.js incluido)
   try {
-    mods = await Promise.all([import("./scene/renderer.js"), import("./scene/timeline.js"), import("./scene/scroll.js"), import("./quality.js")]);
+    mods = await Promise.all([mod(import("./scene/renderer.js")), mod(import("./scene/timeline.js")), mod(import("./scene/scroll.js")), mod(import("./quality.js"))]);
   } catch (e) { return fallback(`no cargó el 3D: ${e.message}`); }
   const [{ createRenderer }, { createFilm }, { createScroll }, { initialLevel, createMonitor, LEVELS }] = mods;
   // fuentes (los textos en canvas las usan) con tope, mientras se ve el póster
   try { if (document.fonts?.load) await Promise.race([Promise.all(["600 40px Fredoka", "500 20px Fredoka", "400 16px Figtree", "800 16px Figtree"].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 1500))]); } catch { /* fuentes del sistema */ }
+  loaderSet(0.2);
 
   const canvas = $("#gl");
+  if (!SHOWCASE) canvas.classList.add("is-hidden"); // se pinta en segundo plano hasta estar lista (en la vitrina la tapa el póster)
   let R;
   try { R = createRenderer(canvas, { stage, level: "medium", maxDpr: SHOWCASE ? 1.25 : 2 }); } catch (e) { return fallback(`WebGL falló: ${e.message}`); }
   const forced = params.get("q");
@@ -47,17 +56,32 @@ async function boot() {
   const markLevel = (l) => document.documentElement.classList.toggle("q-low", l === "low");
   R.setLevel(level); markLevel(level);
   const film = createFilm({ R, quality: LEVELS[level], audio, showcase: SHOWCASE });
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); // deja pintar la pantalla de carga
   const monitor = createMonitor(level, (l) => { if (!forced) { level = l; R.setLevel(l); markLevel(l); } });
   canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); fallback("se perdió el contexto WebGL"); stage.remove(); });
 
-  /* ---------- Póster → 3D ---------- */
-  // El póster se va (fundido de 0.4 s) sólo cuando el 3D ya pintó un frame completo: astronauta GLB (o su
-  // respaldo), foto del visor, shaders compilados y el encuadre de la portada con la franja del título/botón.
-  let bandSet = SHOWCASE, revealAt = -1;
+  /* ---------- Carga → escena (100 % lista) → entrada ---------- */
+  // La escena se revela sólo cuando, 3 cuadros seguidos: GLB, texturas y fotos cargados y decodificados, shaders
+  // compilados, el astronauta en su animación de dormir desde hace ≥ 4 cuadros (nunca en reposo ni pose fija), el
+  // encuadre final calculado con la franja real del título/botón y la portada HTML ya armada (film.coverReady).
+  // Entrada: la pantalla de carga se desvanece (0.4 s, Gloobi se encoge) → la escena aparece desde el índigo (0.8 s)
+  // con un acercamiento de 4 % que termina exacto en el encuadre → título, insignia, botón y enlace (120 ms entre sí).
+  let bandSet = SHOWCASE, readyFrames = 0;
   if (SHOWCASE) film.setCoverBand(flag("title") ? 0.2 : 0.06, 0.95);
-  const reveal = () => { if (revealAt < 0) revealAt = frames + 2; };
-  Promise.race([Promise.all([film.ready, new Promise((r) => { const k = () => (bandSet ? r() : setTimeout(k, 50)); k(); })]), new Promise((r) => setTimeout(r, 9000))]).then(reveal);
   window.__setCoverBand = (a, b) => { film.setCoverBand(a, b); bandSet = true; };
+  const reveal = () => {
+    if (intro.revealed) return;
+    intro.revealed = true;
+    loaderSet(1);
+    const hadLoader = !!window.__loader?.visible;
+    window.__loader?.hide();
+    setTimeout(() => {
+      canvas.classList.remove("is-hidden"); poster?.classList.add("is-out");
+      film.startCoverDrift(); window.__ready = true;
+      setTimeout(() => intro.cover?.playIntro(), prefersReduced() ? 300 : 650);
+    }, hadLoader ? 220 : 0);
+  };
+  const safety = setTimeout(reveal, 30000); // tope: aun con algo trabado, nunca se queda en la carga
 
   /* ---------- Bucle ---------- */
   // Un SOLO bucle vivo (rafId): al ocultarse la pestaña se cancela y al volver se reanuda sólo si no hay otro. Antes, el
@@ -76,11 +100,17 @@ async function boot() {
     const dt = last < 0 ? 0 : Math.min(MAX_DT, Math.max(0, (now - last) / 1000)); last = now; t += dt;
     if (film.mode === "story" && scroll) story = scroll.update(dt);
     film.update(dt, t, story);
-    R.render();
+    // (antes de estar compilado no se dibuja: el primer dibujo compilaría todo de golpe y congelaría la carga)
+    if (intro.revealed || film.renderReady) R.render();
     monitor.tick(dt);
     fadeEl.style.opacity = String(film.fade || 0);
     ctl?.frame(dt, story);
-    if (++frames === revealAt) { poster.classList.add("is-out"); film.startCoverDrift(); window.__ready = true; }
+    frames++;
+    if (!intro.revealed) {
+      loaderSet(0.2 + 0.78 * film.loadProgress());
+      readyFrames = film.coverReady() && bandSet && (SHOWCASE || intro.cover) ? readyFrames + 1 : 0;
+      if (readyFrames >= 3) { clearTimeout(safety); reveal(); }
+    }
     if (!rafId) rafId = requestAnimationFrame(loop);
   }
   start();
@@ -155,9 +185,9 @@ async function startExperience({ R, film, scroll, monitor, getLevel, setLevel })
     scroll.lock(true); scroll.jump(1, 0);
     setHud(false); progress.show(false);
     film.toCover();
-    window.__removePre?.();
-    cover = showCover(ui, {
-      audio, returning,
+    // (primera vez: oculta hasta que la escena está lista y entra escalonada; al repetir, entra de una vez)
+    cover = intro.cover = showCover(ui, {
+      audio, returning, intro: intro.revealed ? "play" : "pending",
       onHold: (p) => {
         film.setHold(p);
         if (soundOn && p > 0 && !audio.isEnabled()) { audio.unlock(); audio.setEnabled(true); } // el gesto desbloquea el audio
@@ -281,7 +311,9 @@ async function startExperience({ R, film, scroll, monitor, getLevel, setLevel })
     if (film.mode === "launch") {
       const L = film.launchInfo;
       let txt = "";
-      if (!L.short) { if (L.t > 1.4 && L.t < 2.2) txt = "3"; else if (L.t >= 2.2 && L.t < 3.0) txt = "2"; else if (L.t >= 3.0 && L.t < 3.8) txt = "1"; else if (L.t >= 3.8 && L.t < 5.0) txt = "¡DESPEGUE!"; }
+      // (relativo al encendido: antes del conteo el astronauta aborda y la escotilla se cierra)
+      const k = L.t - L.ign;
+      if (!L.short) { if (k > -2.4 && k < -1.6) txt = "3"; else if (k >= -1.6 && k < -0.8) txt = "2"; else if (k >= -0.8 && k < 0) txt = "1"; else if (k >= 0 && k < 1.2) txt = "¡DESPEGUE!"; }
       else if (L.t < 1.3) txt = "¡DESPEGUE!";
       if (txt !== lastCount) {
         lastCount = txt; countEl.textContent = txt; countEl.className = `launch-count${txt ? " is-on" : ""}${txt.length > 2 ? " is-go" : ""}`;

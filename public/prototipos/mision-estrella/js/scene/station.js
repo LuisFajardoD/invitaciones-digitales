@@ -7,7 +7,7 @@
 // líneas de escaneo suaves, borde brillante y leve parpadeo).
 // Geometrías y materiales compartidos; vigas, pernos y celdas instanciados. En calidad baja: menos segmentos.
 import * as THREE from "three";
-import { pbr, canvasTex, halo, heightToNormal, rng, solarTexture } from "./materials.js";
+import { pbr, canvasTex, halo, heightToNormal, rng, solarTexture, THEME3D, onTheme, themed } from "./materials.js";
 import { modelOrBuild } from "../characters/rocket.js";
 import { mapSVG } from "../ui/map.js";
 
@@ -29,9 +29,10 @@ function hullTextures() {
   c.fillStyle = g; c.fillRect(0, 0, W, H); hc.fillStyle = "#808080"; hc.fillRect(0, 0, W, H);
   // desgaste sutil: manchitas lavanda muy suaves
   for (let i = 0; i < 90; i++) { const x = r() * W, y = r() * H, rr = 8 + r() * 30, gg = c.createRadialGradient(x, y, 0, x, y, rr); gg.addColorStop(0, "rgba(150,130,190,.07)"); gg.addColorStop(1, "rgba(150,130,190,0)"); c.fillStyle = gg; c.fillRect(x - rr, y - rr, rr * 2, rr * 2); }
-  // franja rosa con filete dorado (a lo largo del módulo: v ≈ 0.62)
+  // franja con filete dorado (a lo largo del módulo: v ≈ 0.62), en los colores del tema (se repinta al cambiarlo)
   const by = H * 0.6;
-  c.fillStyle = "#FF8FA3"; c.fillRect(0, by, W, 30); c.fillStyle = "#FFD27A"; c.fillRect(0, by - 5, W, 3); c.fillRect(0, by + 32, W, 3);
+  const stripe = () => { c.fillStyle = THEME3D.hex.primary; c.fillRect(0, by, W, 30); c.fillStyle = THEME3D.hex.gold; c.fillRect(0, by - 5, W, 3); c.fillRect(0, by + 32, W, 3); };
+  stripe();
   hc.fillStyle = "#8a8a8a"; hc.fillRect(0, by, W, 30);
   // costuras: anillos (horizontales en la textura) y paneles alrededor (verticales)
   const seam = (x0, y0, x1, y1) => {
@@ -48,11 +49,34 @@ function hullTextures() {
   const rows = [0.08, 0.36, 0.86].map((v) => v * H);
   rows.forEach((y) => { seam(0, y, W, y); for (let x = 10; x < W; x += 24) { rivet(x, y - 8); rivet(x, y + 8); } });
   for (let k = 0; k < 10; k++) { const x = (k / 10) * W; seam(x, rows[0], x, rows[1]); seam(x + W / 20, rows[1], x + W / 20, by - 6); seam(x, by + 36, x, rows[2]); }
-  // rótulo amable en un panel
-  c.fillStyle = "#6F5FB0"; c.font = "600 34px Fredoka, system-ui, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
-  c.fillText("ESTACIÓN GLOOBI", W * 0.25, H * 0.22);
   const map = new THREE.CanvasTexture(col); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4; map.wrapS = THREE.RepeatWrapping;
+  onTheme(() => { stripe(); map.needsUpdate = true; });
   return { map, normalMap: heightToNormal(hgt, 3) };
+}
+
+/** Placa del rótulo "ESTACIÓN GLOOBI": panel claro con filete dorado, borde lavanda y remaches en las esquinas. */
+function plaqueTexture() {
+  const W = 1024, H = 400;
+  const draw = (c) => {
+    const rr = (x, y, w, h, r) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
+    c.fillStyle = "#A49DCB"; c.fillRect(0, 0, W, H); // borde metálico (lo que asoma alrededor del panel)
+    rr(14, 14, W - 28, H - 28, 60); c.fillStyle = "#FFC96B"; c.fill();
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#FFFFFF"); g.addColorStop(1, "#EAE3F6");
+    rr(30, 30, W - 60, H - 60, 48); c.fillStyle = g; c.fill();
+    for (const [x, y] of [[70, 70], [W - 70, 70], [70, H - 70], [W - 70, H - 70]]) {
+      const rg = c.createRadialGradient(x - 4, y - 4, 1, x, y, 14); rg.addColorStop(0, "#FFFFFF"); rg.addColorStop(1, "#8C84B8");
+      c.fillStyle = rg; c.beginPath(); c.arc(x, y, 12, 0, Math.PI * 2); c.fill();
+    }
+    c.fillStyle = "#6F5FB0"; c.textAlign = "center"; c.textBaseline = "middle";
+    c.font = "700 112px Fredoka, system-ui, sans-serif";
+    c.fillText("ESTACIÓN", W / 2, H * 0.36, W - 200);
+    c.font = "700 124px Fredoka, system-ui, sans-serif";
+    c.fillText("GLOOBI", W / 2, H * 0.68, W - 200);
+  };
+  const tex = canvasTex(W, H, draw); tex.anisotropy = 4;
+  // (la fuente puede llegar después: se repinta cuando esté lista)
+  document.fonts?.load?.("700 112px Fredoka").then(() => { draw(tex.image.getContext("2d")); tex.needsUpdate = true; }).catch(() => {});
+  return tex;
 }
 
 export function createStation({ low = false } = {}) {
@@ -67,7 +91,7 @@ export function createStation({ low = false } = {}) {
     const hullLav = pbr("#DCD3F5", { rough: 0.5, map: tex.map, normalMap: tex.normalMap, normalScale: 0.7, env: 0.55 });
     const steel = pbr("#A49DCB", { rough: 0.36, metal: 0.6, env: 1, rim: 0.4 });
     const gold = pbr("#FFC96B", { rough: 0.3, metal: 0.7, emissive: "#6a4a10", ei: 0.12, env: 1, rim: 0.4 });
-    const pink = pbr("#FF8FA3", { rough: 0.4, metal: 0.05, env: 0.6 });
+    const pink = themed(pbr("#3D6BE0", { rough: 0.4, metal: 0.05, env: 0.6 }), "primary"); // detalles: primario del tema
     const cells = pbr("#ffffff", { rough: 0.28, metal: 0.35, map: solarTexture(), env: 1.3, emissive: "#1a2266", ei: 0.35, rim: 0.3 });
     const winGlow = new THREE.MeshBasicMaterial({ color: "#FFD9A0", toneMapped: false });
     const winGlass = pbr("#2E3470", { rough: 0.12, metal: 0.2, env: 1.4, emissive: "#FFB870", ei: 0.35 });
@@ -83,6 +107,8 @@ export function createStation({ low = false } = {}) {
       const mod = new THREE.Group(); mod.position.x = s * 1.72; root.add(mod);
       const body = new THREE.Mesh(modGeo, s < 0 ? hull : hullLav); body.rotation.z = Math.PI / 2; body.rotation.x = s < 0 ? 0 : Math.PI; mod.add(body);
       const cap = new THREE.Mesh(capGeo, s < 0 ? hull : hullLav); cap.scale.set(1, 0.55, 1); cap.rotation.z = -s * Math.PI / 2; cap.position.x = s * 0.625; mod.add(cap);
+      // tapa del extremo que da al núcleo (el collar de acoplamiento entra en ella: sin hueco hacia el interior)
+      const endCap = new THREE.Mesh(new THREE.CircleGeometry(0.62, seg(40)), steel); endCap.rotation.y = s * -Math.PI / 2; endCap.position.x = -s * 0.62; mod.add(endCap);
       // anillos de unión (acero + filete dorado) en ambos extremos del cilindro
       for (const e of [-1, 1]) {
         const ring = new THREE.Mesh(ringGeo, steel); ring.rotation.y = Math.PI / 2; ring.position.x = e * 0.63; mod.add(ring);
@@ -115,8 +141,25 @@ export function createStation({ low = false } = {}) {
     const upRing = new THREE.Mesh(new THREE.TorusGeometry(0.47, 0.05, 8, seg(36)), steel); upRing.rotation.x = Math.PI / 2; upRing.position.y = 0.72; up.add(upRing);
     const dome = new THREE.Mesh(new THREE.SphereGeometry(0.4, seg(32), seg(16), 0, Math.PI * 2, 0, Math.PI / 2), winGlass); dome.position.y = 0.72; up.add(dome);
     for (let k = 0; k < 6; k++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(0.405, 0.018, 6, seg(20), Math.PI / 2), steel); rib.rotation.y = (k / 6) * Math.PI * 2; rib.position.y = 0.72; up.add(rib); }
-    // --- armazón (truss) que sube detrás hasta las alas solares: rieles + diagonales instanciados
-    const trussH = 2.3, tz = -0.35, ty0 = 1.8, half = 0.2;
+    // --- cuello de acoplamiento: une la base del módulo superior con el núcleo (entra en la esfera: sin hueco), con
+    // anillo de unión sobre el casco, filete dorado, anillo bajo el módulo y dos hileras de remaches
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.46, seg(32), 1, true), hullLav); neck.position.y = 0.82; root.add(neck);
+    const neckBase = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.055, 8, seg(36)), steel); neckBase.rotation.x = Math.PI / 2; neckBase.position.y = 0.78; root.add(neckBase);
+    const neckGold = new THREE.Mesh(new THREE.TorusGeometry(0.39, 0.02, 6, seg(36)), gold); neckGold.rotation.x = Math.PI / 2; neckGold.position.y = 0.9; root.add(neckGold);
+    const neckTop = new THREE.Mesh(new THREE.TorusGeometry(0.47, 0.05, 8, seg(36)), steel); neckTop.rotation.x = Math.PI / 2; neckTop.position.y = 1.01; root.add(neckTop);
+    const upBase = new THREE.Mesh(new THREE.CircleGeometry(0.5, seg(36)), steel); upBase.rotation.x = Math.PI / 2; upBase.position.y = 1.0; root.add(upBase); // (fondo del módulo superior)
+    {
+      const n = low ? 10 : 18, rivetGeo = new THREE.SphereGeometry(0.02, 8, 6), rv = new THREE.InstancedMesh(rivetGeo, steel, n * 2), m = new THREE.Matrix4();
+      for (let k = 0; k < n * 2; k++) {
+        const y = k < n ? 0.85 : 0.96, rad = 0.42 - ((y - 0.59) / 0.46) * 0.06 + 0.008, ang = ((k % n) + (k < n ? 0 : 0.5)) / n * Math.PI * 2;
+        rv.setMatrixAt(k, m.makeTranslation(Math.sin(ang) * rad, y, Math.cos(ang) * rad));
+      }
+      root.add(rv);
+    }
+    // --- armazón (truss) que sube detrás hasta las alas solares: rieles + diagonales instanciados. Arranca sobre el
+    // anillo superior del módulo (sus cuatro rieles caben en él), con una placa de montaje
+    const trussH = 2.38, tz = -0.28, ty0 = 1.72, half = 0.17;
+    const mount = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.5), steel); mount.position.set(0, ty0 + 0.02, tz); root.add(mount);
     const strut = new THREE.BoxGeometry(0.045, 1, 0.045);
     const bars = [];
     const M = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), a = new THREE.Vector3(), b = new THREE.Vector3(), d = new THREE.Vector3();
@@ -132,9 +175,11 @@ export function createStation({ low = false } = {}) {
         bar(new THREE.Vector3(x0, k % 2 ? y0 : y1, tz + z0), new THREE.Vector3(x1, k % 2 ? y1 : y0, tz + z1));
       }
     }
-    const truss = new THREE.InstancedMesh(strut, steel, bars.length); bars.forEach((m, i) => truss.setMatrixAt(i, m)); root.add(truss);
-    // --- alas solares: brazo articulado (codo dorado) + dos paneles con marco por lado
+    // --- alas solares: brazo articulado (codo dorado) + dos paneles con marco por lado; el codo va sobre un travesaño
+    // del armazón (el brazo queda unido a la torre)
     const topY = ty0 + trussH - 0.25;
+    for (const s of [-1, 1]) bar(new THREE.Vector3(s * half, topY, tz - half), new THREE.Vector3(s * half, topY, tz + half));
+    const truss = new THREE.InstancedMesh(strut, steel, bars.length); bars.forEach((m, i) => truss.setMatrixAt(i, m)); root.add(truss);
     const panelGeo = new THREE.BoxGeometry(1.05, 0.72, 0.03), frameGeo = new THREE.BoxGeometry(1.1, 0.04, 0.05), frameGeoV = new THREE.BoxGeometry(0.04, 0.76, 0.05);
     for (const s of [-1, 1]) {
       const arm = new THREE.Group(); arm.position.set(s * half, topY, tz); root.add(arm);
@@ -158,7 +203,10 @@ export function createStation({ low = false } = {}) {
     const dm = pbr("#FFF7EC", { rough: 0.45, metal: 0.1, env: 0.8, side: THREE.DoubleSide }); dish.add(new THREE.Mesh(new THREE.LatheGeometry(prof, seg(32)), dm));
     const feed = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.36, 6), steel); feed.position.y = 0.18; dish.add(feed);
     const horn = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), gold); horn.position.y = 0.37; dish.add(horn);
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8), steel); mast.position.set(1.85, 0.62, -0.1); root.add(mast);
+    // mástil justo bajo el vértice del plato (entra en el casco del módulo) con su articulación dorada
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.34, 8), steel); mast.position.set(1.95, 0.56, -0.1); root.add(mast);
+    const mastJ = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), gold); mastJ.position.set(1.95, 0.72, -0.1); root.add(mastJ);
+    const mastB = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.05, 12), steel); mastB.position.set(1.95, 0.6, -0.1); root.add(mastB);
     const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.018, 0.8, 6), steel); ant.position.set(-1.9, 0.95, -0.15); ant.rotation.z = 0.25; root.add(ant);
     const tip = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 8), pink); tip.position.set(-2.0, 1.34, -0.15); root.add(tip);
     // --- proyector del holograma (al frente del núcleo)
@@ -166,6 +214,9 @@ export function createStation({ low = false } = {}) {
     proj.add(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.26, 0.12, seg(24)), steel));
     const lens = new THREE.Mesh(new THREE.CircleGeometry(0.15, seg(24)), new THREE.MeshBasicMaterial({ color: "#8FF3FF", toneMapped: false })); lens.rotation.x = -Math.PI / 2; lens.position.y = 0.065; proj.add(lens);
     const pr = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.02, 8, seg(24)), gold); pr.rotation.x = Math.PI / 2; pr.position.y = 0.06; proj.add(pr);
+    // --- rótulo "ESTACIÓN GLOOBI": placa curva sobre el núcleo, debajo del proyector (se lee completo de frente)
+    const plaque = new THREE.Mesh(new THREE.SphereGeometry(0.962, seg(32), 8, Math.PI / 2 - 0.6, 1.2, Math.PI * 0.34, Math.PI * 0.155), pbr("#ffffff", { rough: 0.45, metal: 0.05, map: plaqueTexture(), env: 0.5 }));
+    plaque.scale.set(1, 0.94, 1); root.add(plaque);
     return { root };
   });
   group.add(holder);

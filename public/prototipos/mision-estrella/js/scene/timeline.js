@@ -5,14 +5,15 @@ import * as THREE from "three";
 import { demoData, visorPhotos, VISOR_FALLBACK } from "../data.js";
 import { clamp, smooth, easeInOut, easeIn, invLerp, lerp, prefersReduced, vibrate, missionName, loadPhoto } from "../util.js";
 import { V, samplePath, blendShots, camSpace, shake, shot } from "./camera-path.js";
-import { ENV, glowTexture, createStudioEnv, pbr, canvasTex } from "./materials.js";
+import { ENV, glowTexture, createStudioEnv, refreshStudioEnv, pbr, canvasTex, THEME3D, onTheme, setTheme3D } from "./materials.js";
+import { THEMES, themeOf, applyThemeCss } from "../themes.js";
 import { renderNebula } from "./nebula.js";
-import { moonSurface } from "./moon-surface.js";
+import { moonSurfaceAsync } from "./moon-surface.js";
 import { createSky, createNebulaClouds } from "./sky.js";
 import { createStars } from "./stars.js";
 import { createEarth } from "./earth.js";
 import { createLaunchSet, PAD_Y, CLOUD_Y } from "./launch.js";
-import { createCrescent, createMoonSet } from "./moon.js";
+import { createCrescent, createMoonSet, refreshMoonMaterials } from "./moon.js";
 import { createStation } from "./station.js";
 import { createConstellation } from "./constellation.js";
 import { createMemories } from "./memories.js";
@@ -39,7 +40,6 @@ const MEM0 = V(40, 0, -290), MEMDIR = V(-40, 0, -80).normalize();
 const FLIGHT = V(-40, 0, -440), CARGO = V(-40, -1, -462);
 const EARTH_R = 100, EARTH_Y = -114; // la curvatura se ve desde la órbita
 const WALK = V(0.9, 2.48, 2.6); // dónde saluda el astronauta en la caminata
-const JUMP_FROM = V(2.4, PAD_Y + 0.9, 1.6);
 export const CHAPTER_COUNT = 9;
 // Portada: media luna [giro Z, escala] y astronauta [rotX, rotY, rotZ (orden ZYX), x, y, z, giro del casco] respecto
 // a COVER (el casco gira −0.4 rad hacia la cámara: la cara queda centrada en el visor; sin tocar la luna)
@@ -55,11 +55,16 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   const { scene, camera } = R;
   const reduced = () => prefersReduced();
   const q = quality;
+  // --- tema de color del niño (antes que cualquier material: cohete, torre, parche, luz de borde)
+  setTheme3D(themeOf(demoData.child));
+  let patchR = null; // último RSVP con el que se pintó el parche (para repintarlo al cambiar de tema)
   // --- cielo, nebulosa, estrellas
   const neb = renderNebula(R.renderer, { w: q.nebula, h: q.nebula / 2 });
   ENV.envMap.value = neb;
   try { createStudioEnv(R.renderer); } catch { /* sin reflejos de estudio */ }
-  try { moonSurface(R.renderer, q.name === "high" ? 2048 : 1024); } catch { /* luna sencilla */ }
+  // superficie lunar sin bloquear (compila en paralelo y se dibuja por franjas): la escena no se muestra hasta tenerla
+  const frameP = () => new Promise((r) => requestAnimationFrame(() => r()));
+  const surfP = moonSurfaceAsync(R.renderer, q.name === "high" ? 2048 : 1024).then(() => refreshMoonMaterials(scene)).catch(() => { /* luna sencilla */ }).then(() => { load.surface = 1; });
   const sky = createSky(neb); scene.add(sky.mesh);
   const clouds = createNebulaClouds(showcase ? 6 : 10); scene.add(clouds);
   const stars = createStars({ density: q.stars }); scene.add(stars.group);
@@ -69,10 +74,11 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   // fotos del visor (dormido / despierto): se decodifican y se preparan como texturas ANTES de mostrar el 3D
   const PH = visorPhotos(demoData.child);
   const photoP = Promise.all([loadPhoto(PH.sleeping, VISOR_FALLBACK), PH.awake === PH.sleeping ? null : loadPhoto(PH.awake, VISOR_FALLBACK)])
-    .then(([s, a]) => { const ts = visorTexture(s), ta = a ? visorTexture(a) : ts; astro.setVisorPhotos(ts, ta); }).catch(() => {});
-  // Listo para mostrarse: astronauta (GLB o respaldo) con su pose, foto del visor y shaders de lo visible compilados
-  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const ready = Promise.all([astro.ready, photoP]).then(() => wait(400)).then(() => precompile(true));
+    .then(([s, a]) => { const ts = visorTexture(s), ta = a ? visorTexture(a) : ts; astro.setVisorPhotos(ts, ta); }).catch(() => {}).then(() => { load.photos = 1; });
+  // Listo para mostrarse: astronauta (GLB o respaldo) con su pose, fotos del visor y shaders de lo visible compilados
+  // (y texturas subidas a la GPU). La portada además espera a que el astronauta esté asentado y el encuadre estable
+  // (coverReady): el 3D nunca se ve a medio cargar.
+  const load = { photos: 0, compiled: 0, surface: 0, built: 0 };
   // --- portada: media luna como cuna (abertura hacia arriba a la derecha); [giro Z, escala] ajustable con ?cres=
   const params = new URLSearchParams(location.search);
   const CRES = (params.get("cres") || CRES_DEFAULT).split(",").map(Number);
@@ -84,7 +90,7 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     () => { W.earth = createEarth({ radius: EARTH_R, low: q.name === "low" }); W.earth.group.position.set(0, EARTH_Y, 0); W.earth.group.visible = false; scene.add(W.earth.group); },
     () => { W.launch = createLaunchSet({ particles: q.particles, low: q.name === "low" }); W.launch.group.visible = false; scene.add(W.launch.group); },
     () => { W.rocket = createRocket(demoData.child); W.rocket.root.visible = false; scene.add(W.rocket.root); W.rocket.root.add(W.launch.flame); W.mural = createMural(W.rocket, demoData.rsvp); },
-    () => { W.constellation = createConstellation({ age: demoData.child.age, name: demoData.child.name, width: 22 }); W.constellation.group.position.copy(CONST); W.constellation.group.visible = false; scene.add(W.constellation.group); },
+    () => { W.constellation = createConstellation({ age: demoData.child.age, name: demoData.child.name, width: 22, onChime: (k) => audio.chime(k) }); W.constellation.group.position.copy(CONST); W.constellation.group.visible = false; scene.add(W.constellation.group); },
     () => { W.moon = createMoonSet(); W.moon.group.position.copy(MOON); samplePath(CH[4].keys, 0.6, sA); W.moon.setAnchor(sA.pos, sA.tgt); W.moon.group.visible = false; scene.add(W.moon.group); },
     () => { W.station = createStation({ low: q.name === "low" }); W.station.group.position.copy(STATION); W.station.group.rotation.y = -0.3; W.station.screen.rotation.y = 0.12; /* la pantalla, de frente a la cámara */ W.station.group.visible = false; scene.add(W.station.group); },
     () => { W.memories = createMemories({ anchor: MEM0, dir: MEMDIR, low: q.name === "low", density: Math.max(0.6, q.particles) }); W.memories.group.visible = false; scene.add(W.memories.group); },
@@ -105,17 +111,19 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   tGeo.setAttribute("uv", new THREE.BufferAttribute(tUv, 2));
   const tether = new THREE.Mesh(tGeo, tetherMaterial());
   tether.frustumCulled = false; tether.visible = false; scene.add(tether);
-  /** Cordón acolchado: crema con franja en espiral rosa y filete dorado (se repite a lo largo). */
+  /** Cordón acolchado: crema con franja en espiral del color del tema y filete dorado (se repite a lo largo). */
   function tetherMaterial() {
-    const map = canvasTex(128, 64, (c, w, hh) => {
+    const paint = (c, w, hh) => {
       c.fillStyle = "#FFF7EC"; c.fillRect(0, 0, w, hh);
       c.save(); c.transform(1, 0, -0.9, 1, 0, 0);
-      c.fillStyle = "#FF8FA3"; for (let x = 0; x < w * 2; x += 64) c.fillRect(x, 0, 18, hh);
-      c.fillStyle = "#FFD27A"; for (let x = 0; x < w * 2; x += 64) c.fillRect(x + 20, 0, 4, hh);
+      c.fillStyle = THEME3D.hex.primary; for (let x = 0; x < w * 2; x += 64) c.fillRect(x, 0, 18, hh);
+      c.fillStyle = THEME3D.hex.gold; for (let x = 0; x < w * 2; x += 64) c.fillRect(x + 20, 0, 4, hh);
       c.restore();
       const g = c.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, "rgba(60,40,110,.18)"); g.addColorStop(0.5, "rgba(255,255,255,0)"); g.addColorStop(1, "rgba(60,40,110,.18)");
       c.fillStyle = g; c.fillRect(0, 0, w, hh);
-    });
+    };
+    const map = canvasTex(128, 64, paint);
+    onTheme(() => { paint(map.image.getContext("2d"), 128, 64); map.needsUpdate = true; });
     map.wrapS = map.wrapT = THREE.RepeatWrapping;
     return pbr("#ffffff", { map, rough: 0.5, metal: 0.05, env: 0.5, rim: 0.6, emissive: "#3a2f6a", ei: 0.25 });
   }
@@ -147,7 +155,11 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   }
   let built = 0;
   const buildUpTo = (n) => { while (built < Math.min(n, builders.length)) builders[built++](); };
-  if (!showcase) buildUpTo(3); // portada + despegue listos; el resto conforme se acerca
+  // portada + despegue (Tierra, torre, cohete) listos antes de mostrar la escena, uno por cuadro (sin congelar la
+  // pantalla de carga); el resto conforme se acerca
+  const prepP = showcase ? Promise.resolve() : (async () => { for (let k = 1; k <= 3; k++) { await frameP(); buildUpTo(k); load.built = k / 3; } })();
+  if (showcase) load.built = 1;
+  const ready = Promise.all([astro.ready, photoP, surfP, prepP]).then(() => precompile(true)).then(() => { load.compiled = 1; });
   const buildIdle = () => { if (built < builders.length) { buildUpTo(built + 1); setTimeout(buildIdle, 150); } else precompile(); };
   /** Compila los shaders de todo el mundo en segundo plano (evita tirones la primera vez que aparece cada parte). */
   // (también se llama antes de mostrar el 3D con lo ya construido: portada, despegue, Tierra y cohete)
@@ -192,6 +204,21 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   const rA = { pose: "fly", look: "camera", visible: true, scale: 1, inRocket: false }, rB = { ...rA };
   const finalC = new THREE.Quaternion(), finalD = new THREE.Quaternion(), mA = new THREE.Matrix4(), mB = new THREE.Matrix4();
   const fL = V(0, 0, 0), uL = V(0, 0, 0), fT = V(0, 0, 0), bx = V(0, 0, 0), by = V(0, 0, 0);
+  const gLook = V(0, 0, 0); let gLookCam = true; // a dónde mira el astronauta (Gloobi lo imita)
+  // viaje entre capítulos con la pose fly (ver updateStory): on = volando; g = posición global anterior (capítulo + p);
+  // still = s sin moverse; stalled = detenido a medio viaje (float); dir = sentido del scroll (con histéresis: acc
+  // acumula lo recorrido en contra); offT = s desde el último cambio de estado
+  const fl = { on: false, g: -1, still: 0, stalled: false, moved: 0, dir: 1, acc: 0, offT: 9, onT: 0, carry: false };
+  const flyDir = V(0, 0, 0), flySide = V(0, 0, 0), flyPrev = V(0, 0, 0);
+  const relA = V(0, 0, 0), relB = V(0, 0, 0), cF = V(0, 0, 0), cR = V(0, 0, 0), cU = V(0, 0, 0), cD = V(0, 0, 0);
+  /** Inverso de camSpace: el punto P en espacio del encuadre s (x derecha, y arriba, z hacia adelante). */
+  function camLocal(s, P, out) {
+    cF.subVectors(s.tgt, s.pos).normalize(); cR.crossVectors(cF, UP).normalize(); cU.crossVectors(cR, cF).normalize();
+    cD.subVectors(P, s.pos); return out.set(cD.dot(cR), cD.dot(cU), cD.dot(cF));
+  }
+  // abordaje del despegue: puntos de la pasarela, frente de la escotilla, dentro, orientación hacia adentro
+  const bA = V(0, 0, 0), bB = V(0, 0, 0), bFront = V(0, 0, 0), bIn = V(0, 0, 0), bOff = V(0, 0, 0), bQ = new THREE.Quaternion();
+  const Y180 = new THREE.Quaternion().setFromAxisAngle(V(0, 1, 0), Math.PI), Z_AXIS = V(0, 0, 1);
 
   /* ---------- Portada: encuadre automático ---------- */
   // El grupo (media luna + astronauta + Gloobi) queda centrado: ~85 % del ancho en vertical y dentro de la franja
@@ -251,7 +278,10 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     const a = (t / 24) * Math.PI * 2; // loop perfecto de 24 s, oscilando alrededor del centro del grupo
     cDir.copy(CDIR).applyAxisAngle(UP, Math.sin(a) * 0.07).applyAxisAngle(cRight, Math.sin(a * 2) * 0.03);
     out.tgt.copy(c.ctr).add(c.off);
-    out.pos.copy(c.ctr).addScaledVector(cDir, c.d * (1 + Math.sin(a) * 0.015)).add(c.off);
+    // entrada: acercamiento leve (4 % → 0 en 1.2 s, curva que sólo desacelera: termina exacto en el encuadre, sin
+    // rebote); con movimiento reducido, nada
+    const intro = st.coverT0 >= 0 && !reduced() ? 0.04 * Math.pow(1 - clamp(t / 1.2), 3) : 0;
+    out.pos.copy(c.ctr).addScaledVector(cDir, c.d * (1 + Math.sin(a) * 0.015) * (1 + intro)).add(c.off);
     return out;
   }
   // Astronauta dormido acurrucado en la curva interior de la media luna (pose "sleep": rodillas al pecho abrazando a
@@ -279,8 +309,21 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   }
 
   /* ---------- Despegue ---------- */
-  const LAUNCH_LEN = () => (st.launchShort ? 2.6 : 7.2);
-  const IGN = () => (st.launchShort ? 0.15 : 3.8); // momento del despegue
+  // (el despegue completo empieza con el abordaje: el astronauta camina por la pasarela de la torre, da un saltito
+  // frente a la escotilla abierta y entra por ella; la escotilla se cierra y luego viene el conteo 3-2-1)
+  const LAUNCH_LEN = () => (st.launchShort ? 2.6 : 9.0);
+  const IGN = () => (st.launchShort ? 0.15 : 5.6); // momento del despegue
+  // abordaje (s): pasarela, saltito, entra, se hace a un lado; Gloobi lo sigue (gDelay) y entra (gIn0 → gIn1); la
+  // escotilla se cierra antes del conteo (IGN − 2.4) y los dos se asoman por el vidrio (seat0 → seat1)
+  const BOARD = { walk0: 0.1, walk1: 1.3, hop1: 1.8, in1: 2.4, aside1: 2.75, gDelay: 0.35, gIn0: 2.15, gIn1: 2.75, close0: 2.8, close1: 3.15, seat0: 3.2, seat1: 4.1 };
+  const bAside = V(0, 0, 0);
+  /** Recorrido del astronauta al abordar (posición). */
+  function boardPos(t, out) {
+    if (t < BOARD.walk1) { const k = clamp((t - BOARD.walk0) / (BOARD.walk1 - BOARD.walk0)); out.lerpVectors(bA, bB, easeInOut(k)); out.y += Math.abs(Math.sin(k * Math.PI * 5)) * 0.07; return out; }
+    if (t < BOARD.hop1) { const k = clamp((t - BOARD.walk1) / (BOARD.hop1 - BOARD.walk1)); out.lerpVectors(bB, bFront, easeInOut(k)); out.y += Math.sin(k * Math.PI) * 0.3; return out; }
+    if (t < BOARD.in1) return out.lerpVectors(bFront, bIn, easeInOut((t - BOARD.hop1) / (BOARD.in1 - BOARD.hop1)));
+    return out.lerpVectors(bIn, bAside, smooth((t - BOARD.in1) / (BOARD.aside1 - BOARD.in1)));
+  }
   function rocketLaunchY(lt) {
     const start = PAD_Y + 0.9;
     if (lt < IGN()) return start;
@@ -307,7 +350,8 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   // Encuadres: [p, posición, objetivo]. El primero empieza en T (llegada desde el capítulo anterior).
   const CH = {
     1: { keys: [[0, V(5.5, 6.5, 12), V(0, 1.2, 0)], [1, V(4.4, 5.5, 10.8), V(0, 1.6, 0)]] },
-    2: { keys: [[T, V(3.6, 3.0, 8.6), V(0.2, 2.2, 1)], [0.5, V(2.7, 2.8, 6.2), V(0.7, 2.45, 2.2)], [0.72, V(1.3, 2.85, 4.25), V(0.9, 2.78, 2.6)], [0.86, V(1.35, 2.85, 4.2), V(0.9, 2.78, 2.6)], [1, V(2.1, 3.3, 5.6), V(0.8, 2.7, 2.3)]] },
+    // (la salida por la escotilla queda centrada: el objetivo sigue el eje de salida hasta que llega a saludar)
+    2: { keys: [[T, V(3.6, 3.0, 8.6), V(-0.05, 2.15, 1.3)], [0.44, V(2.9, 2.85, 6.8), V(-0.05, 2.3, 2.1)], [0.5, V(2.7, 2.8, 6.2), V(0.35, 2.4, 2.3)], [0.72, V(1.3, 2.85, 4.25), V(0.9, 2.78, 2.6)], [0.86, V(1.35, 2.85, 4.2), V(0.9, 2.78, 2.6)], [1, V(2.1, 3.3, 5.6), V(0.8, 2.7, 2.3)]] },
     3: { keys: [[T, V(1.8, 4, 9.5), V(0.6, 5.5, 0)], [0.5, V(0, 5, 22), V(0, 23, -40)], [1, V(0, 5.5, 24), V(0, 24, -40)]] },
     4: { keys: [[T, MOON.clone().add(V(14, 6, 60)), MOON], [0.6, MOON.clone().add(V(4, 3, 45)), MOON.clone().add(V(0, -2.5, 0))], [1, MOON.clone().add(V(2, 2.5, 43)), MOON.clone().add(V(0, -2.5, 0))]] },
     // estación: primero completa y grande (sin tarjeta), luego la pantalla del mapa junto a la tarjeta
@@ -335,14 +379,84 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   /** Dónde está el astronauta en cada capítulo. Escribe la posición en out y devuelve r (pose, mirada...). */
   // Poses por capítulo: portada sleep · despegue y final fly · caminata y despedidas wave · tripulación celebrate ·
   // el resto float.
+  // Salida por la escotilla (cap. 2), en fracciones del capítulo: aparece dentro de la cabina (show), sale en línea
+  // recta perpendicular a la pared (go → out) con la pose fly y la orientación fija, sin tocar el marco (su silueta
+  // cabe en el paso con holgura); ya afuera pasa a float (0.6 s), gira hacia la cámara (turn) y va a saludar (walk,
+  // wave). Antes (show → go) deja la ventana y se coloca en el eje, dentro. Gloobi, que estaba asomado a su lado,
+  // se aparta dentro de la cabina (gAside) mientras él sale, vuelve al eje (gIn → gGo), sale después por el mismo eje
+  // (gGo → gOut) y luego se acomoda a su lado (gSide).
+  const EXIT = { show: 0.22, go: 0.3, out: 0.46, turn: 0.5, wave: 0.56, walk: 0.58, gAside: 0.24, gIn: 0.4, gGo: 0.44, gOut: 0.54, gSide: 0.6 };
+  const FLY_C = V(-0.05, -0.06, 0); // centro (local) del círculo mínimo que contiene la silueta fly vista de frente
+  const exC = V(0, 0, 0), exN = V(0, 0, 0), exS = V(0, 0, 0), exE = V(0, 0, 0), exG0 = V(0, 0, 0), exG1 = V(0, 0, 0), exQ = new THREE.Quaternion(), exOff = V(0, 0, 0);
+  /** Eje de la escotilla: centro, normal, orientación de salida (frente = normal, arriba = vertical) y extremos. */
+  function exitFrame() {
+    W.rocket.hatchWorld(exC, exN);
+    bx.crossVectors(UP, exN).normalize(); by.crossVectors(exN, bx); mA.makeBasis(bx, by, exN); exQ.setFromRotationMatrix(mA);
+    exOff.copy(FLY_C).applyQuaternion(exQ); // la silueta queda centrada en el eje
+    exS.copy(exC).addScaledVector(exN, -0.88).sub(exOff); // dentro: el brazo al frente queda detrás del collarín
+    exE.copy(exC).addScaledVector(exN, 1.4).sub(exOff); // afuera: la espalda a ~1 cuerpo de la pared
+    exG0.copy(exC).addScaledVector(exN, -1.35); exG1.copy(exC).addScaledVector(exN, 0.75);
+    exR.crossVectors(UP, exN).normalize(); // derecha, vista desde afuera
+  }
+
+  /* ---------- Asomados por la escotilla (dentro del cohete) ---------- */
+  // El astronauta, con el visor justo detrás del vidrio y un poco a la izquierda, mirando a la cámara con el casco
+  // derecho (la orientación se mide con los ejes reales del casco: sirve para cualquier pose); Gloobi a su derecha, un
+  // poco más abajo, dentro del tubo de la escotilla. Se usa en el despegue, el cap. 1, el cap. 2 antes de salir y el
+  // final (cap. 9). Todo dentro de la cabina: sólo se ve por la escotilla.
+  const SEAT = { depth: 0.26, dx: -0.15, scale: 0.9, gDepth: 0.1, gDx: 0.3, gDy: 0.1 };
+  const exR = V(0, 0, 0), seatP = V(0, 0, 0), seatQ = new THREE.Quaternion(), seatFrom = V(0, 0, 0), seatFromQ = new THREE.Quaternion();
+  /** Calcula (sin aplicar) seatP / seatQ para el cuadro actual (exitFrame() ya llamado). */
+  function seatSolve() {
+    astro.root.quaternion.copy(st.finalQ); astro.root.updateMatrixWorld(true);
+    astro.visorWorld(tmp3);
+    finalC.copy(st.finalQ).invert();
+    // ejes reales del casco (frente y arriba) en el espacio del astronauta
+    astro.headAxes(fL, uL); fL.applyQuaternion(finalC); uL.applyQuaternion(finalC);
+    bx.crossVectors(uL, fL).normalize(); uL.crossVectors(fL, bx); mA.makeBasis(bx, uL, fL);
+    fT.subVectors(cam.pos, tmp3); fT.y *= 0.5; fT.normalize(); fT.addScaledVector(UP, -fT.dot(UP) * 0.6).normalize();
+    fT.lerp(exN, 0.45).normalize(); // (a medio camino del eje de la escotilla: el cuerpo no gira tanto como para salirse del casco)
+    bx.crossVectors(UP, fT).normalize(); by.crossVectors(fT, bx); mB.makeBasis(bx, by, fT);
+    finalD.setFromRotationMatrix(mB.multiply(mA.transpose()));
+    st.finalQ.slerp(finalD, 0.35);
+    astro.root.quaternion.copy(st.finalQ); astro.root.updateMatrixWorld(true);
+    tmp2.copy(exC).addScaledVector(exN, -SEAT.depth).addScaledVector(exR, SEAT.dx); astro.visorWorld(tmp3);
+    seatP.copy(astro.root.position).add(tmp2.sub(tmp3)); seatQ.copy(st.finalQ);
+  }
+  /** Asomado (w = 1) o en camino desde seatFrom / seatFromQ (w < 1). */
+  function applySeat(w) {
+    seatSolve();
+    if (w >= 1) { astro.root.position.copy(seatP); astro.root.quaternion.copy(seatQ); }
+    else { astro.root.position.lerpVectors(seatFrom, seatP, w); astro.root.quaternion.copy(seatFromQ).slerp(seatQ, w); }
+    astro.root.scale.setScalar(lerp(1, SEAT.scale, w));
+    astro.root.updateMatrixWorld(true);
+  }
+  /** Lugar de Gloobi asomado junto al astronauta. */
+  const gWin = (out) => out.copy(exC).addScaledVector(exN, -SEAT.gDepth).addScaledVector(exR, SEAT.gDx).addScaledVector(UP, SEAT.gDy);
+  /** Gloobi por un recorrido exacto (no el seguimiento libre, que atajaría por la pared). */
+  function gAt(pos) { st.gloobiPath = true; gloobi.follow(null); gloobi.root.position.copy(pos); }
+  /** Igual, suavizado (sólo afuera: para empalmar con donde estaba). */
+  function gToward(pos, dt) {
+    st.gloobiPath = true; gloobi.follow(null);
+    if (gloobi.root.position.distanceTo(pos) > 3) gloobi.teleport(pos); else gloobi.root.position.lerp(pos, 1 - Math.exp(-12 * dt));
+  }
   function astroAt(i, p, out, r) {
-    r.pose = "float"; r.look = "camera"; r.visible = true; r.scale = 1; r.inRocket = false;
-    if (i === 1) { r.visible = false; r.inRocket = true; out.copy(A).set(0, 2.2, 0.4); return r; }
-    if (i === 2) {
-      W.rocket.windowWorld(tmp3); tmp3.y -= 0.1; tmp3.z -= 0.45;
-      out.lerpVectors(tmp3, WALK, smooth((p - 0.3) / 0.25));
-      r.visible = p > 0.26; r.inRocket = p < 0.5; r.pose = p > 0.5 ? "wave" : "float";
-      r.look = p > 0.45 ? "camera" : "out";
+    r.pose = "float"; r.look = "camera"; r.visible = true; r.scale = 1; r.inRocket = false; r.exact = false; r.fade = undefined; r.seat = -1;
+    // 1: asomado con Gloobi por el vidrio de la escotilla cerrada (llegan así del despegue)
+    if (i === 1) { exitFrame(); r.inRocket = true; r.seat = 1; r.look = "none"; out.copy(exC); return r; }
+    if (i === 2) { // salida por la escotilla (ver EXIT)
+      exitFrame();
+      r.inRocket = p < EXIT.out;
+      if (p < EXIT.go) { // deja la ventana: de asomado a su lugar en el eje, dentro, ya con la pose fly
+        r.seat = 1 - smooth((p - EXIT.show) / (EXIT.go - EXIT.show)); seatFrom.copy(exS); seatFromQ.copy(exQ);
+        r.pose = p > EXIT.show ? "fly" : "float"; r.look = "none"; out.copy(exS);
+      } else if (p < EXIT.out) { // dentro → afuera en línea recta sobre el eje de la escotilla, pose fly, orientación fija
+        out.lerpVectors(exS, exE, easeInOut(clamp((p - EXIT.go) / (EXIT.out - EXIT.go))));
+        r.pose = "fly"; r.look = "exit"; r.exact = true;
+      } else { // ya afuera (a ~1 cuerpo de la pared): float, gira hacia la cámara y va a saludar
+        out.lerpVectors(exE, WALK, smooth((p - EXIT.turn) / (EXIT.walk - EXIT.turn)));
+        r.pose = p > EXIT.wave ? "wave" : "float"; r.look = "camera"; r.fade = 0.6;
+      }
       return r;
     }
     // constelación: mira las estrellas y, al completarse el nombre, se voltea hacia la cámara (visor de frente)
@@ -358,22 +472,78 @@ export function createFilm({ R, quality, audio, showcase = false }) {
       return r;
     }
     if (i === 8) { samplePath(CH[8].keys, 0.6, sA); sA.pos.add(muralDelta); sA.tgt.add(muralDelta); camSpace(sA.pos, sA.tgt, 0.5, -0.62, 3.6, out); r.pose = "celebrate"; return r; }
-    // 9: sentado en la ventana del cohete, que se aleja
+    // 9: asomado por el vidrio de la escotilla cerrada, saludando, mientras el cohete se aleja (la llegada desde el
+    // cap. 8 la hace final9)
     rocketAt(9, p, tmp3); W.rocket.root.position.copy(tmp3); W.rocket.root.updateMatrixWorld(true);
-    W.rocket.windowWorld(out); out.y -= 0.34; out.z -= 0.42;
-    r.pose = "fly"; r.scale = 0.95; r.inRocket = true; r.look = "none";
+    exitFrame(); out.copy(exC);
+    r.pose = "wave"; r.inRocket = true; r.look = "none"; r.seat = 1;
     return r;
   }
 
+  // Final (cap. 9, en fracciones del capítulo): del mural vuela a la escotilla (abierta) con la pose fly y entra por
+  // su eje; ya dentro se hace a un lado y entra Gloobi, que lo siguió; la escotilla se cierra y los dos se asoman por
+  // el vidrio (él saluda) antes de que el cohete arranque (p = 0.3).
+  const V9W = V(0, 2.05, 1); // escotilla respecto a la base del cohete (sin girar)
+  const FIN = { fly: 0.1, in: 0.145, aside: 0.185, gDelay: 0.035, gIn0: 0.135, gIn1: 0.18, open0: 0.01, open1: 0.08, close0: 0.19, close1: 0.24, seat0: 0.21, seat1: 0.28 };
+  const fP8 = V(0, 0, 0), fF = V(0, 0, 0), fIn = V(0, 0, 0), fAside = V(0, 0, 0), arcV = V(0, 0, 0), fQ = new THREE.Quaternion(), rF = { ...rA };
+  /** Posición del astronauta en el recorrido de llegada (q en fracciones del cap. 9; hasta que se hace a un lado). */
+  function final9Pos(q, out) {
+    if (q <= 0) return out.copy(fP8);
+    if (q < FIN.fly) { // arco suave hacia afuera del casco: no roza el cohete al rodearlo
+      const k = easeInOut(q / FIN.fly);
+      out.lerpVectors(fP8, fF, k); arcV.subVectors(out, B); arcV.y = 0; if (arcV.lengthSq() > 1e-6) out.addScaledVector(arcV.normalize(), Math.sin(k * Math.PI) * 0.6);
+      return out;
+    }
+    if (q < FIN.in) return out.lerpVectors(fF, fIn, easeInOut((q - FIN.fly) / (FIN.in - FIN.fly)));
+    return out.lerpVectors(fIn, fAside, smooth((q - FIN.in) / (FIN.aside - FIN.in)));
+  }
+  function final9(p, out, r) {
+    astroAt(8, 1, fP8, rF); // (su lugar junto al mural)
+    rocketAt(9, p, tmp3); W.rocket.root.position.copy(tmp3); W.rocket.root.updateMatrixWorld(true);
+    exitFrame();
+    if (p >= FIN.seat1) return astroAt(9, p, out, r);
+    r.pose = "fly"; r.look = "quat"; r.visible = true; r.scale = 1; r.inRocket = p > FIN.in - 0.02; r.exact = true; r.fade = 0.5; r.seat = -1;
+    bQ.copy(exQ).multiply(Y180); bOff.copy(FLY_C).applyQuaternion(bQ); // mirando hacia adentro, silueta en el eje
+    fF.copy(exC).addScaledVector(exN, 1.3).sub(bOff); fIn.copy(exC).addScaledVector(exN, -0.95).sub(bOff);
+    fAside.copy(exC).addScaledVector(exN, -1.0).addScaledVector(exR, -0.38);
+    final9Pos(p, out);
+    if (p < 0.004) r.pose = rF.pose; // (aún en su lugar del cap. 8)
+    if (p < FIN.fly) { // de frente hacia donde vuela y, al acercarse, hacia adentro de la escotilla
+      tmp.subVectors(fF, fP8); tmp.y *= 0.3; tmp.normalize();
+      mtx.lookAt(tmp2.copy(out).add(tmp), out, UP); fQ.setFromRotationMatrix(mtx).slerp(bQ, smooth((p - FIN.fly * 0.45) / (FIN.fly * 0.55)));
+    } else fQ.copy(bQ);
+    if (p > FIN.aside) r.pose = "float";
+    if (p > FIN.seat0) { r.seat = smooth((p - FIN.seat0) / (FIN.seat1 - FIN.seat0)); seatFrom.copy(fAside); seatFromQ.copy(bQ); r.pose = r.seat > 0.4 ? "wave" : "float"; }
+    return r;
+  }
+  /** Gloobi en el final: sigue al astronauta con retraso, entra por el eje y se asoma a su lado. */
+  function final9Gloobi(p, dt) {
+    const q = p - FIN.gDelay;
+    if (p >= FIN.seat0) { // dentro: de su lugar junto al eje a asomarse (exacto: el cohete puede estar moviéndose)
+      tmp.copy(exC).addScaledVector(exN, -0.55); gWin(tmp2);
+      gAt(tmp.lerp(tmp2, smooth((p - FIN.seat0) / (FIN.seat1 - FIN.seat0))));
+      return;
+    }
+    if (p >= FIN.gIn0) { tmp.copy(exC).addScaledVector(exN, 1.1); tmp2.copy(exC).addScaledVector(exN, -0.55); gAt(tmp.lerp(tmp2, easeInOut(clamp((p - FIN.gIn0) / (FIN.gIn1 - FIN.gIn0))))); return; }
+    // afuera: detrás de él, un poco arriba, y llega al eje de la escotilla antes de entrar
+    final9Pos(Math.min(q, FIN.fly), tmp); tmp.addScaledVector(bOff, 1); // (su centro, no el de la silueta fly)
+    const onAxis = smooth((q - FIN.fly * 0.5) / (FIN.fly * 0.5));
+    tmp.addScaledVector(UP, 0.45 * (1 - onAxis));
+    tmp2.copy(exC).addScaledVector(exN, 1.1); if (q >= FIN.fly) tmp.copy(tmp2); else tmp.lerp(tmp2, onAxis * onAxis);
+    gToward(tmp, dt);
+  }
+
+  // parche del traje: el del invitado si ya confirmó (su color); si no, el del niño con el primario del tema
   function setPatch(r) {
-    const opts = r?.attending ? { color: r.avatar.color, symbol: r.avatar.symbol, top: r.guestName, bottom: missionName() } : { color: demoData.child.accentColor, symbol: "star", top: demoData.child.name, bottom: "Misión" };
+    patchR = r;
+    const opts = r?.attending ? { color: r.avatar.color, symbol: r.avatar.symbol, top: r.guestName, bottom: missionName() } : { color: THEME3D.hex.primary, symbol: "star", top: demoData.child.name, bottom: "Misión" };
     const tex = new THREE.CanvasTexture(patchCanvas(256, opts)); tex.colorSpace = THREE.SRGBColorSpace;
     astro.setPatchTexture(tex);
   }
 
   /* ---------- Frame ---------- */
   function update(dt, t, story) {
-    st.t = t;
+    st.t = t; st.gloobiPath = false;
     const R0 = reduced();
     let space = 1, shakeAmp = 0, earthY = EARTH_Y;
     if (st.mode === "cover") {
@@ -412,7 +582,8 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     // en capítulos, el protagonista queda en la mitad superior (las tarjetas van abajo)
     // con tarjeta abajo, el protagonista sube a la mitad superior; sin tarjeta, vuelve casi al centro (no deja la
     // mitad inferior vacía)
-    st.viewShift = THREE.MathUtils.damp(st.viewShift, st.mode === "story" ? (st.cardOn ? 0.16 : 0.05) : 0, 3, dt);
+    // (cap. 4: su tarjeta es más baja —sólo fecha y botones—, así que sube menos)
+    st.viewShift = THREE.MathUtils.damp(st.viewShift, st.mode === "story" ? (st.cardOn ? (st.chapter === 4 ? 0.1 : 0.16) : 0.05) : 0, 3, dt);
     const { w, h } = R.size;
     if (st.viewShift > 0.001) camera.setViewOffset(w, h, 0, h * st.viewShift, w, h); else if (camera.view?.enabled) camera.clearViewOffset();
     // cielo, estrellas, tierra
@@ -433,7 +604,7 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   // cámara lo justo para que no se toquen (portada y todos los capítulos). Si está detrás del astronauta, no importa.
   const kv = V(0, 0, 0), kg = V(0, 0, 0), G_R = 0.16 * 1.65;
   function keepVisorClear() {
-    if (!astro.root.visible || !gloobi.root.visible) return;
+    if (!astro.root.visible || !gloobi.root.visible || st.gloobiPath) return; // (en la escotilla Gloobi va en su eje)
     astro.visorWorld(kv).applyMatrix4(camera.matrixWorldInverse);
     kg.copy(gloobi.root.position).applyMatrix4(camera.matrixWorldInverse);
     const zV = -kv.z, zG = -kg.z;
@@ -468,21 +639,53 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     W.rocket.root.visible = true;
     W.rocket.root.position.copy(rocketPos);
     W.rocket.root.updateMatrixWorld(true);
-    W.rocket.setHatch(0); W.rocket.setInterior(false);
-    // el astronauta salta a la cápsula
-    const jumpK = st.launchShort || R0 ? 1 : clamp((lt - 0.2) / 1.1);
-    if (jumpK < 1) {
-      W.rocket.windowWorld(tmp2);
-      astro.root.visible = true; astro.setPose("fly", { safe: false }); astro.allowSwap();
-      astro.root.position.lerpVectors(JUMP_FROM, tmp2, easeInOut(jumpK)); astro.root.position.y += Math.sin(jumpK * Math.PI) * 2.2;
-      astro.root.scale.setScalar(1 - smooth((jumpK - 0.75) / 0.25) * 0.9);
-      astro.root.rotation.set(0, -0.8 + jumpK * 0.8, Math.sin(jumpK * Math.PI) * 0.5);
-    } else astro.root.visible = false;
-    // Gloobi sale por la ventana al final, señalando hacia abajo
-    gloobi.setMode("awake");
-    gloobi.root.visible = lt > L - 0.9 || (R0 && lt > L * 0.5);
-    if (gloobi.root.visible) { W.rocket.windowWorld(gTarget); gTarget.x += 1.1; gTarget.y += 0.5; gTarget.z += 1.4; gloobi.follow(gTarget); gloobi.point(-1); }
-    else { W.rocket.windowWorld(tmp); gloobi.teleport(tmp); gloobi.follow(null); }
+    // abordaje: camina por la pasarela (brazo bajo de la torre), saltito hasta quedar frente a la escotilla abierta,
+    // mirando hacia adentro, y entra en línea recta por su eje con la pose fly (su silueta cabe en el paso, igual que
+    // al salir en el cap. 2: nada atraviesa la pared); ya dentro se hace a un lado y entra Gloobi, que lo siguió
+    // volando; la escotilla se cierra antes del conteo y los dos se asoman por el vidrio (así suben y llegan al
+    // espacio). Despegue corto o movimiento reducido: ya van asomados desde el principio.
+    const boarding = !st.launchShort && !R0;
+    const hatchK = boarding ? 1 - smooth((lt - BOARD.close0) / (BOARD.close1 - BOARD.close0)) : 0;
+    W.rocket.setHatch(hatchK); W.rocket.update?.(t);
+    exitFrame(); // escotilla del cohete: exC, exN, exQ, exR
+    bQ.copy(exQ).multiply(Y180); // de espaldas a la cámara: mirando hacia adentro del cohete
+    bOff.copy(FLY_C).applyQuaternion(bQ);
+    bFront.copy(exC).addScaledVector(exN, 0.75).sub(bOff); bIn.copy(exC).addScaledVector(exN, -0.95).sub(bOff);
+    bAside.copy(exC).addScaledVector(exN, -1.0).addScaledVector(exR, -0.38);
+    const wk = W.launch.walkway;
+    bA.copy(wk.from).y += 0.52; bB.copy(wk.to).y += 0.52; // centro del cuerpo sobre la cubierta
+    astro.root.visible = true; astro.setHeadYaw(0); // (desde el primer cuadro tras el corte de la portada)
+    const seatW = boarding ? smooth((lt - BOARD.seat0) / (BOARD.seat1 - BOARD.seat0)) : 1;
+    if (!boarding || lt >= BOARD.seat0) { // asomado por el vidrio (desde su lugar a un lado, dentro)
+      astro.setPose("float", { safe: false });
+      seatFrom.copy(bAside); seatFromQ.copy(bQ); applySeat(seatW);
+    } else {
+      astro.root.scale.setScalar(1);
+      boardPos(lt, astro.root.position);
+      if (lt < BOARD.walk1) { // caminata con pasitos (rebote) por la pasarela
+        astro.setPose("float", { safe: false });
+        astro.root.quaternion.setFromUnitVectors(Z_AXIS, tmp.subVectors(bB, bA).setY(0).normalize()); // mira hacia la punta
+      } else if (lt < BOARD.hop1) { // saltito: de la punta de la pasarela a frente de la escotilla, girando hacia ella
+        const k = clamp((lt - BOARD.walk1) / (BOARD.hop1 - BOARD.walk1));
+        astro.setPose("fly", { safe: false, fade: 0.35 });
+        quat.setFromUnitVectors(Z_AXIS, tmp.subVectors(bB, bA).setY(0).normalize());
+        astro.root.quaternion.copy(quat).slerp(bQ, smooth(k / 0.8));
+      } else { // entra: recto por el eje de la escotilla, orientación fija; ya dentro se hace a un lado
+        astro.setPose(lt < BOARD.in1 ? "fly" : "float", { safe: false });
+        astro.root.quaternion.copy(bQ);
+      }
+    }
+    // Gloobi: aparece con él en la pasarela y lo sigue volando (un poco atrás y arriba), llega al eje de la escotilla,
+    // entra detrás de él y se asoma a su lado
+    gloobi.setMode("awake"); gloobi.point(0); gloobi.lookAt(null); gloobi.root.visible = astro.root.visible;
+    const gIn = tmp3.copy(exC).addScaledVector(exN, -0.55);
+    if (!boarding || lt >= BOARD.seat0) gAt(boarding ? gIn.lerp(gWin(tmp2), seatW) : gWin(tmp2));
+    else if (lt >= BOARD.gIn0) gAt(tmp.copy(exC).addScaledVector(exN, 0.75).lerp(gIn, easeInOut(clamp((lt - BOARD.gIn0) / (BOARD.gIn1 - BOARD.gIn0)))));
+    else {
+      const tg = Math.max(BOARD.walk0, lt - BOARD.gDelay), onAxis = smooth((tg - BOARD.walk1) / (BOARD.hop1 - BOARD.walk1));
+      boardPos(tg, tmp); tmp.addScaledVector(bOff, onAxis).addScaledVector(UP, 0.75 * (1 - onAxis));
+      gAt(tmp);
+    }
     // humo, llama, temblor
     const power = lt >= ign ? clamp((lt - ign) / 0.3) : 0;
     st.shake = 0;
@@ -524,6 +727,9 @@ export function createFilm({ R, quality, audio, showcase = false }) {
       if (R0) { const s = k < 0.5 ? a : b; cam.pos.copy(s.pos); cam.tgt.copy(s.tgt); st.fade = Math.sin(k * Math.PI); }
       else { blendShots(a, b, k, cam, i === 3 || i === 9 ? 0.02 : 0.1); st.fade = 0; }
     } else { shift(i, samplePath(CH[i].keys, p, cam)); st.fade = 0; }
+    // final: la mirada de la cámara acompaña a medias a la escotilla mientras el cohete se aleja (se ven los dos
+    // asomados saludando)
+    if (i === 9 && !traveling) { rocketAt(9, p, tmp).add(V9W); cam.tgt.lerp(tmp, 0.85 * smooth((p - T) / 0.1)); }
     // bodega: al tocar una fila de la tarjeta, la cámara gira suavemente hacia ese regalo (y vuelve al salir)
     const inCargo = i === 7 && p > 0.58 && !traveling && W.cargo;
     if (!inCargo) st.giftFocus = -1;
@@ -536,83 +742,162 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     // cohete
     rocketAt(i, p, rocketPos);
     W.rocket.root.visible = true; W.rocket.root.position.copy(rocketPos); W.rocket.root.updateMatrixWorld(true);
-    W.rocket.setHatch(i === 2 ? smooth((p - 0.2) / 0.12) * (1 - smooth((p - 0.9) / 0.1)) : 0);
+    // escotilla: se abre para la caminata (cap. 2) y para el regreso (cap. 9, se cierra antes de arrancar); con
+    // movimiento reducido el regreso es un fundido y queda cerrada
+    W.rocket.setHatch(i === 2 ? smooth((p - 0.2) / 0.12) * (1 - smooth((p - 0.9) / 0.1))
+      : i === 9 && !R0 ? smooth((p - FIN.open0) / (FIN.open1 - FIN.open0)) * (1 - smooth((p - FIN.close0) / (FIN.close1 - FIN.close0))) : 0);
+    W.rocket.update?.(t);
     W.launch.group.visible = i === 9 && p > 0.3; W.launch.base.visible = false; W.launch.clouds.mesh.visible = false;
     W.launch.flame.visible = i === 9 && p > 0.3;
     W.launch.update(dt, t, rocketPos, i === 9 ? smooth((p - 0.3) / 0.1) * 0.7 : 0);
     if (W.earth) { W.earth.group.visible = i <= 3; W.earth.group.scale.setScalar(1); }
     // astronauta (durante el viaje se mezcla con el lugar del capítulo anterior)
     let r;
-    if (traveling) {
+    if (i === 9 && !R0) r = final9(p, astroPos, rB); // (incluye el regreso desde el cap. 8: ver FIN)
+    else if (traveling) {
       const ra = astroAt(i - 1, 1, prevPos, rA);
       r = astroAt(i, T, astroPos, rB);
       const k = easeInOut(p / T);
-      if (i === 2 || i === 9) { if (k < 0.5) { astroPos.copy(prevPos); r.pose = ra.pose; r.visible = ra.visible; r.inRocket = ra.inRocket; } }
-      else astroPos.lerpVectors(prevPos, astroPos, k);
+      flyDir.subVectors(astroPos, prevPos); // (recta del viaje: de su lugar en el capítulo anterior al de éste)
+      if (i === 2 || i === 9) { if (k < 0.5) { astroPos.copy(prevPos); r.pose = ra.pose; r.visible = ra.visible; r.inRocket = ra.inRocket; r.seat = ra.seat; r.look = ra.look; } }
+      else if (R0) { astroPos.lerpVectors(prevPos, astroPos, k); if (k < 0.5) r.pose = ra.pose; }
+      else { // vuela con la cámara: su lugar en el encuadre pasa del de un capítulo al del otro, y a mitad del viaje
+        // ocupa un lugar de vuelo cerca del centro (a la vista aunque su lugar de llegada aún quede fuera de cuadro)
+        camLocal(a, prevPos, relA); camLocal(b, astroPos, relB); relA.lerp(relB, k);
+        tmp2.set(0.1, -0.55, Math.min(relA.z, 6.5));
+        relA.lerp(tmp2, Math.pow(Math.sin(Math.PI * k), 0.6));
+        camSpace(cam.pos, cam.tgt, relA.x, relA.y, relA.z, astroPos);
+        if (k < 0.5) r.pose = ra.pose;
+      }
       astro.allowSwap();
     } else r = astroAt(i, p, astroPos, rB);
+    // Viaje con la pose fly (del cap. 2 al 3 y hasta el 8; no al llegar al 2 —sale por la escotilla— ni al 9 —se
+    // sube a la ventana del cohete que despega—; con movimiento reducido sólo hay fundido). "En viaje" = entre los
+    // puntos de descanso (p < T del capítulo), con histéresis: entra sólo ya adentrado en el tramo (20–80 %) y tras
+    // ≥ 0.6 s en reposo; sale al llegar a un punto de descanso. Detenido a medio viaje > 1 s → float; vuelve a fly
+    // al retomar el scroll.
+    {
+      const g = i + p, dg = fl.g < 0 ? 0 : g - fl.g; fl.g = g;
+      const u = traveling ? p / T : -1, canFly = !R0 && traveling && i >= 3 && i <= 8;
+      const was = fl.on;
+      if (!canFly) fl.on = false;
+      else if (!fl.on && u > 0.2 && u < 0.8 && fl.offT > 0.6) { fl.on = true; fl.stalled = false; fl.still = 0; fl.acc = 0; fl.dir = dg < 0 ? -1 : 1; }
+      if (fl.on !== was) { fl.offT = 0; fl.onT = 0; } else if (fl.on) fl.onT += dt; else fl.offT += dt;
+      if (fl.on) {
+        // sentido del movimiento: se invierte sólo tras recorrer un tramo claro en contra (no con cada temblor)
+        if (dg * fl.dir > 0) fl.acc = 0; else fl.acc += Math.abs(dg);
+        if (fl.acc > 0.012) { fl.dir = -fl.dir; fl.acc = 0; }
+        if (Math.abs(dg) < 0.0004) fl.still += dt; else fl.still = 0;
+        if (!fl.stalled && fl.still > 1) { fl.stalled = true; fl.moved = 0; }
+        else if (fl.stalled) { fl.moved += Math.abs(dg); if (fl.moved > 0.01) fl.stalled = false; }
+        r.pose = fl.stalled ? "float" : "fly"; r.fade = fl.stalled ? 0.8 : 0.5;
+      } else if (fl.offT < 0.3 && r.fade === undefined) r.fade = 0.6; // llegada: fundido a la pose del capítulo
+    }
     if (i === 9) { rocketAt(9, p, rocketPos); W.rocket.root.position.copy(rocketPos); W.rocket.root.updateMatrixWorld(true); }
     astro.root.visible = r.visible;
-    astro.root.position.lerp(astroPos, traveling || i === 9 ? 1 : 1 - Math.exp(-6 * dt));
+    // (r.exact: mientras cruza la escotilla la posición y la orientación son exactas, sin suavizado que lo desvíe del
+    // eje y lo haga rozar la pared)
+    astro.root.position.lerp(astroPos, traveling || i === 9 || r.exact ? 1 : 1 - Math.exp(-6 * dt));
     astro.root.scale.setScalar(r.scale);
     if (st.farewellT >= 0) { st.farewellT += dt; r.pose = "wave"; if (st.farewellT > 3) st.farewellT = -1; }
     if (st.celebrateT >= 0) { st.celebrateT += dt; r.pose = "celebrate"; if (st.celebrateT > 3.5) st.celebrateT = -1; }
-    astro.setPose(r.pose, { safe: traveling });
-    // orientación
-    if (r.look === "none") quat.copy(noRot);
+    astro.setPose(r.pose, { safe: traveling, fade: r.fade });
+    // orientación (y hacia dónde mira: Gloobi lo imita, ver gLook)
+    gLookCam = r.look === "camera" || r.look === "none"; // "none" = final en la ventana: el visor mira a la cámara
+    if (fl.on) { // volando: el cuerpo hacia donde avanza (inclinación vertical atenuada)
+      flyDir.normalize().multiplyScalar(fl.dir); flyDir.y *= 0.35; if (flyDir.lengthSq() < 1e-6) flyDir.set(0, 0, -1); flyDir.normalize();
+      gLookCam = false; gLook.copy(astro.root.position).addScaledVector(flyDir, 20);
+      tmp.copy(astro.root.position).add(flyDir); mtx.lookAt(tmp, astro.root.position, UP); quat.setFromRotationMatrix(mtx);
+    } else if (r.look === "none") quat.copy(noRot);
+    else if (r.look === "quat") { quat.copy(fQ); gLookCam = false; gLook.copy(astro.root.position).addScaledVector(tmp.set(0, 0, 1).applyQuaternion(fQ), 20); } // (regreso a la escotilla, ver final9)
+    else if (r.look === "exit") { quat.copy(exQ); gLook.copy(exC).addScaledVector(exN, 20); }
     else {
       if (r.look === "camera") tmp.copy(cam.pos);
       else if (r.look === "out") tmp.set(0.9, 2.5, 8);
       else if (r.look === "memories") tmp.copy(W.memories?.nearest(camera) || cam.tgt);
       else tmp.copy(r.look);
+      gLook.copy(tmp);
       tmp.y = lerp(astro.root.position.y, tmp.y, 0.3);
       mtx.lookAt(tmp, astro.root.position, camera.up); quat.setFromRotationMatrix(mtx);
     }
-    astro.root.quaternion.slerp(quat, traveling ? 0.25 : 1 - Math.exp(-4 * dt));
-    // final: pose "fly" dentro de la ventana, compensando su inclinación (el visor queda de frente, centrado en la
-    // ventana y sin nada encima)
-    if (i === 9 && r.inRocket) {
-      // orientación calculada: (cabeza → visor) apunta a la cámara y (cuerpo → cabeza) queda lo más vertical posible
-      // (sin giro de lado del casco); se mide en el espacio del astronauta y se arma la rotación con dos bases
-      astro.root.quaternion.copy(st.finalQ); astro.root.updateMatrixWorld(true);
-      astro.visorWorld(tmp3);
-      finalC.copy(st.finalQ).invert();
-      // ejes reales del casco (frente y arriba) en el espacio del astronauta
-      astro.headAxes(fL, uL); fL.applyQuaternion(finalC); uL.applyQuaternion(finalC);
-      bx.crossVectors(uL, fL).normalize(); uL.crossVectors(fL, bx); mA.makeBasis(bx, uL, fL);
-      fT.subVectors(cam.pos, tmp3); fT.y *= 0.5; fT.normalize(); fT.addScaledVector(UP, -fT.dot(UP) * 0.6).normalize();
-      bx.crossVectors(UP, fT).normalize(); by.crossVectors(fT, bx); mB.makeBasis(bx, by, fT);
-      finalD.setFromRotationMatrix(mB.multiply(mA.transpose()));
-      st.finalQ.slerp(finalD, 0.35);
-      astro.root.quaternion.copy(st.finalQ); astro.root.updateMatrixWorld(true);
-      W.rocket.windowWorld(tmp2); tmp2.z -= 0.2; astro.visorWorld(tmp3); // el visor, justo detrás del vidrio (el cuerpo queda dentro)
-      astro.root.position.add(tmp2.sub(tmp3));
-    }
+    // (viajes del 3 al 8: giro amortiguado, sin brusquedad al entrar, al invertir el scroll ni al llegar)
+    astro.root.quaternion.slerp(quat, r.exact ? 1 : traveling && (R0 || i < 3 || i > 8) ? 0.25 : 1 - Math.exp(-(fl.on ? 3.5 : 4) * dt));
+    // asomado por la escotilla (cap. 1, cap. 2 antes de salir, final): visor detrás del vidrio mirando a la cámara
+    if (r.seat >= 0) { applySeat(r.seat); gLookCam = true; }
     // recorrido (estación, recuerdos, bodega, plan de vuelo): el cuerpo sigue de 3/4 trasero; cada ~7 s la cabeza
     // gira un poco hacia la cámara y el visor se asoma de perfil
     if (i >= 5 && i <= 7 && !traveling) {
       astro.root.updateMatrixWorld(); tmp.copy(cam.pos); astro.root.worldToLocal(tmp);
       const toCam = Math.atan2(tmp.x, tmp.z), glance = smooth(clamp((Math.sin(t * 0.9) - 0.55) / 0.3)) * (Math.sin(t * 0.14) > -0.2 ? 1 : 0);
       astro.setHeadYaw(clamp(toCam, -0.85, 0.85) * glance);
+      // el casco se asoma de reojo hacia la cámara: Gloobi imita ese mismo giro (hacia donde apunta el casco; el cuerpo
+      // sigue de espaldas, así que no mira de frente a la cámara)
+      if (glance > 0.3) { astro.headAxes(fL, uL); astro.visorWorld(gLook).addScaledVector(fL, 20); gLookCam = false; }
     } else astro.setHeadYaw(0);
     W.rocket.setInterior(r.inRocket || (i === 2 && p < 0.6));
     tether.visible = plugA.visible = plugB.visible = i === 2 && p > 0.3 && !traveling;
     if (tether.visible) updateTether(t);
     // Gloobi
     gloobi.root.visible = true; gloobi.setMode("awake");
-    if (i === 1) { gTarget.set(1.1, 2.7, 1.5); gloobi.follow(gTarget); gloobi.point(p < 0.6 ? -1 : 0); gloobi.lookAt(null); }
+    if (i === 1) { gloobi.point(0); gloobi.lookAt(null); } // (asomado junto al astronauta: ver abajo)
     else {
       camSpace(cam.pos, astro.root.position, 0.42, 0.28, 0, gTarget).sub(cam.pos).add(astro.root.position);
-      if (i === 8) camSpace(cam.pos, astro.root.position, -0.6, 0.08, 0, gTarget).sub(cam.pos).add(astro.root.position); // a la izquierda del astronauta, bajo el mural: no tapa parches ni visor
-      if (i === 5) camSpace(cam.pos, astro.root.position, 0.02, 0.66, 0, gTarget).sub(cam.pos).add(astro.root.position); // estación: sobre el astronauta, no tapa el núcleo
-      if (i === 7 && p >= 0.6) camSpace(cam.pos, astro.root.position, -0.05, 0.62, 0, gTarget).sub(cam.pos).add(astro.root.position); // bodega: sobre el astronauta, no tapa los regalos
-      if (i === 9) { W.rocket.windowWorld(gTarget); gTarget.x += 0.62; gTarget.y += 0.2; gTarget.z += 0.25; }
+      if (i === 8) camSpace(cam.pos, astro.root.position, -0.6, -0.15, 0, gTarget).sub(cam.pos).add(astro.root.position); // a la izquierda del astronauta, bajo el marco del mural: no tapa parches ni visor
+      if (i === 6) camSpace(cam.pos, astro.root.position, -0.2, -0.6, 0, gTarget).sub(cam.pos).add(astro.root.position); // recuerdos: abajo a su izquierda, bajo el cinturón de fotos (no tapa ninguna)
+      if (i === 7 && p < 0.6) camSpace(cam.pos, astro.root.position, 0.45, -0.25, 0, gTarget).sub(cam.pos).add(astro.root.position); // plan de vuelo: a su derecha, bajo la ruta y sus marcas
+      // estación: junto a la esquina inferior derecha del mapa holográfico, a su misma profundidad, sobre el módulo
+      // derecho (nunca delante del mapa, sus etiquetas, el rótulo del núcleo ni el visor), mirándolo
+      if (i === 5 && W.station) { W.station.screen.updateWorldMatrix(true, false); W.station.screen.localToWorld(gTarget.set(1.75, -1.4, 0.3)); }
+      if (i === 7 && p >= 0.6) camSpace(cam.pos, astro.root.position, 0.1, -0.15, -0.6, gTarget).sub(cam.pos).add(astro.root.position); // bodega: delante de su espalda (de 3/4 trasero: lejos del visor), no tapa los regalos
+      if (i === 9) camSpace(cam.pos, astro.root.position, -0.6, -0.15, 0, gTarget).sub(cam.pos).add(astro.root.position); // (sólo con movimiento reducido, antes del fundido: como en el cap. 8; si no, final9Gloobi)
+      if (fl.on) { // volando: un poco detrás del astronauta y a un lado (el de la derecha en pantalla), mirando adonde él
+        flySide.crossVectors(flyDir, UP); if (flySide.lengthSq() < 1e-6) flySide.set(1, 0, 0); flySide.normalize();
+        if (flySide.dot(tmp2.setFromMatrixColumn(camera.matrixWorld, 0)) < 0) flySide.negate();
+        gTarget.copy(astro.root.position).addScaledVector(flyDir, -0.35).addScaledVector(flySide, 0.5).addScaledVector(UP, 0.3);
+      }
+      // en los viajes viaja con él (el retraso del seguimiento sólo afecta al acomodo: no se queda atrás en los
+      // tramos largos)
+      const carry = traveling && !R0 && i >= 3 && i <= 8;
+      if (carry && fl.carry) gloobi.root.position.add(tmp2.subVectors(astro.root.position, flyPrev));
+      fl.carry = carry; flyPrev.copy(astro.root.position);
       gloobi.follow(gTarget); gloobi.point(0);
-      gloobi.lookAt(i === 3 ? CONST : i === 4 ? MOON : i === 5 ? HOLO : i === 6 ? W.memories?.nearest(camera) : i === 7 ? (p < 0.6 ? FLIGHT : CARGO) : null);
+      // mira a donde mira el astronauta (letrero, Luna, estación, fotos, regalos… o la cámara), con el retraso y el
+      // rebote de su imitación (gloobi.js); al voltear los dos hacia la cámara, un parpadeo tierno
+      gloobi.lookAt(gLookCam ? null : gLook);
+      if (i === 5 && !fl.on && W.station) gloobi.lookAt(W.station.screen.getWorldPosition(tmp2)); // (mira el mapa)
       if (i === 6 && Math.random() < dt * 0.25) gloobi.wow(1400);
     }
+    // (cap. 1: el astronauta aún no aparece y Gloobi señala hacia abajo para indicar el scroll: mira a la cámara)
+    if (gLookCam && !st.gLookCam && astro.root.visible && i !== 1) st.gestureT = 0.35;
+    st.gLookCam = gLookCam;
+    if (st.gestureT >= 0) { st.gestureT -= dt; if (st.gestureT < 0) gloobi.blink(); }
+    // cap. 2: Gloobi espera dentro (oculto hasta que el astronauta avanza), sale por el mismo eje de la escotilla
+    // detrás de él y ya afuera se acomoda a su lado. La posición sigue el recorrido exacto (sin atajos que crucen la
+    // pared); el estirado/aplastado orgánico sale de su propia velocidad.
+    st.gloobiPath = false;
+    // Dentro del cohete y al cruzar la escotilla Gloobi va por un recorrido exacto (nunca atraviesa la pared ni aparece
+    // de golpe). Cap. 1 (y el viaje al 2): asomado junto al astronauta. Cap. 2: se aparta dentro mientras él sale,
+    // vuelve al eje, sale detrás de él y se acomoda a su lado. Cap. 9: final9Gloobi (con movimiento reducido, el
+    // cambio de lugar ocurre durante el fundido).
+    const k2 = traveling ? easeInOut(p / T) : 1;
+    if (i === 1 || (i === 2 && k2 < 0.5)) { gAt(gWin(tmp)); gloobi.lookAt(null); }
+    else if (i === 2 && p < EXIT.gSide) {
+      const gIn = tmp3.copy(exC).addScaledVector(exN, -0.6);
+      tmp2.copy(exC).addScaledVector(exN, -0.85).addScaledVector(exR, 0.5).addScaledVector(UP, 0.42); // apartado, dentro de la cabina
+      if (p < EXIT.gAside) { gAt(gWin(tmp)); gloobi.lookAt(null); }
+      else if (p < EXIT.gIn) { // primero hacia adentro por el tubo de la escotilla y luego a un lado (no roza la pared)
+        const k = clamp((p - EXIT.gAside) / (EXIT.go - EXIT.gAside));
+        gWin(tmp); tmp.addScaledVector(exN, -0.5 * smooth(k / 0.5)); gAt(tmp.lerp(tmp2, smooth((k - 0.4) / 0.6)));
+      }
+      else if (p < EXIT.gGo) gAt(tmp.copy(tmp2).lerp(gIn, smooth((p - EXIT.gIn) / (EXIT.gGo - EXIT.gIn))));
+      else if (p < EXIT.gOut) gAt(tmp.copy(gIn).lerp(exG1, easeInOut((p - EXIT.gGo) / (EXIT.gOut - EXIT.gGo))));
+      else gAt(tmp.lerpVectors(exG1, gTarget, smooth((p - EXIT.gOut) / (EXIT.gSide - EXIT.gOut))));
+    } else if (i === 9) {
+      if (!R0) final9Gloobi(p, dt);
+      else if (!(traveling && k2 < 0.5)) { gAt(gWin(tmp)); gloobi.lookAt(null); }
+    }
     // partes por capítulo
-    if (W.constellation) { W.constellation.group.visible = i >= 2 && i <= 4; const cp = i === 3 ? clamp((p - 0.2) / 0.45) : i > 3 ? 1 : 0; if (W.constellation.update(dt, t, cp, R.dpr) && i === 3) { audio.sparkle(); gloobi.wow(1500); } }
+    if (W.constellation) { W.constellation.group.visible = i >= 2 && i <= 4; const cp = i === 3 ? clamp((p - 0.2) / 0.45) : i > 3 ? 1 : 0; if (W.constellation.update(dt, t, cp, R.dpr) && i === 3) gloobi.wow(1500); } // (las campanitas las da la onda: onChime)
     if (W.moon) { W.moon.group.visible = i >= 3 && i <= 5; if (W.moon.group.visible) W.moon.update(dt, t, camera, i === 4 ? smooth((p - 0.3) / 0.15) : 0); }
     if (W.station) { W.station.group.visible = i >= 4 && i <= 6; if (W.station.group.visible) W.station.update(dt, t, i === 5 ? smooth((p - 0.3) / 0.15) : 0); }
     if (W.memories) { W.memories.group.visible = i >= 5 && i <= 7; if (W.memories.group.visible) W.memories.update(dt, t, camera); }
@@ -700,6 +985,15 @@ export function createFilm({ R, quality, audio, showcase = false }) {
       setPatch(r);
     },
     setMine(r) { buildUpTo(3); W.mural.setMine(r?.attending ? r.avatar : null, r?.guestName); setPatch(r); },
+    /** Cambia el tema de color en vivo (modo debug): escena 3D, reflejos, parche e interfaz. */
+    setTheme(key) {
+      const t = themeOf({ colorTheme: key });
+      setTheme3D(t); applyThemeCss(t);
+      try { refreshStudioEnv(R.renderer, scene); } catch { /* sin reflejos de estudio */ }
+      setPatch(patchR);
+    },
+    get themeKey() { return THEME3D.key; },
+    themes: Object.keys(THEMES),
     farewell() { st.farewellT = 0; audio.bye(); },
     crewCount() { buildUpTo(3); return W.mural.count(); },
     tap,
@@ -713,6 +1007,14 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     renderCover(t) { const m = st.mode, c0 = st.coverT0; st.mode = "cover"; st.coverT0 = -1; update(0.016, t, { chapter: 1, p: 0 }); st.mode = m; st.coverT0 = c0; },
     /** Arranca la deriva lenta de la portada (al quitar el póster). */
     startCoverDrift() { if (st.coverT0 < 0) st.coverT0 = st.t; },
+    /** Carga real (0–1): descarga del astronauta, fotos del visor, shaders compilados y astronauta asentado. */
+    /** ¿Ya se puede dibujar? (shaders compilados en paralelo: el primer dibujo no congela la pantalla de carga) */
+    get renderReady() { return !!load.compiled; },
+    loadProgress() { return Math.min(1, 0.4 * astro.loadProgress + 0.1 * load.photos + 0.2 * load.surface + 0.1 * load.built + 0.12 * load.compiled + 0.08 * Math.min(1, astro.settledFrames / 4)); },
+    /** ¿La portada se puede mostrar? Todo cargado y compilado (superficie lunar incluida), astronauta en su animación
+     *  de dormir desde hace ≥ 4 cuadros (nunca en reposo ni en una pose fija) y el encuadre ya calculado con el
+     *  modelo definitivo. */
+    coverReady() { return st.mode === "cover" && load.compiled && load.photos && load.surface && astro.settledFrames >= 4 && CF.has && st.t - CF.kindT >= 0.35; },
     /** Franja libre de la portada (fracciones del alto, de arriba hacia abajo) entre el título y el botón. */
     setCoverBand(top, bottom) { if (Math.abs(top - CF.band[0]) + Math.abs(bottom - CF.band[1]) > 0.004) CF.band = [top, bottom]; },
     /** Punto focal de la portada en pantalla (fracciones), para alinear el póster (object-position). */

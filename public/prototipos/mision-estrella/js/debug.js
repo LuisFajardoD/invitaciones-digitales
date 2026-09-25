@@ -4,6 +4,7 @@
 // tools/regenerar-poster.mjs, que genera todas las variantes).
 import { h, clock, eventInfo, prefersReduced, setForcedReduced, missionName } from "./util.js";
 import { demoData } from "./data.js";
+import { THEMES } from "./themes.js";
 
 export function initDebug({ R, film, scroll, monitor, audio, state, getLevel, setLevel, replay, jump }) {
   const { exportPoster } = posterTools({ R, film });
@@ -12,6 +13,8 @@ export function initDebug({ R, film, scroll, monitor, audio, state, getLevel, se
   const toggle = (text, get, set) => btn(text, (b) => { set(!get()); b.classList.toggle("is-on", get()); }, get());
   const DAY = 86400000, ev = eventInfo();
   const qBtns = ["low", "medium", "high"].map((l) => btn({ low: "Baja", medium: "Media", high: "Alta" }[l], () => { setLevel(l); qBtns.forEach((b, i) => b.classList.toggle("is-on", ["low", "medium", "high"][i] === l)); }, getLevel() === l));
+  // tema de color en vivo (escena 3D, reflejos, parche e interfaz): film.setTheme
+  const themeBtns = (film.themes || []).map((k) => btn(THEMES[k].label, () => { film.setTheme(k); themeBtns.forEach((b, i) => b.classList.toggle("is-on", film.themes[i] === k)); }, film.themeKey === k));
   const reload = (k, v) => { const u = new URL(location.href); if (v) u.searchParams.set(k, "1"); else u.searchParams.delete(k); location.href = u.href; };
   const panel = h("div.debug", { role: "region", "aria-label": "Panel de pruebas" },
     h("div.debug-head", h("span", { text: "🛠 Debug" }), btn("–", () => panel.classList.toggle("is-min"))),
@@ -19,6 +22,7 @@ export function initDebug({ R, film, scroll, monitor, audio, state, getLevel, se
     h("h4", { text: "Ir a capítulo" }),
     h("div.debug-row", ...Array.from({ length: 9 }, (_, i) => btn(String(i + 1), () => jump(i + 1)))),
     h("h4", { text: "Calidad" }), h("div.debug-row", ...qBtns),
+    h("h4", { text: "Tema de color" }), h("div.debug-row", ...themeBtns),
     h("h4", { text: "Días restantes" }),
     h("div.debug-row", ...[30, 5].map((d) => btn(`${d}`, () => clock.setOffset(ev.start - d * DAY - Date.now()))),
       btn("0 (hoy)", () => clock.setOffset(ev.start - 2 * 3600000 - Date.now())), btn("-1", () => clock.setOffset(ev.end + DAY - Date.now())), btn("Real", () => clock.reset())),

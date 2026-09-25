@@ -7,13 +7,13 @@ import { dateBlock, countdown, calendarButtons, venueBlock, mapsButtons, transpo
 
 const SECTIONS = [
   { k: "fecha", chip: "Fecha", title: "Fecha y hora", icon: "calendar", color: "#6FD6E8" },
-  { k: "lugar", chip: "Lugar", title: "Lugar", icon: "pin", color: "#FF8FA3" },
+  { k: "lugar", chip: "Lugar", title: "Lugar", icon: "pin", color: "var(--pink)" },
   { k: "plan", chip: "Plan", title: "Plan de vuelo", icon: "route", color: "#FFD27A" },
   { k: "antes", chip: null, title: "Antes del despegue", icon: "checklist", color: "#9BE5B4" },
   { k: "regalos", chip: "Regalos", title: "Carga de la misión", icon: "gift", color: "#B9A2FF" },
   { k: "fotos", chip: "Fotos", title: "Recuerdos", icon: "photo", color: "#FFC9A0" },
   { k: "faq", chip: "Más info", title: "Preguntas frecuentes", icon: "question", color: "#6FD6E8" },
-  { k: "live", chip: null, title: "Transmisión en vivo", icon: "broadcast", color: "#FF8FA3" },
+  { k: "live", chip: null, title: "Transmisión en vivo", icon: "broadcast", color: "var(--pink)" },
   { k: "hospedaje", chip: null, title: "Hospedaje", icon: "bed", color: "#FFD27A" },
   { k: "contacto", chip: null, title: "Contacto directo", icon: "chat", color: "#9BE5B4" }
 ];
