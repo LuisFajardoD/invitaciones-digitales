@@ -2,8 +2,8 @@
 // "cover" (portada), "launch" (despegue por tiempo) y "story" (capítulos 1–9 ligados al scroll), coloca cámara,
 // cohete, astronauta y Gloobi, y responde a los toques (Gloobi, estrellas, polaroids).
 import * as THREE from "three";
-import { demoData } from "../data.js";
-import { clamp, smooth, easeInOut, easeIn, invLerp, lerp, prefersReduced, vibrate, missionName, loadImage } from "../util.js";
+import { demoData, visorPhotos, VISOR_FALLBACK } from "../data.js";
+import { clamp, smooth, easeInOut, easeIn, invLerp, lerp, prefersReduced, vibrate, missionName, loadPhoto } from "../util.js";
 import { V, samplePath, blendShots, camSpace, shake, shot } from "./camera-path.js";
 import { ENV, glowTexture, createStudioEnv, pbr, canvasTex } from "./materials.js";
 import { renderNebula } from "./nebula.js";
@@ -41,8 +41,14 @@ const EARTH_R = 100, EARTH_Y = -114; // la curvatura se ve desde la órbita
 const WALK = V(0.9, 2.48, 2.6); // dónde saluda el astronauta en la caminata
 const JUMP_FROM = V(2.4, PAD_Y + 0.9, 1.6);
 export const CHAPTER_COUNT = 9;
-// Portada: media luna [giro Z, escala] y astronauta [rotX, rotY, rotZ (orden ZYX), x, y, z] respecto a COVER
-const CRES_DEFAULT = "1.0,1.0", COV_DEFAULT = "0,0.4,0.75,-0.228,-0.283,0.05";
+// Portada: media luna [giro Z, escala] y astronauta [rotX, rotY, rotZ (orden ZYX), x, y, z, giro del casco] respecto
+// a COVER (el casco gira −0.4 rad hacia la cámara: la cara queda centrada en el visor; sin tocar la luna)
+const CRES_DEFAULT = "1.0,1.0", COV_DEFAULT = "0,0.4,0.75,-0.228,-0.283,0.05,-0.4";
+// Foto del visor según la luz de cada escena (gain multiplica, contrast alrededor del gris medio): portada nocturna
+// un poco más cálida y suave; despegue al amanecer y espacio casi neutros. Nunca oscura ni lavada.
+const LOOK_COVER = { gain: [1.3, 1.16, 1.02], contrast: 1.04 };
+const LOOK_DAY = { gain: [1.12, 1.06, 1.0], contrast: 0.97 };
+const LOOK_SPACE = { gain: [1.1, 1.07, 1.05], contrast: 1.0 };
 const T = 0.22; // fracción de cada capítulo dedicada a viajar desde el anterior
 
 export function createFilm({ R, quality, audio, showcase = false }) {
@@ -60,7 +66,10 @@ export function createFilm({ R, quality, audio, showcase = false }) {
   // --- personajes
   const astro = createAstronaut(demoData.child); scene.add(astro.root);
   const gloobi = createGloobi({ size: 0.16 }); scene.add(gloobi.root);
-  const photoP = loadImage(demoData.child.visorPhoto).then((img) => astro.setVisorTexture(visorTexture(img))).catch(() => {});
+  // fotos del visor (dormido / despierto): se decodifican y se preparan como texturas ANTES de mostrar el 3D
+  const PH = visorPhotos(demoData.child);
+  const photoP = Promise.all([loadPhoto(PH.sleeping, VISOR_FALLBACK), PH.awake === PH.sleeping ? null : loadPhoto(PH.awake, VISOR_FALLBACK)])
+    .then(([s, a]) => { const ts = visorTexture(s), ta = a ? visorTexture(a) : ts; astro.setVisorPhotos(ts, ta); }).catch(() => {});
   // Listo para mostrarse: astronauta (GLB o respaldo) con su pose, foto del visor y shaders de lo visible compilados
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const ready = Promise.all([astro.ready, photoP]).then(() => wait(400)).then(() => precompile(true));
@@ -258,7 +267,9 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     astro.root.position.set(COVER.x + COV[3], COVER.y + COV[4], COVER.z + COV[5]);
     covE.set(COV[0], COV[1], COV[2]); astro.root.quaternion.setFromEuler(covE);
     astro.root.updateMatrixWorld(true);
-    astro.setHeadYaw(0); // con este giro de 3/4 el visor ya queda de frente a la cámara
+    // giro del casco hacia la cámara (la cara queda centrada en el visor); inmediato: el póster se captura en un solo
+    // cuadro y el 3D debe verse igual desde el primero
+    astro.setHeadYaw(COV[6] ?? 0, { instant: true });
     gloobi.follow(null); gloobi.root.visible = true;
     const wake = smooth(clamp((hold - 0.1) / 0.25)); // al despertar vuelve a su tamaño y sale del abrazo
     gloobi.root.scale.setScalar(lerp(G_COVER, 1, wake));
@@ -371,7 +382,11 @@ export function createFilm({ R, quality, audio, showcase = false }) {
       coverShot(ct, cam, dt);
       placeCover(ct, st.hold);
       astro.setPose(st.hold > 0.35 ? "fly" : "sleep", { safe: false }); astro.allowSwap();
-      gloobi.setMode(st.hold > 0.15 ? "awake" : "sleep");
+      // despertar: Gloobi abre los ojos y, en el mismo instante, el visor pasa de la foto dormido a la despierto
+      // (fundido de 0.35 s con destello); si se suelta antes y vuelve a dormir, regresa igual
+      const awake = st.hold > 0.15;
+      gloobi.setMode(awake ? "awake" : "sleep"); astro.setAwake(awake);
+      astro.setVisorLook(LOOK_COVER.gain, LOOK_COVER.contrast);
       gloobi.lookAt(null); gloobi.point(0);
       shakeAmp = R0 ? 0 : st.hold * st.hold * 0.07;
       if (W.rocket) W.rocket.root.visible = false;
@@ -380,11 +395,13 @@ export function createFilm({ R, quality, audio, showcase = false }) {
       hideStory();
     } else if (st.mode === "launch") {
       gloobi.root.scale.setScalar(1); astro.setHeadYaw(0);
+      astro.setAwake(true); astro.setVisorLook(LOOK_DAY.gain, LOOK_DAY.contrast);
       earthY = updateLaunch(dt, t, R0);
       space = st.space; shakeAmp = st.shake;
       hideStory();
     } else {
       gloobi.root.scale.setScalar(1);
+      astro.setAwake(true, { instant: true }); astro.setVisorLook(LOOK_SPACE.gain, LOOK_SPACE.contrast);
       updateStory(dt, t, story, R0);
     }
     if (W.comets) W.comets.update(dt, camera);
@@ -665,7 +682,7 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     update,
     buildRest() { buildIdle(); },
     setHold(h) { st.hold = h; },
-    toCover() { st.mode = "cover"; st.hold = 0; st.launchDone = true; st.lastChapter = 0; st.fade = 0; astro.snapPose("sleep"); gloobi.setMode("sleep"); W.launch?.clearSmoke(); },
+    toCover() { st.mode = "cover"; st.hold = 0; st.launchDone = true; st.lastChapter = 0; st.fade = 0; astro.snapPose("sleep"); astro.setAwake(false, { instant: true }); gloobi.setMode("sleep"); W.launch?.clearSmoke(); },
     /** Despegue por tiempo. short = visitas repetidas (~2.5 s). */
     launch({ short = false, onEnd } = {}) {
       buildUpTo(3);

@@ -1,7 +1,7 @@
 // Tema Misión Estrella: espacio de cuento (índigo → violeta, rosa, durazno, turquesa y dorado), astronauta con
 // Gloobi, tarjetas suaves con esquinas de 24 px, Fredoka + Figtree. El muro de invitados es el mural de parches
 // bordados de la tripulación.
-import { demoData } from "../../mision-estrella/js/data.js";
+import { demoData, visorPhotos } from "../../mision-estrella/js/data.js";
 import { astronautSVG, gloobiSVG, starsSVG } from "../../mision-estrella/js/ui/illustrations.js";
 import { patchSVG } from "../../mision-estrella/js/ui/patch.js";
 
@@ -38,7 +38,7 @@ export default {
     container.innerHTML = `<svg viewBox="0 0 320 170" role="img" aria-label="${ev.childName} flota en el espacio con Gloobi">
       ${starsSVG(320, 170, 40, 7)}
       <circle cx="262" cy="150" r="70" fill="#FFE7C2" opacity=".14"/>
-      <g class="hero-float">${astronautSVG(150, 168, 0.72, { pose: "float", photo: asset(kid.visorPhoto), accent: kid.accentColor, suit: kid.suitColor })}</g>
+      <g class="hero-float">${astronautSVG(150, 168, 0.72, { pose: "float", photo: asset(visorPhotos(kid).awake), accent: kid.accentColor, suit: kid.suitColor })}</g>
       ${gloobiSVG(236, 58, 17)}
     </svg>`;
   },

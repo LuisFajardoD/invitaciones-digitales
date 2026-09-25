@@ -1,7 +1,7 @@
 // Datos de la invitación "Misión Estrella". Misma estructura base que temporada-8, isla-cubo y el-circuito
 // (child, event, itinerary, dressCode, gifts, gallery, hosts, rsvp, sound) + los campos que ya maneja el editor
 // de Gloobi (checklist, faq, liveStream, transport, lodging, contact) + los propios (missionName, tagline,
-// child.visorPhoto, child.suitColor, child.accentColor, avatar "mission-patch").
+// child.visorPhotoSleeping / child.visorPhotoAwake, child.suitColor, child.accentColor, avatar "mission-patch").
 // Todo texto o dato variable de la invitación sale de aquí. Plantillas: {name}, {age}, {missionName}.
 // Las confirmaciones usan el contrato común: ../../_shared/rsvp-contract.js
 export const demoData = {
@@ -9,7 +9,10 @@ export const demoData = {
   child: {
     name: "Luis Arturo",
     age: 8,
-    visorPhoto: "assets/placeholders/visor.svg", // foto circular que va dentro del casco
+    // fotos del niño dentro del visor (cara centrada, fondo oscuro, ≤ 512 px): dormido (ojos cerrados) en la portada y
+    // despierto (ojos abiertos) en el resto. Junto a cada .avif va una copia .webp de respaldo. Ver visorPhotos().
+    visorPhotoSleeping: "assets/placeholders/visor-dormido.avif",
+    visorPhotoAwake: "assets/placeholders/visor-despierto.avif",
     suitColor: "#F4F1FA",
     accentColor: "#FF8FA3" // parche, detalles del traje y cohete
   },
@@ -69,3 +72,11 @@ export const demoData = {
   },
   sound: { enabledByDefault: true }
 };
+
+/** Visor por defecto (ilustración) si no hay ninguna foto. */
+export const VISOR_FALLBACK = "assets/placeholders/visor.svg";
+/** Fotos del visor ya resueltas: sin foto dormido se usa la despierto; sin ninguna, la ilustración. */
+export function visorPhotos(child = demoData.child) {
+  const awake = child.visorPhotoAwake || child.visorPhotoSleeping || VISOR_FALLBACK;
+  return { sleeping: child.visorPhotoSleeping || awake, awake };
+}

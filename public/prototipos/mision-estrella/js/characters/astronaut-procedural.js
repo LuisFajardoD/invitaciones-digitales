@@ -16,24 +16,62 @@ export const POSES = {
 };
 POSES.float = POSES.fly; // flotar: en el procedural es la misma pose que volar
 
-/** Textura circular de la foto del visor: fondo de visor oscuro y la foto con borde difuminado. */
+/**
+ * Textura de la foto del visor (512 px): fondo de visor oscuro y la foto centrada con viñeta circular.
+ * Las UV del visor del GLB usan todo el ancho (u 0–1) y la franja v 0.107–0.893 del alto (≈ 402 px visibles): la
+ * foto (cara con pelo ≈ 95 % de su alto, fondo oscuro) se dibuja a 430 px: el rostro (frente a barbilla) ocupa
+ * ≈ 80 % del alto visible y el pelo y las orejas se funden con el borde del visor.
+ * Se mezcla con "lighten": el fondo negro de la foto toma el color del visor (sin cuadro ni círculo visible).
+ */
 export function visorTexture(img) {
   const S = 512, cv = document.createElement("canvas"); cv.width = cv.height = S;
   const c = cv.getContext("2d");
   const g = c.createRadialGradient(S * 0.45, S * 0.4, S * 0.05, S / 2, S / 2, S / 2);
-  g.addColorStop(0, "#2A2560"); g.addColorStop(1, "#0E0B26");
+  g.addColorStop(0, "#221E52"); g.addColorStop(1, "#0E0B26");
   c.fillStyle = g; c.fillRect(0, 0, S, S);
   if (img) {
-    c.save(); c.beginPath(); c.arc(S / 2, S / 2, S * 0.4, 0, Math.PI * 2); c.clip();
-    const k = Math.max((S * 0.8) / img.width, (S * 0.8) / img.height);
-    c.drawImage(img, S / 2 - (img.width * k) / 2, S / 2 - (img.height * k) / 2, img.width * k, img.height * k);
-    c.restore();
-    const v = c.createRadialGradient(S / 2, S / 2, S * 0.3, S / 2, S / 2, S * 0.42);
-    v.addColorStop(0, "rgba(14,11,38,0)"); v.addColorStop(1, "rgba(14,11,38,1)");
-    c.fillStyle = v; c.fillRect(0, 0, S, S);
+    const D = 430, k = D / Math.max(img.width, img.height), w = img.width * k, h = img.height * k;
+    // foto con los bordes desvanecidos (máscara radial) en un lienzo aparte
+    const pc = document.createElement("canvas"); pc.width = pc.height = D;
+    const p = pc.getContext("2d");
+    p.drawImage(img, (D - w) / 2, (D - h) / 2, w, h);
+    p.globalCompositeOperation = "destination-in";
+    const m = p.createRadialGradient(D / 2, D / 2, D * 0.38, D / 2, D / 2, D * 0.5);
+    m.addColorStop(0, "rgba(0,0,0,1)"); m.addColorStop(1, "rgba(0,0,0,0)");
+    p.fillStyle = m; p.fillRect(0, 0, D, D);
+    c.globalCompositeOperation = "lighten";
+    c.drawImage(pc, (S - D) / 2, (S - D) / 2);
+    c.globalCompositeOperation = "source-over";
   }
-  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   return t;
+}
+
+/**
+ * Material del visor: dos fotos (dormido → despierto) con fundido cruzado (`mix` 0–1), un destello suave al cambiar
+ * (`flash`) y ajuste de color por escena (`gain` multiplica, `contrast` alrededor del gris medio). Sin luces (la foto
+ * se ve siempre clara); el vidrio del casco va encima.
+ */
+export function visorMaterial(map = visorTexture(null)) {
+  const mat = new THREE.MeshBasicMaterial({ map, toneMapped: false });
+  // (astronaut.js reemplaza estos uniforms por unos compartidos entre sus modelos antes del primer dibujo)
+  mat.userData.visor = visorUniforms(map);
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, mat.userData.visor);
+    sh.fragmentShader = "uniform sampler2D map2; uniform float mixK; uniform float flash; uniform vec3 gain; uniform float contrast;\n" + sh.fragmentShader.replace("#include <map_fragment>", /* glsl */`
+      #ifdef USE_MAP
+        vec4 ph = mix(texture2D(map, vMapUv), texture2D(map2, vMapUv), mixK);
+        ph.rgb = max((ph.rgb - 0.18) * contrast + 0.18, 0.0) * gain;
+        float fl = flash * (1.0 - smoothstep(0.0, 0.62, distance(vMapUv, vec2(0.46, 0.44))));
+        ph.rgb += vec3(1.0, 0.95, 0.85) * fl * 0.55;
+        diffuseColor *= ph;
+      #endif`);
+  };
+  mat.customProgramCacheKey = () => "visor-photo";
+  return mat;
+}
+export function visorUniforms(map = null) {
+  return { map2: { value: map }, mixK: { value: 0 }, flash: { value: 0 }, gain: { value: new THREE.Color(1, 1, 1) }, contrast: { value: 1 } };
 }
 
 /** Casquete esférico al frente (+Z) con UV planas (la foto circular no se deforma). */
@@ -62,7 +100,7 @@ export function createProceduralAstronaut({ suitColor = "#F4F1FA", accentColor =
   const collar = mesh(new THREE.TorusGeometry(0.12, 0.032, 10, 32), dark, "collar"); collar.rotation.x = Math.PI / 2; head.add(collar);
   const helmet = mesh(new THREE.SphereGeometry(0.235, 40, 32), suit, "helmet"); helmet.position.y = 0.2; head.add(helmet);
   const visorTex = visorTexture(null);
-  const visor = mesh(frontCap(0.238, 0.72), new THREE.MeshBasicMaterial({ map: visorTex, toneMapped: false }), "visor");
+  const visor = mesh(frontCap(0.238, 0.72), visorMaterial(visorTex), "visor");
   visor.position.copy(helmet.position); head.add(visor);
   const rim = mesh(new THREE.TorusGeometry(0.238 * Math.sin(0.72), 0.018, 10, 48), accent, "visor_rim");
   rim.position.set(0, 0.2, 0.238 * Math.cos(0.72)); head.add(rim);

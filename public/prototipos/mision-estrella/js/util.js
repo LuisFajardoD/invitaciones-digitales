@@ -152,3 +152,17 @@ export const waUrl = (phone, text) => `https://wa.me/${String(phone).replace(/\D
 export function loadImage(src) {
   return new Promise((res, rej) => { const i = new Image(); i.decoding = "async"; i.onload = () => res(i); i.onerror = rej; i.src = src; });
 }
+
+/**
+ * Carga una foto del visor: el .avif; si el navegador no lo decodifica, su copia .webp; si tampoco, `fallback`.
+ * Resuelve con la imagen ya decodificada (o null si nada cargó).
+ */
+export async function loadPhoto(src, fallback = null) {
+  const tries = [src];
+  if (/\.avif$/i.test(src)) tries.push(src.replace(/\.avif$/i, ".webp"));
+  if (fallback && fallback !== src) tries.push(fallback);
+  for (const s of tries) {
+    try { const img = await loadImage(s); if (img.decode) await img.decode().catch(() => {}); if (img.naturalWidth) return img; } catch { /* siguiente */ }
+  }
+  return null;
+}

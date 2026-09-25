@@ -3,7 +3,7 @@
 // Si algo falla, quien llama usa el modelo procedural (models.js → build: "procedural").
 import * as THREE from "three";
 import { addRim, glassMaterial } from "../scene/materials.js";
-import { frontCap, visorTexture } from "./astronaut-procedural.js";
+import { frontCap, visorMaterial } from "./astronaut-procedural.js";
 
 // GLTFLoader + MeshoptDecoder se descargan sólo si models.js pide algún archivo (sin GLB no pesan nada).
 let loaderP = null;
@@ -77,13 +77,13 @@ export function adapt(gltf, { height = 1, suitColor, accentColor, visorPhoto = t
     if (parts.helmet) hb.setFromObject(parts.helmet); else { hb.copy(new THREE.Box3().setFromObject(root)); hb.min.y = hb.max.y - (hb.max.y - hb.min.y) * 0.45; }
     const hs = hb.getSize(new THREE.Vector3()), hc = hb.getCenter(new THREE.Vector3());
     const rad = Math.min(hs.x, hs.y) * 0.5;
-    const cap = new THREE.Mesh(frontCap(rad * 0.98, 0.7), new THREE.MeshBasicMaterial({ map: visorTexture(null), toneMapped: false }));
+    const cap = new THREE.Mesh(frontCap(rad * 0.98, 0.7), visorMaterial());
     cap.name = "visor"; cap.position.copy(hc); root.add(cap);
     parts.visor = cap;
     if (!parts.glass) { const g = new THREE.Mesh(frontCap(rad * 1.02, 0.78), glassMaterial()); g.name = "helmet_glass"; g.position.copy(hc); g.renderOrder = 3; root.add(g); parts.glass = g; }
   } else if (parts.visor) {
     // visor del modelo: sus UV vienen del GLB (convención glTF, sin volteo vertical): la foto se aplica con flipY=false
-    parts.visor.material = new THREE.MeshBasicMaterial({ map: visorTexture(null), toneMapped: false });
+    parts.visor.material = visorMaterial();
     parts.visor.userData.gltfUV = true;
     parts.visor.renderOrder = 2;
     if (parts.glass) parts.glass.renderOrder = 3; // vidrio y reflejo siempre encima de la foto

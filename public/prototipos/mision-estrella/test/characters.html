@@ -22,14 +22,16 @@
     import { visorTexture } from "../js/characters/astronaut-procedural.js";
     import { createGloobi } from "../js/characters/gloobi.js";
     import { patchCanvas } from "../js/ui/patch.js";
-    import { demoData } from "../js/data.js";
+    import { demoData, visorPhotos } from "../js/data.js";
+    import { loadPhoto } from "../js/util.js";
     const p = new URLSearchParams(location.search);
     const R = createRenderer(document.getElementById("c"), { stage: document.body, level: p.get("q") || "high" });
     const neb = renderNebula(R.renderer); ENV.envMap.value = neb;
     const sky = createSky(neb); R.scene.add(sky.mesh);
     const stars = createStars(); R.scene.add(stars.group); stars.setPixelRatio(R.dpr);
     const astro = createAstronaut(demoData.child); R.scene.add(astro.root);
-    const img = new Image(); img.src = "../" + demoData.child.visorPhoto; img.onload = () => astro.setVisorTexture(visorTexture(img));
+    const ph = visorPhotos();
+    Promise.all([loadPhoto("../" + ph.sleeping), loadPhoto("../" + ph.awake)]).then(([s, a]) => astro.setVisorPhotos(visorTexture(s), visorTexture(a)));
     await document.fonts.load("600 20px Fredoka").catch(() => {});
     const pt = new THREE.CanvasTexture(patchCanvas(256, { color: demoData.child.accentColor, symbol: "star", top: demoData.child.name, bottom: "Misión" })); pt.colorSpace = THREE.SRGBColorSpace;
     astro.setPatchTexture(pt);

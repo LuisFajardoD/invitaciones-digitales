@@ -27,7 +27,8 @@ maneja el editor). Plantillas en textos: `{name}`, `{age}`, `{missionName}`.
 | Campo | Dónde se usa |
 |---|---|
 | `child.name`, `child.age` | Título, insignia, constelación (cap. 3), tarjetas, parches, WhatsApp |
-| `child.visorPhoto` | Foto circular dentro del visor del casco (3D, versión ilustrada, panel) |
+| `child.visorPhotoSleeping` | Foto del niño **dormido** (ojos cerrados) en el visor: portada 3D (acurrucado en la luna con Gloobi), `?showcase=1`, póster/OG y portada de la versión ilustrada |
+| `child.visorPhotoAwake` | Foto del niño **despierto** (ojos abiertos, sonriendo): al mantener presionado el botón de despegue (fundido cruzado de 0.35 s con destello, al mismo tiempo que Gloobi abre los ojos; si se suelta antes, regresa a dormido) y en todo el resto (despegue, caminata, constelación, recorrido, tripulación, final, versión ilustrada, panel) |
 | `child.suitColor`, `child.accentColor` | Traje del astronauta; parche, detalles del traje y cohete |
 | `missionName` | "Misión {name}" si es `null`; parches y mensaje de WhatsApp |
 | `tagline` | Tarjeta de la caminata espacial (cap. 2) |
@@ -41,6 +42,13 @@ maneja el editor). Plantillas en textos: `{name}`, `{age}`, `{missionName}`.
 | `hosts` | .ics / Google Calendar |
 | `rsvp.*` | Formulario de tripulación, mural (`mockGuests`), mensajes de WhatsApp, `deadlineText` |
 | `sound.enabledByDefault` | Sonido inicial (luego se recuerda la elección) |
+
+Fotos del visor (el editor pedirá dos: dormido y despierto): cuadradas, cara centrada ocupando casi todo el alto,
+fondo oscuro, ≤ 512 px. Formato `.avif` con una copia `.webp` al lado (mismo nombre) que se usa si el navegador no
+decodifica AVIF. Si falta la de dormido se usa la de despierto; si faltan ambas, `assets/placeholders/visor.svg`
+(`visorPhotos()` en `data.js`). En 3D la foto se dibuja con viñeta circular fundida con el visor (el rostro ≈ 80 % del
+alto visible), se ajusta a la luz de cada escena (`LOOK_*` en `timeline.js`) y el vidrio del casco va encima con un
+reflejo sutil.
 
 Confirmaciones con el contrato común `../_shared/rsvp-contract.js` (`avatar: { style: "mission-patch", color, symbol }`,
 símbolos `star | rocket | planet | heart | moon | comet`). Sin alergias ni dietas.
