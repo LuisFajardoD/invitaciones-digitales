@@ -14,6 +14,7 @@ export const POSES = {
   celebrate: { body: [-0.1, 0, 0], head: [-0.15, 0, 0], shL: [0, 0, 2.6], shR: [0, 0, -2.6], elL: -0.3, elR: -0.3, hipL: [0.2, 0, 0.2], hipR: [-0.2, 0, -0.2], knL: 0.3, knR: 0.3 },
   sit: { body: [0, 0, 0], head: [0.05, 0, 0], shL: [-0.4, 0, 0.25], shR: [-0.4, 0, -0.25], elL: -1, elR: -1, hipL: [-1.5, 0, 0.1], hipR: [-1.5, 0, -0.1], knL: 1.5, knR: 1.5 }
 };
+POSES.float = POSES.fly; // flotar: en el procedural es la misma pose que volar
 
 /** Textura circular de la foto del visor: fondo de visor oscuro y la foto con borde difuminado. */
 export function visorTexture(img) {

@@ -31,7 +31,8 @@ const NAMES = {
   patch: /patch|parche|badge|emblem/i,
   helmet: /helmet|casco|head/i
 };
-const ANIMS = { fly: /idle|float|fly/i, wave: /wave|hello|hi\b|saludo/i, sleep: /sleep|dorm/i, celebrate: /celebrate|happy|jump|cheer/i, sit: /sit|seat/i };
+// primero se busca un clip con el nombre exacto de la pose; si no, por palabras clave
+const ANIMS = { float: /float|idle/i, fly: /fly|vuelo/i, wave: /wave|hello|hi\b|saludo/i, sleep: /sleep|dorm/i, celebrate: /celebrate|happy|jump|cheer/i, sit: /sit|seat/i };
 
 /** Busca la primera pieza cuyo nombre (o el de su material) coincide. */
 export function findPart(root, key) {
@@ -54,7 +55,7 @@ export function adapt(gltf, { height = 1, suitColor, accentColor, visorPhoto = t
   const root = new THREE.Group(); root.add(inner);
   src.traverse((o) => {
     if (!o.isMesh) return;
-    o.frustumCulled = true;
+    o.frustumCulled = !o.isSkinnedMesh; // la caja de una malla con piel es la del reposo: animada se recortaría mal
     const mats = [].concat(o.material);
     mats.forEach((m) => {
       if ("roughness" in m) m.roughness = Math.max(0.55, m.roughness ?? 1);
@@ -64,7 +65,10 @@ export function adapt(gltf, { height = 1, suitColor, accentColor, visorPhoto = t
     });
   });
   const parts = { visor: findPart(src, "visor"), glass: findPart(src, "glass"), suit: findPart(src, "suit"), patch: findPart(src, "patch"), helmet: findPart(src, "helmet") };
-  if (suitColor && parts.suit) [].concat(parts.suit.material).forEach((m) => m.color?.set(suitColor));
+  // traje con varios materiales: el color sólo va a las piezas blancas (no a metales, visor ni detalles oscuros)
+  const light = (m) => m.color && Math.min(m.color.r, m.color.g, m.color.b) > 0.75 && Math.max(m.color.r, m.color.g, m.color.b) - Math.min(m.color.r, m.color.g, m.color.b) < 0.06;
+  // (GLTFLoader parte una malla con varios materiales en submallas "nombre_1", "nombre_2"...: se revisan todas)
+  if (suitColor) src.traverse((o) => { if (o.isMesh && NAMES.suit.test(o.name)) [].concat(o.material).filter(light).forEach((m) => m.color.set(suitColor)); });
   if (accentColor && parts.patch) [].concat(parts.patch.material).forEach((m) => m.color?.set(accentColor));
   if (parts.glass) parts.glass.material = glassMaterial(); // vidrio con fresnel de la escena
   // Visor: si no existe como pieza, se crea un casquete curvo dentro del casco para la foto.
@@ -78,17 +82,21 @@ export function adapt(gltf, { height = 1, suitColor, accentColor, visorPhoto = t
     parts.visor = cap;
     if (!parts.glass) { const g = new THREE.Mesh(frontCap(rad * 1.02, 0.78), glassMaterial()); g.name = "helmet_glass"; g.position.copy(hc); g.renderOrder = 3; root.add(g); parts.glass = g; }
   } else if (parts.visor) {
+    // visor del modelo: sus UV vienen del GLB (convención glTF, sin volteo vertical): la foto se aplica con flipY=false
     parts.visor.material = new THREE.MeshBasicMaterial({ map: visorTexture(null), toneMapped: false });
+    parts.visor.userData.gltfUV = true;
+    parts.visor.renderOrder = 2;
+    if (parts.glass) parts.glass.renderOrder = 3; // vidrio y reflejo siempre encima de la foto
   }
-  // Animaciones por palabras clave
+  // Animaciones: nombre exacto de la pose y, si no hay, palabras clave
   let mixer = null; const actions = {};
   if (gltf.animations?.length) {
     mixer = new THREE.AnimationMixer(src);
     for (const [pose, re] of Object.entries(ANIMS)) {
-      const clip = gltf.animations.find((a) => re.test(a.name));
+      const clip = gltf.animations.find((a) => a.name.toLowerCase() === pose) || gltf.animations.find((a) => re.test(a.name));
       if (clip) actions[pose] = mixer.clipAction(clip);
     }
-    if (!Object.keys(actions).length) actions.fly = mixer.clipAction(gltf.animations[0]);
+    if (!Object.keys(actions).length) actions.float = mixer.clipAction(gltf.animations[0]);
   }
   return { root, mixer, actions, parts };
 }

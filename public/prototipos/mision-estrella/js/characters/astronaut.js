@@ -14,12 +14,22 @@ export function createAstronaut({ suitColor, accentColor }) {
   holder.add(proc.root);
   let visorTex = null, patchTex = null;
   const glb = {}; // pose → { root, mixer, actions, parts } (o "all" para un GLB con animaciones)
-  let active = proc, activeKey = "procedural", pose = "fly", pending = null, swapT = -1;
+  let active = proc, activeKey = "procedural", pose = "float", pending = null, swapT = -1;
   const cfg = models.astronaut;
 
+  const FADE = 0.5; // fundido cruzado entre animaciones (s)
+  // Las UV del GLB usan la convención glTF (sin volteo vertical): misma imagen, textura con flipY = false.
+  const gltfTex = new WeakMap();
+  function forGltf(t) {
+    if (!gltfTex.has(t)) { const c = t.clone(); c.flipY = false; c.needsUpdate = true; gltfTex.set(t, c); }
+    return gltfTex.get(t);
+  }
   function applyTextures(target) {
     if (!target) return;
-    if (visorTex && target.parts?.visor) { target.parts.visor.material.map = visorTex; target.parts.visor.material.needsUpdate = true; }
+    if (visorTex && target.parts?.visor) {
+      const v = target.parts.visor;
+      v.material.map = v.userData.gltfUV ? forGltf(visorTex) : visorTex; v.material.needsUpdate = true;
+    }
     if (patchTex && target.parts?.patch) { const m = target.parts.patch.material; if (m) { m.map = patchTex; m.needsUpdate = true; } }
   }
   function modelFor(p) { return glb[p] || glb.all || null; }
@@ -35,9 +45,11 @@ export function createAstronaut({ suitColor, accentColor }) {
     }
     if (active === proc) proc.setPose(p);
     else if (active.actions) {
-      const a = active.actions[p] || active.actions.fly;
-      Object.values(active.actions).forEach((x) => { if (x !== a) x.fadeOut(0.3); });
-      a?.reset().fadeIn(0.3).play();
+      const A = active.actions, a = A[p] || A.float || A.fly;
+      if (!a || a === active.current) return;
+      Object.values(A).forEach((x) => { if (x !== a && x.isRunning()) x.fadeOut(FADE); });
+      a.reset().setEffectiveWeight(1).fadeIn(active.current ? FADE : 0).play();
+      active.current = a;
     }
   }
   async function loadAll() {

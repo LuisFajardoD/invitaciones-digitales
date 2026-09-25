@@ -53,7 +53,7 @@ Los modelos actuales son **provisionales hechos con código**. Para usar archivo
 ```js
 export const models = {
   astronaut: {
-    url: null,                    // un GLB con todas las poses como animaciones…
+    url: "assets/models/astronaut.glb", // un GLB con todas las poses como animaciones…
     poses: { fly: null, wave: null, sleep: null, celebrate: null, sit: null }, // …o un GLB por pose
     build: "procedural", height: 1.0
   },
@@ -70,8 +70,15 @@ export const models = {
   suaviza materiales (sin brillo plástico) y les agrega la luz de borde rosa/turquesa de la escena.
 - **Poses del astronauta**: `url` con animaciones, o un GLB por pose en `poses` (misma geometría). Los cambios entre
   GLB distintos sólo ocurren durante transiciones de cámara o fuera de cuadro, con un micro fundido.
-  Uso: `sleep` portada · `fly` despegue, capítulos 3–7 · `wave` caminata y tripulación · `celebrate` al unirse ·
-  `sit` en la ventana del cohete (capítulo final).
+  Uso: `sleep` portada · `fly` despegue y capítulo final · `wave` caminata y despedidas · `celebrate` tripulación y
+  al unirse · `float` el resto. Con un GLB animado las poses se mezclan con un fundido cruzado de 0.5 s
+  (`AnimationMixer`); el astronauta procedural queda como respaldo si el GLB no carga.
+- **Astronauta actual** (`assets/models/astronaut.glb`, 667 KB, ~41.9k triángulos, meshopt): un solo skin
+  (`astronaut_body`, 7 materiales) + `visor` (UV frontal para la foto; se aplica con `flipY = false`, convención
+  glTF) + `helmet_glass` (se reemplaza por el vidrio fresnel, que también sigue al esqueleto). Sólo huesos de
+  deformación; animaciones horneadas `float`, `wave`, `sleep`, `celebrate`, `fly`, en bucle perfecto. Piernas y cadera
+  quedan en su pose de reposo: el cuerpo se mueve entero. Fuente y scripts de Blender fuera del repo
+  (`blender-trabajo/`).
 
 ### Nombres de piezas que se reconocen (sin distinguir mayúsculas)
 
@@ -87,8 +94,10 @@ export const models = {
 
 ### Animaciones que se reconocen
 
-`idle|float|fly` → fly · `wave|hello|saludo` → wave · `sleep` → sleep · `celebrate|happy|jump|cheer` → celebrate ·
-`sit|seat` → sit. Si el modelo no trae animaciones, se aplica movimiento procedural (flotar, balanceo y giro suave).
+Primero por nombre exacto de la pose; si no hay, por palabras clave: `float|idle` → float · `fly|vuelo` → fly ·
+`wave|hello|saludo` → wave · `sleep` → sleep · `celebrate|happy|jump|cheer` → celebrate · `sit|seat` → sit. Si falta
+una pose se usa `float` (o `fly`). Si el modelo no trae animaciones, se aplica movimiento procedural (flotar,
+balanceo y giro suave). Un traje con varios materiales sólo tiñe con `suitColor` las piezas blancas.
 
 ## Arquitectura
 

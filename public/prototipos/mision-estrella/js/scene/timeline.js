@@ -209,13 +209,15 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     return out;
   }
   /** Dónde está el astronauta en cada capítulo. Escribe la posición en out y devuelve r (pose, mirada...). */
+  // Poses por capítulo: portada sleep · despegue y final fly · caminata y despedidas wave · tripulación celebrate ·
+  // el resto float.
   function astroAt(i, p, out, r) {
-    r.pose = "fly"; r.look = "camera"; r.visible = true; r.scale = 1; r.inRocket = false;
+    r.pose = "float"; r.look = "camera"; r.visible = true; r.scale = 1; r.inRocket = false;
     if (i === 1) { r.visible = false; r.inRocket = true; out.copy(A).set(0, 2.2, 0.4); return r; }
     if (i === 2) {
       W.rocket.windowWorld(tmp3); tmp3.y -= 0.1; tmp3.z -= 0.45;
       out.lerpVectors(tmp3, WALK, smooth((p - 0.3) / 0.25));
-      r.visible = p > 0.26; r.inRocket = p < 0.5; r.pose = p > 0.5 ? "wave" : "fly";
+      r.visible = p > 0.26; r.inRocket = p < 0.5; r.pose = p > 0.5 ? "wave" : "float";
       r.look = p > 0.45 ? "camera" : "out";
       return r;
     }
@@ -224,11 +226,11 @@ export function createFilm({ R, quality, audio, showcase = false }) {
     if (i === 5) { samplePath(CH[5].keys, 0.6, sA); camSpace(sA.pos, sA.tgt, -0.5, -1.0, 5, out); r.look = HOLO; return r; }
     if (i === 6) { samplePath(CH[6].keys, Math.max(p, T), sA); camSpace(sA.pos, sA.tgt, 0.35, -0.25, 5.5, out); r.look = "memories"; return r; }
     if (i === 7) { samplePath(CH[7].keys, p < 0.6 ? 0.5 : 1, sA); camSpace(sA.pos, sA.tgt, -0.35, -0.3, 6, out); r.look = p < 0.6 ? FLIGHT : CARGO; return r; }
-    if (i === 8) { samplePath(CH[8].keys, 0.6, sA); sA.pos.add(muralDelta); sA.tgt.add(muralDelta); camSpace(sA.pos, sA.tgt, 0.5, -0.62, 3.6, out); r.pose = "wave"; return r; }
+    if (i === 8) { samplePath(CH[8].keys, 0.6, sA); sA.pos.add(muralDelta); sA.tgt.add(muralDelta); camSpace(sA.pos, sA.tgt, 0.5, -0.62, 3.6, out); r.pose = "celebrate"; return r; }
     // 9: sentado en la ventana del cohete, que se aleja
     rocketAt(9, p, tmp3); W.rocket.root.position.copy(tmp3); W.rocket.root.updateMatrixWorld(true);
     W.rocket.windowWorld(out); out.y -= 0.34; out.z -= 0.42;
-    r.pose = "sit"; r.scale = 0.95; r.inRocket = true; r.look = "none";
+    r.pose = "fly"; r.scale = 0.95; r.inRocket = true; r.look = "none";
     return r;
   }
 

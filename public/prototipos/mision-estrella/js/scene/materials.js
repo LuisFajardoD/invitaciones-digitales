@@ -71,13 +71,21 @@ export function glassMaterial({ tint = "#B9D8FF", strength = 1 } = {}) {
   return new THREE.ShaderMaterial({
     transparent: true, depthWrite: false,
     uniforms: { ...ENV, tint: { value: new THREE.Color(tint) }, strength: { value: strength }, time: { value: 0 } },
+    // con piel (SkinnedMesh del GLB) el vidrio sigue al hueso de la cabeza; sin piel los chunks no hacen nada
     vertexShader: /* glsl */`
+      #include <common>
+      #include <skinning_pars_vertex>
       varying vec3 vN; varying vec3 vV; varying vec3 vWN; varying vec3 vWP;
       void main() {
-        vec4 wp = modelMatrix * vec4(position, 1.0);
-        vWP = wp.xyz; vWN = normalize(mat3(modelMatrix) * normal);
+        #include <skinbase_vertex>
+        #include <beginnormal_vertex>
+        #include <skinnormal_vertex>
+        #include <begin_vertex>
+        #include <skinning_vertex>
+        vec4 wp = modelMatrix * vec4(transformed, 1.0);
+        vWP = wp.xyz; vWN = normalize(mat3(modelMatrix) * objectNormal);
         vec4 mv = viewMatrix * wp;
-        vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz);
+        vN = normalize(normalMatrix * objectNormal); vV = normalize(-mv.xyz);
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: /* glsl */`
